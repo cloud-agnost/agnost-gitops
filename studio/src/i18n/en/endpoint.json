@@ -1,0 +1,82 @@
+{
+	"title": "Endpoints",
+	"method": "Method",
+	"path": "Path",
+	"apiKey": "Api Key",
+	"session": "Session",
+	"add": "Create Endpoint",
+	"required": "Required",
+	"optional": "Optional",
+	"empty": "You do not have any endpoints for this app version",
+	"no_headers": "This response has no headers",
+	"no_cookies": "This response has no cookies",
+	"create": {
+		"title": "Create New Endpoint",
+		"name": "Name",
+		"timeout": "Timeout",
+		"timeout_description": "Maximum time in milliseconds to wait for endpoint logic to execute",
+		"methodAndPath": "Method & Path",
+		"method": "Method",
+		"path": "Path",
+		"apiKey": {
+			"title": "API key required",
+			"label": "Require a valid API key to call this endpoint"
+		},
+		"session": {
+			"title": "Session required",
+			"label": "Require a valid session token in \"Session\" header of the request"
+		},
+		"logExecution": {
+			"title": "Log execution",
+			"label": "Log endpoint request, response, status and execution duration"
+		}
+	},
+	"errors": {
+		"notValidRoute": "Path should start with a forward slash, followed by alphanumeric characters, hyphens, and underscores",
+		"invalidParams": "Invalid route parameter name {{param}}",
+		"duplicateParam": "Duplicate parameter names in route",
+		"invalidMethod": "Unsupported method type",
+		"reservedKeyword": "Endpoint route cannot start with {{keyword}}"
+	},
+
+	"edit": "Edit {{name}}",
+	"editLogicSuccess": "Endpoint logic updated successfully",
+	"editSuccess": "Endpoint updated successfully",
+	"test": {
+		"test": "Test",
+		"title": "Test Endpoint",
+		"params": "Params",
+		"headers": "Headers",
+		"abort": "Abort",
+		"body": "Body",
+		"files": "Files",
+		"query_params": "Query Params",
+		"path_variables": "Path Variables",
+		"cookies": "Cookies",
+		"console_logs": "Console",
+		"file_name": "File Name",
+		"file": "File",
+		"send": "Send",
+		"key": "Key",
+		"value": "Value",
+		"add_query_param": "Add Query Param",
+		"add_form_data": "Add Form Data",
+		"add_header": "Add Header",
+		"deploy": {
+			"warning": "API Server undergoing deployment",
+			"description": "Please wait a few seconds for deployment to complete before testing.",
+			"error": "API server is in error state. ",
+			"error_description": "Please check the logs for more details."
+		}
+	},
+	"duration": "Duration",
+	"status": "Status",
+	"json": "JSON",
+	"form-data": "Form Data",
+	"bodyType": "Body Type",
+	"delete": {
+		"title": "Delete Endpoint",
+		"message": "Are you sure you want to delete endpoint ? This action is not reversible — please continue with caution."
+	},
+	"logs": "Endpoint Logs"
+}

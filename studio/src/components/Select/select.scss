@@ -1,0 +1,57 @@
+.select {
+	@apply flex h-9 items-center justify-between text-default;
+	@apply rounded appearance-none;
+	@apply px-3 py-2 text-sm ring-offset-button-primary;
+	@apply placeholder:text-subtle placeholder:text-sm focus:outline-none;
+	@apply focus:border-input-focus focus:outline-none focus:ring-0;
+	@apply truncate max-w-[calc(100%)];
+	@apply disabled:bg-input-disabled-background disabled:border-input-disabled-border disabled:cursor-not-allowed disabled:opacity-50;
+	@apply border border-input-border hover:border-input-hover dark:border-none;
+	&[data-placeholder] span {
+		@apply text-subtle focus:outline-none;
+	}
+
+	&-content {
+		@apply relative z-50 min-w-[8rem] rounded-md bg-input-background border border-border;
+		@apply text-subtle shadow-md max-h-60 overflow-auto;
+	}
+	&-value {
+		@apply flex items-center justify-between;
+	}
+	&-viewport {
+		&-popper {
+			@apply h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)];
+		}
+	}
+	&-label {
+		@apply py-1.5 px-2 text-default text-sm font-semibold;
+	}
+	&-item {
+		@apply grid grid-cols-[10fr_1fr] w-full cursor-pointer select-none;
+		@apply py-1.5 px-2 text-sm outline-none text-default;
+		@apply focus:bg-subtle focus:text-default;
+		@apply data-[disabled]:pointer-events-none data-[disabled]:text-subtle data-[disabled]:bg-subtle;
+		@apply checked:bg-subtle checked:text-default;
+		@apply truncate max-w-full hover:bg-lighter dark:hover:bg-[#343B4D] focus-visible:bg-lighter;
+		&.no-indicator {
+			@apply block;
+		}
+	}
+	&-seperator {
+		@apply -mx-1 my-1 h-px bg-subtle;
+	}
+	& > span {
+		@apply truncate max-w-[calc(100%-1rem)] flex-1 text-start;
+	}
+
+	&.input {
+		@apply flex h-9 w-full px-3 py-2 text-sm text-default bg-input-background rounded appearance-none;
+		@apply border border-input-border hover:border-input-hover;
+		@apply disabled:cursor-not-allowed disabled:opacity-50;
+		@apply focus:border-input-focus focus:outline-none focus:ring-0;
+		@apply disabled:bg-input-disabled-background disabled:border-input-disabled-border;
+		&-error {
+			@apply border-error;
+		}
+	}
+}

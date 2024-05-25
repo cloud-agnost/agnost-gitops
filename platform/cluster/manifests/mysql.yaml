@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mycluster-sa
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mycluster-cluster-secret
+stringData:
+  rootUser: "root"
+  rootHost: "%"
+  rootPassword: "sakila"
+---
+apiVersion: mysql.oracle.com/v2
+kind: InnoDBCluster
+metadata:
+  name: mycluster
+spec:
+  instances: 3
+  tlsUseSelfSigned: true
+  router:
+    instances: 1
+    version: 8.0.34
+  secretName: mycluster-cluster-secret
+  imagePullPolicy : IfNotPresent
+  baseServerId: 1000
+  version: 8.0.34
+  serviceAccountName: mycluster-sa
+  datadirVolumeClaimTemplate:
+    accessModes: 
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 10Gi
+  podSpec:
+    containers:
+    - name: mysql
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "180m"
+        limits:
+          memory: "16Gi"
+          cpu: "4000m"
+  mycnf: |
+    [mysqld]
+    max_connections=200
+    max_allowed_packet=256M
+#  initDB:
+#    clone:
+#      donorUrl: mycluster-0.mycluster-instances.another.svc.cluster.local:3306
+#      rootUser: root
+#      secretKeyRef:
+#        name: mypwds

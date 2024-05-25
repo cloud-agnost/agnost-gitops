@@ -1,0 +1,10 @@
+.confirmation-modal {
+	@apply flex flex-col gap-y-4;
+
+	&-actions {
+		@apply flex justify-end items-center gap-4 self-end;
+	}
+	&-desc {
+		@apply text-sm leading-6 text-subtle font-normal tracking-wide self-start;
+	}
+}

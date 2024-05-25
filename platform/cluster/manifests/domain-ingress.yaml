@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+   name: ai-page-ingress
+   annotations:
+      kubernetes.io/ingress.class: 'nginx'
+      #Required to hande 413 Request Entity Too Large Errors for Ngninx
+      nginx.ingress.kubernetes.io/proxy-body-size: 500m
+      #Required to handle HTTP Status Code 504 Gateway Timeout for Nginx
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: '6000'
+      nginx.ingress.kubernetes.io/proxy-send-timeout: '6000'
+      nginx.ingress.kubernetes.io/proxy-read-timeout: '6000'
+      nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: '6000'
+      #Redirect http traffic to https
+      nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+      nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+      #SSL certificate configuration
+      cert-manager.io/issuer: 'wildward-issuer'
+spec:
+   tls:
+      - hosts:
+           - domain.com
+        secretName: ai-page-wtls-secret
+   rules:
+      - host: domain.com
+        http:
+           paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                   service:
+                      name: ai-page-service
+                      port:
+                         number: 3000

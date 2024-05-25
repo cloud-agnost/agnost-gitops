@@ -1,0 +1,60 @@
+.drawer {
+	@apply fixed z-50 bg-base dark:bg-subtle  opacity-100 shadow-lg border outline-none flex flex-col;
+	&-left {
+		@apply animate-in slide-in-from-left h-full duration-300;
+	}
+	&-right {
+		@apply animate-in slide-in-from-right h-full duration-300;
+	}
+	&-center {
+		width: min(100% - 2rem, 650px);
+		@apply animate-in slide-in-from-top max-h-full duration-300 rounded;
+	}
+
+	&-portal {
+		@apply fixed inset-0 z-50 flex;
+
+		&-left {
+			@apply justify-start;
+		}
+		&-right {
+			@apply justify-end;
+		}
+		&-center {
+			max-height: 100vh;
+			max-width: 100vw;
+			@supports (max-height: 100dvh) {
+				max-height: 100dvh;
+			}
+			@apply justify-center items-center;
+		}
+	}
+	&-overlay {
+		max-height: 100vh;
+		max-width: 100vw;
+		@supports (max-height: 100dvh) {
+			max-height: 100dvh;
+		}
+		@apply fixed inset-0 z-50 bg-base/50  transition-all;
+		@apply duration-100 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in;
+	}
+	&-md {
+		width: 650px;
+	}
+	&-lg {
+		width: 750px;
+	}
+	&-close {
+		@apply rounded-full w-8 h-8 flex justify-center items-center hover:bg-wrapper-background-hover dark:hover:bg-button-secondary-hover;
+		@apply text-icon-base hover:text-icon-secondary;
+	}
+	&-header {
+		@apply flex items-center justify-between text-center sm:text-left border-b border-border p-6;
+	}
+	&-title {
+		@apply font-semibold text-default;
+	}
+	&-footer {
+		@apply flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2;
+	}
+}

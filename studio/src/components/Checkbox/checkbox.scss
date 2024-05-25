@@ -1,0 +1,19 @@
+.checkbox {
+	@apply h-4 w-4 shrink-0 rounded-sm;
+	@apply border border-input-border ring-offset-wrapper-background-base;
+	@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-button-primary focus-visible:ring-offset-2;
+	@apply disabled:cursor-not-allowed disabled:bg-input-disabled-border disabled:text-icon-disabled disabled:data-[state=checked]:opacity-50  disabled:pointer-events-none;
+	@apply data-[state=checked]:bg-button-primary data-[state=checked]:text-white;
+	@apply hover:data-[state=checked]:bg-button-primary-hover;
+
+	&-wrapper {
+		@apply flex items-center space-x-2;
+	}
+
+	&-indicator {
+		@apply flex items-center justify-center text-current;
+	}
+	&-label {
+		@apply cursor-pointer;
+	}
+}

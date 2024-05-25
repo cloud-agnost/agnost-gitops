@@ -1,0 +1,137 @@
+{
+	"page_title": "Databases",
+	"empty_text": "You do not have any databases for this app version",
+	"no_database": "No database found",
+	"no_model": "No model found",
+	"add": {
+		"title": "Create Database",
+		"poolSize": "Pool Size",
+		"field": "Database Name",
+		"resource": {
+			"title": "Resource Management",
+			"field": "Database Server",
+			"placeholder": "Select Database Server",
+			"add": "Add Database Server"
+		},
+		"type": {
+			"title": "Database Type",
+			"field": "Database type",
+			"placeholder": "Select Database Type"
+		},
+		"unique": {
+			"name": "Assign Unique Name",
+			"title": "Assign a unique name to this database in different versions of the application.",
+			"desc": "This option ensures that developers working on different versions of the app utilizing this database server will each have a dedicated database in the database server minimizing conflicts in database schema changes."
+		},
+		"managed": {
+			"title": "Allow Agnost to manage database schema.",
+			"desc": "Agnost can manage the database schema for you, meaning creating and updating tables, fields and indexes."
+		}
+	},
+	"edit": {
+		"title": "Edit Database",
+		"success": "Database updated successfully"
+	},
+	"delete": {
+		"title": "Delete Database",
+		"confirm": "Confirm database delete by typing <confirmCode>{{confirmCode}}</confirmCode> below.",
+		"confirm_title": "Are you sure you want to delete this database?",
+		"confirm_description": "Deleting this database will remove all associated data and cannot be undone."
+	},
+	"models": {
+		"add": {
+			"schema": {
+				"field": "Schema Name"
+			},
+			"name": {
+				"field": "Model Name"
+			},
+			"description": {
+				"field": "Model Description"
+			},
+			"timestamps": {
+				"enabled": {
+					"field": "Enable Timestamps",
+					"desc": "Models with timestamps automatically set create and update timestamp fields so that you can track creation and last modification date of model objects."
+				},
+				"createdAt": {
+					"field": "Created At Field",
+					"name": "createdAt"
+				},
+				"updatedAt": {
+					"field": "Updated At Field",
+					"name": "updatedAt"
+				}
+			}
+		},
+		"delete": {
+			"title": "Delete Model",
+			"description": "Deleting this model will remove all associated data and cannot be undone."
+		},
+		"delete_multi": {
+			"code": "Confirm selected models delete by typing <confirmCode>{{confirmCode}}</confirmCode> below.",
+			"confirm_text": "Yes, I am sure",
+			"title": "Delete Selected Models",
+			"description": "Deleting these models will remove all associated data and cannot be undone."
+		},
+		"title": "Models",
+		"create": "Create Model",
+		"edit": "Edit Model",
+		"edit_success": "Model updated successfully",
+		"no_models": "You do not have any models in this database",
+		"no_data": "You do not have any data for this model"
+	},
+	"fields": {
+		"select_default_value": "Select Default Value",
+		"title": "Fields",
+		"create": "Create Field",
+		"add": "Add Field",
+		"add_field": "Add {{field}} Field",
+		"edit": "Edit Field",
+		"no_fields": "You do not have any fields for this model",
+		"basic_value_list": "Basic Value List",
+		"basic_value_list_type": "Basic Value List Type",
+		"basic_value_list_placeholder": "Select basic value list type",
+		"enum_values": "Enum Values",
+		"enum_placeholder": "Enter enum values separated by new line",
+		"reference_action": "Reference Action",
+		"reference_action_placeholder": "Select reference action",
+		"reference_model": "Reference Model",
+		"reference_model_placeholder": "Select reference model",
+		"edit_success": "Field updated successfully",
+		"delete": {
+			"title": "Delete Field",
+			"description": "Deleting this field will remove all associated data and cannot be undone."
+		},
+		"field_desc": "Field Description",
+		"field_desc_placeholder": "Enter field description",
+		"form": {
+			"name": "Field Name",
+			"unique_desc": "The value of the field is different across model objects.",
+			"indexed_desc": "The value of the field is indexed in database for faster.",
+			"required_desc": "Field value existence checks are applied during object.",
+			"immutable_desc": "The value of the field once set cannot be modified later.",
+			"searchable_desc": "Enable text search of string content.",
+			"default_value": "Default Value"
+		},
+		"searchable": {
+			"lang": {
+				"title": "Searchable Language",
+				"field": "Searchable Language",
+				"placeholder": "Select Searchable Language"
+			},
+			"collation": {
+				"title": "Searchable Collation",
+				"field": "Searchable Collation",
+				"placeholder": "Select Searchable Collation"
+			}
+		}
+	},
+	"navigator": {
+		"title": "Navigator",
+		"delete": {
+			"title": "Delete Data",
+			"message": "Are you sure you want to delete this data? This action is not reversible — please continue with caution."
+		}
+	}
+}

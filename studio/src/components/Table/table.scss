@@ -1,0 +1,49 @@
+.table {
+	@apply w-full caption-bottom text-xs bg-base rounded-lg border-border;
+	&-container {
+		@apply w-full border border-border rounded-lg;
+	}
+	&-header {
+		@apply [&_tr]:border-b;
+	}
+	&-footer {
+		@apply bg-subtle font-medium text-subtle;
+	}
+	&-body {
+		@apply [&_tr:last-child]:border-none bg-base;
+	}
+	&-row {
+		@apply border-b transition-colors   #{!important};
+
+		&.head {
+			@apply border-none;
+		}
+
+		&:hover {
+			.table-cell.actions {
+				* {
+					@apply opacity-100;
+				}
+			}
+		}
+	}
+	&-head {
+		@apply h-10 px-4 text-left align-middle font-medium relative bg-subtle;
+		@apply text-subtle [&:has([role=checkbox])]:pr-0 font-sfCompact text-xs first:rounded-tl-lg last:rounded-tr-lg;
+		&.sortable {
+			@apply hover:bg-lighter;
+		}
+	}
+	&-cell {
+		@apply px-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 text-default rounded-lg;
+
+		&.actions {
+			* {
+				@apply opacity-0;
+			}
+		}
+	}
+	&-caption {
+		@apply mt-4 text-xs text-subtle;
+	}
+}

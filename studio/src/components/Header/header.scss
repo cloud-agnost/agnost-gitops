@@ -1,0 +1,47 @@
+.header-menu {
+	--height: var(--header-menu-height);
+	@apply bg-base flex justify-between items-center h-[var(--height)] py-1.5 px-3 border-b border-border;
+	@apply sticky top-0 z-10;
+	&-divider {
+		@apply w-[1px] h-[40px] bg-border;
+	}
+
+	&-left {
+		@apply flex gap-4 items-center;
+
+		&-organization-select {
+			@apply text-icon-base;
+		}
+	}
+
+	&-right {
+		@apply flex gap-3 items-center text-icon-base;
+		&-nav {
+			@apply hidden 2xl:flex gap-1 items-center;
+		}
+		&-actions {
+			@apply flex items-center;
+
+			.btn {
+				@apply w-[32px] h-[32px] p-0 rounded-full;
+				svg {
+					@apply text-[17px];
+				}
+			}
+
+			&-user {
+				@apply flex items-center gap-2;
+				&-avatar {
+					@apply rounded-full overflow-hidden;
+				}
+				&-name {
+					@apply leading-6 font-normal text-sm;
+				}
+			}
+		}
+
+		.header-menu-divider {
+			@apply hidden 2xl:block;
+		}
+	}
+}

@@ -1,0 +1,13 @@
+.form {
+	&-message {
+		@apply text-error text-xs;
+	}
+
+	&-label-error {
+		@apply text-error;
+	}
+
+	&-description {
+		@apply text-subtle text-xs;
+	}
+}

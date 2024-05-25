@@ -1,0 +1,11 @@
+.popover-content {
+	@apply z-50 rounded-md border border-border bg-wrapper-background-light text-default shadow-md;
+	@apply outline-none animate-in data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2;
+	@apply data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2;
+
+
+	.arrow {
+		@apply fill-wrapper-background-light;
+	}
+}
+

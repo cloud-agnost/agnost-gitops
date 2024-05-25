@@ -1,0 +1,14 @@
+{
+   "release": "v1.0.0",
+   "modules": {
+      "engine-core": "v1.0.0",
+      "engine-monitor": "v1.0.0",
+      "engine-realtime": "v1.0.0",
+      "engine-scheduler": "v1.0.0",
+      "engine-worker": "v1.0.0",
+      "platform-core": "v1.0.0",
+      "platform-sync": "v1.0.0",
+      "platform-worker": "v1.0.0",
+      "studio": "v1.0.0"
+   }
+}

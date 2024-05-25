@@ -1,0 +1,300 @@
+name: Create New Agnost Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release Type'
+        required: true
+        type: choice
+        default: 'patch'
+        options:
+          - 'patch'
+          - 'minor'
+          - 'major'
+      engine-core:
+        description: 'Engine Core Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      engine-monitor:
+        description: 'Engine Monitor Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      engine-realtime:
+        description: 'Engine Realtime Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      engine-scheduler:
+        description: 'Engine Scheduler Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      engine-worker:
+        description: 'Engine Worker Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      platform-core:
+        description: 'Platform Core Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      platform-sync:
+        description: 'Platform Sync Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      platform-worker:
+        description: 'Platform Worker Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      studio:
+        description: 'Studio Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+
+env:
+  RELEASE_TYPE: '${{ github.event.inputs.release-type }}'
+  ENGINE_CORE: '${{ github.event.inputs.engine-core }}'
+  ENGINE_MONITOR: '${{ github.event.inputs.engine-monitor }}'
+  ENGINE_REALTIME: '${{ github.event.inputs.engine-realtime }}'
+  ENGINE_SCHEDULER: '${{ github.event.inputs.engine-scheduler }}'
+  ENGINE_WORKER: '${{ github.event.inputs.engine-worker }}'
+  PLATFORM_CORE: '${{ github.event.inputs.platform-core }}'
+  PLATFORM_SYNC: '${{ github.event.inputs.platform-sync }}'
+  PLATFORM_WORKER: '${{ github.event.inputs.platform-worker }}'
+  STUDIO: '${{ github.event.inputs.studio }}'
+  DOCKER_REGISTRY: 'gcr.io'
+  GCR_PROJECT: 'agnost-community'
+
+jobs:
+  get_released_apps:
+    runs-on: ubuntu-latest
+    outputs:
+      applications: ${{ steps.get-applications.outputs.APPLICATIONS }}
+      details: ${{ steps.get-details.outputs.DETAILS }}
+      release_number: ${{ steps.get-release-number.outputs.RELEASE_NUMBER }}
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      -
+        name: Install semver
+        run: |
+          wget https://github.com/ffurrer2/semver/releases/download/v2.2.0/semver_2.2.0_linux_amd64.tar.gz
+          tar zxvf semver_2.2.0_linux_amd64.tar.gz
+          cp semver /usr/local/bin
+      -
+        name: get-info
+        run: |
+          read -r APPLICATIONS DETAILS RELEASE_NUMBER <<< $(python .github/scripts/get_released_apps.py)
+          echo APPLICATIONS=$APPLICATIONS >> $GITHUB_ENV
+          echo DETAILS=$DETAILS >> $GITHUB_ENV
+          echo RELEASE_NUMBER=$RELEASE_NUMBER >> $GITHUB_ENV
+      -
+        id: get-applications
+        run: echo "APPLICATIONS=${{ env.APPLICATIONS }}" >> $GITHUB_OUTPUT
+      -
+        id: get-details
+        run: echo "DETAILS=${{ env.DETAILS }}" >> $GITHUB_OUTPUT
+      -
+        id: get-release-number
+        run: echo "RELEASE_NUMBER=${{ env.RELEASE_NUMBER }}" >> $GITHUB_OUTPUT
+
+  build:
+    runs-on: ubuntu-latest
+    needs: get_released_apps
+    strategy:
+      matrix:
+        application: ${{ fromJSON(needs.get_released_apps.outputs.applications) }}
+        include: ${{ fromJSON(needs.get_released_apps.outputs.details) }}
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: 'Authenticate to GCP'
+        id: 'auth'
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+      -
+        name: Login to GCR
+        uses: docker/login-action@v3
+        with:
+          registry: '${{ env.DOCKER_REGISTRY }}'
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'
+      -
+        name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: ./${{ matrix.application }}
+          file: ./${{ matrix.application }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.GCR_PROJECT }}/${{ matrix.application }}:${{ matrix.version }}
+            ${{ env.DOCKER_REGISTRY }}/${{ env.GCR_PROJECT }}/${{ matrix.application }}:latest-release
+
+  update-release-info:
+    runs-on: ubuntu-latest
+    needs: [get_released_apps, build]
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+      -
+        name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      -
+        name: Install yaml library
+        run: python -m pip install ruamel.yaml
+      -
+        name: Update release info
+        env:
+          RELEASE_NUMBER: ${{ needs.get_released_apps.outputs.release_number }}
+        run: |
+          python .github/scripts/update_package_json.py '${{ needs.get_released_apps.outputs.details }}'
+          python .github/scripts/create_release_manifest.py '${{ needs.get_released_apps.outputs.details }}'
+          if [ $(git status | grep -c "nothing to commit") == 0 ]; then
+            git config user.name ${{ secrets.REPO_ACCESS_USER }}
+            git config user.email ${{ secrets.REPO_ACCESS_EMAIL }}
+            git diff
+            git status
+            git add releases/
+            git commit -am "Updated package.json and release files"
+            git push
+          else
+              echo "No changes, skipping..."
+          fi
+
+  update-helm-chart:
+    runs-on: ubuntu-latest
+    needs: [get_released_apps, build]
+    env:
+      RELEASE_NUMBER: ${{ needs.get_released_apps.outputs.release_number }}
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Checkout Charts
+        uses: actions/checkout@v4
+        with:
+          repository: cloud-agnost/charts
+          path: charts
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+      -
+        name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      -
+        name: Install yaml library
+        run: python -m pip install ruamel.yaml
+      -
+        name: Install semver
+        run: |
+          wget https://github.com/ffurrer2/semver/releases/download/v2.2.0/semver_2.2.0_linux_amd64.tar.gz
+          tar zxvf semver_2.2.0_linux_amd64.tar.gz
+          cp semver /usr/local/bin
+      -
+        name: Update Helm Chart
+        run: |
+          cd charts
+          python ../.github/scripts/update_helm_chart.py '${{ needs.get_released_apps.outputs.details }}'
+          if [ $(git status | grep -c "nothing to commit") == 0 ]; then
+            git config user.name ${{ secrets.REPO_ACCESS_USER }}
+            git config user.email ${{ secrets.REPO_ACCESS_EMAIL }}
+            git diff
+            git commit -am "New chart version"
+            git push
+          else
+              echo "No changes, skipping..."
+          fi
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [get_released_apps, update-helm-chart, update-release-info]
+    env:
+      RELEASE_NUMBER: ${{ needs.get_released_apps.outputs.release_number }}
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.REPO_ACCESS_TOKEN }}"
+          prerelease: false
+          automatic_release_tag: ${{ env.RELEASE_NUMBER }}
+          files: |
+            releases/${{ env.RELEASE_NUMBER }}.json

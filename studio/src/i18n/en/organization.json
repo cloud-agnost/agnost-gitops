@@ -1,0 +1,75 @@
+{
+	"menu": {
+		"projects": "Projects",
+		"apps": "Apps",
+		"resources": "Resources",
+		"settings": "Settings"
+	},
+	"create": "Create Organization",
+	"create-new": "Create New Organization",
+	"name": "Organization Name",
+	"enter_organization_name": "Enter organization name",
+	"select": "Select your organization",
+	"empty": "No organizations found.",
+	"leave": {
+		"description": "You are about the leave the organization. After leaving the organization you will not be able to access it again. Are you sure you would like to leave the {{name}} organization?",
+		"main": "Leave Organization",
+		"success": {
+			"title": "You have successfully left the {{name}} organization.",
+			"description": "You will no longer have access to the {{name}} organization."
+		}
+	},
+	"settings": {
+		"pending-invitation": "Pending Invitations",
+		"general": "General",
+		"members": {
+			"title": "Members",
+			"description": "Manage your organization members",
+			"delete": "Delete Member",
+			"deleteDesc": "Are you sure you want to delete this member? This action cannot be undone. The user will not be able to join the organization.",
+			"invite": {
+				"title": "Invite Organization Members",
+				"desc": "Each organization member can have different role assigned to authorize certain actions within the organization itself. Organization members can also be added to app teams.",
+				"button": "Invite",
+				"delete": "Delete Invitation",
+				"deleteAll": "Delete All",
+				"resend": "Resend All",
+				"deleteDesc": "Are you sure you want to delete this invitation? This action cannot be undone. The user will not be able to join the organization."
+			}
+		},
+		"id": {
+			"title": "Organization ID",
+			"desc": "This is your organization's id within your Agnost Cluster."
+		},
+		"name": {
+			"title": "Organization Name",
+			"desc": "This is your organization's visible name within the platform. For example, the name of your company or department."
+		},
+
+		"avatar": {
+			"title": "Organization Avatar",
+			"desc": "This is the avatar that will be displayed for your organization."
+		},
+		"transfer": {
+			"title": "Transfer Organization Ownership",
+			"desc": "The organization owner is the person who has created the organization or the person to whom the organization ownership has been transferred. The Owner has full control over the organization and only organization owners can delete the organization or transfer its ownership to someone else."
+		},
+		"delete": {
+			"title": "Delete Organization",
+			"desc": "Permanently remove your Organization and all of its apps and associated app data from deployed environments. This action is not reversible — please continue with caution.",
+			"confirm": {
+				"title": "Are you sure to delete your organization?",
+				"desc": "All organization apps and managed resource and associated data will be deleted. This action is not reversible — please continue with caution.",
+				"code": "Confirm organization delete by typing <confirmCode>{{confirmCode}}</confirmCode> below."
+			}
+		}
+	},
+	"transfer": "Transfer",
+	"transfer-ownership": "Transfer Ownership",
+	"transfer-ownership-desc": "The organization owner is the person who has created the organization or the person to whom the organization ownership has been transferred. The Owner has full control over the organization and only organization owners can delete the organization or transfer its ownership to someone else.",
+	"transfer-success": "You have successfully transferred the ownership.",
+	"empty_organization": "You’re not a Member of any organization!",
+	"empty_organization_desc": "Contact your cluster administrator to request access to organizations.",
+	"member_delete_success": "You have successfully deleted the member from the organization.",
+	"invite_delete_success": "You have successfully deleted the invitation."
+}

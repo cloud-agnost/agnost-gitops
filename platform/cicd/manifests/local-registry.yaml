@@ -1,0 +1,122 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-registry
+  labels:
+    app.kubernetes.io/name: zot
+    app.kubernetes.io/instance: zot
+    app.kubernetes.io/version: "v2.0.1"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-registry-config
+data:
+  config.json: "{\n  \"storage\": {\n    \"rootDirectory\": \"/tmp/zot\",\n    \"dedupe\": false,\n    \"gc\": false,\n    \"storageDriver\": {\n        \"name\": \"s3\",\n        \"regionendpoint\": \"http://minio-storage:9000\",\n        \"region\": \"us-east-1\",\n        \"bucket\": \"zot-storage\",\n        \"secure\": false,\n        \"skipverify\": false\n    }\n  },\n  \"http\": {\n    \"address\": \"0.0.0.0\",\n    \"port\": \"5000\",\n    \"realm\": \"zot\",\n    \"auth\": { \"htpasswd\": { \"path\": \"/secret/htpasswd\" } },\n    \"accessControl\": {\n      \"repositories\": {\n        \"**\": {\n          \"defaultPolicy\": [],\n          \"anonymousPolicy\": [\"read\"]\n        }\n      },\n      \"adminPolicy\": {\n        \"users\": [\"admin\"],\n        \"actions\": [\"read\", \"create\", \"update\", \"delete\"]\n      }\n    }\n  },\n  \"log\": { \"level\": \"debug\" },\n  \"extensions\": {\n    \"search\": {\n      \"enable\": true\n    },\n    \"ui\": {\n      \"enable\": true\n    }\n  }\n}"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: local-registry-htpasswd
+type: Opaque
+stringData:
+  htpasswd: admin:$2y$10$20l0SYE1vSkfItgdGM.H5.sCd8h8xBGTEwXu.zvgDTIjPyoe4motS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: local-registry
+  labels:
+    app.kubernetes.io/name: zot
+    app.kubernetes.io/instance: zot
+    app.kubernetes.io/version: "v2.0.1"
+spec:
+  type: NodePort
+  ports:
+    - port: 5000
+      targetPort: zot
+      protocol: TCP
+      name: zot
+      nodePort: 30050
+  selector:
+    app.kubernetes.io/name: zot
+    app.kubernetes.io/instance: zot
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-registry
+  labels:
+    app.kubernetes.io/name: zot
+    app.kubernetes.io/instance: zot
+    app.kubernetes.io/version: "v2.0.1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zot
+      app.kubernetes.io/instance: zot
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zot
+        app.kubernetes.io/instance: zot
+    spec:
+      serviceAccountName: local-registry
+      securityContext:
+        null
+      containers:
+        - name: zot
+          securityContext:
+            null
+          image: "ghcr.io/project-zot/zot-linux-amd64:v2.0.1"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: rootUser
+                  name: minio-credentials
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: rootPassword
+                  name: minio-credentials
+          ports:
+            - name: zot
+              containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: '/etc/zot'
+              name: local-registry-config
+            - mountPath: "/secret"
+              name: "local-registry-htpasswd"
+          livenessProbe:
+            initialDelaySeconds: 5
+            httpGet:
+              path: /v2/
+              port: 5000
+              scheme: HTTP
+          readinessProbe:
+            initialDelaySeconds: 5
+            httpGet:
+              path: /v2/
+              port: 5000
+              scheme: HTTP
+          startupProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+            httpGet:
+              path: /v2/
+              port: 5000
+              scheme: HTTP
+          resources: {}
+      volumes:
+        - name: local-registry-config
+          configMap:
+            name: local-registry-config
+        - name: local-registry-htpasswd
+          secret:
+            secretName: local-registry-htpasswd

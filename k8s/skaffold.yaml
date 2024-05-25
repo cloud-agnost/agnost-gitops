@@ -1,0 +1,37 @@
+apiVersion: skaffold/v2beta14
+kind: Config
+build:
+   artifacts:
+      - image:  agnost-gitops/platform
+        context: ../platform
+        sync:
+           infer:
+              - '**/*.js'
+              - '**/*.json'
+        docker:
+           dockerfile: Dockerfile.dev
+      - image: agnost-gitops/sync
+        context: ../sync
+        sync:
+           infer:
+              - '**/*.js'
+              - '**/*.json'
+              - '**/*.pug'
+        docker:
+           dockerfile: Dockerfile.dev
+      - image: agnost-gitops/monitor
+        context: ../monitor
+        sync:
+          infer:
+              - '**/*.js'
+              - '**/*.json'
+        docker:
+          dockerfile: Dockerfile.dev
+deploy:
+   statusCheckDeadlineSeconds: 300
+   kubectl:
+      defaultNamespace: default
+      manifests:
+         - platform.yaml
+         - sync.yaml
+         - monitor.yaml

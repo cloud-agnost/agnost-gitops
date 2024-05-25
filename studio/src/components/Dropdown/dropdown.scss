@@ -1,0 +1,62 @@
+.dropdown {
+	&-sub-trigger {
+		@apply flex cursor-default select-none items-center px-2 py-1.5 text-xs outline-none;
+	}
+
+	&-sub-content {
+		@apply z-50 min-w-[8rem] overflow-hidden rounded-sm border border-border shadow-md animate-in data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1;
+	}
+
+	&-content {
+		@apply bg-base dark:bg-subtle;
+		@apply z-50 min-w-[8rem] overflow-hidden rounded-sm border shadow-md animate-in data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2;
+	}
+
+	&-item {
+		@apply relative flex cursor-pointer select-none items-center font-sfCompact text-xs;
+		@apply px-3 py-1.5 text-default outline-none transition-colors;
+		@apply data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+		&:hover,
+		&:focus-visible,
+		&.active {
+			@apply bg-lighter text-default;
+		}
+	}
+
+	&-checkbox-item {
+		@apply relative flex justify-between cursor-pointer select-none items-center text-default;
+		@apply font-sfCompact p-2 text-xs outline-none transition-colors;
+		@apply data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+		> span {
+			@apply flex h-3.5 w-3.5 items-center justify-center;
+		}
+		&:hover,
+		&.active {
+			@apply bg-lighter text-default;
+		}
+	}
+
+	&-radio-item {
+		@apply relative flex cursor-default select-none items-center font-sfCompact py-1.5 pl-8 pr-2 text-xs outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+
+		> span {
+			@apply absolute left-2 flex h-3.5 w-3.5 items-center justify-center;
+		}
+	}
+
+	&-label {
+		@apply p-2 text-xs font-semibold;
+	}
+
+	&-item-container {
+		@apply flex flex-col text-default;
+	}
+
+	&-separator {
+		@apply h-px bg-border dark:bg-wrapper-border m-0;
+	}
+
+	&-shortcut {
+		@apply ml-auto text-xs tracking-widest opacity-60;
+	}
+}

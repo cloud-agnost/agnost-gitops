@@ -1,0 +1,13 @@
+{
+	"empty_text": "You do not have any helper function for this app version",
+	"add": "Create Function",
+	"title": "Functions",
+	"delete": {
+		"title": "Delete Helper Function",
+		"message": "Are you sure you want to delete this function ? This action is not reversible — please continue with caution."
+	},
+	"edit": "Edit {{name}}",
+	"test": "Test {{name}}",
+	"editLogicSuccess": "Function logic updated successfully",
+	"edit_success": "Function updated successfully"
+}

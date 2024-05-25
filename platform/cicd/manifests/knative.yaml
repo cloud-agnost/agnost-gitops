@@ -1,0 +1,56 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: example-service
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: example-service
+      annotations:
+        autoscaling.knative.dev/initial-scale: "1"
+        autoscaling.knative.dev/target: "10"
+        autoscaling.knative.dev/metric: "concurrency"
+        autoscaling.knative.dev/max-scale: "1"
+        autoscaling.knative.dev/min-scale: "10"
+        autoscaling.knative.dev/target-utilization-percentage: "80"
+        autoscaling.knative.dev/scale-down-delay: "5m00s"
+        autoscaling.knative.dev/scale-to-zero-pod-retention-period: "10m00s"
+    spec:
+      containers:
+      - name: dummy-container
+        image: traefik/whoami
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 4000
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        env:
+        - name: DUMMY_KEY_1
+          value: "dummy_value_1"
+        - name: DUMMY_KEY_2
+          value: "dummy_value_2"
+        - name: DUMMY_KEY_3
+          value: "dummy_value_3"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 60
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 60
+          failureThreshold: 3

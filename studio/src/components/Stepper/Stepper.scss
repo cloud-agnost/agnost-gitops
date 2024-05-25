@@ -1,0 +1,45 @@
+.auth-stepper {
+	@apply grid text-subtle;
+
+	.auth-stepper-item {
+		@apply text-sm;
+
+		.auth-stepper-item-wrapper {
+			@apply flex items-center gap-2;
+
+			.auth-stepper-item-number {
+				@apply tabular-nums flex font-medium items-center justify-center w-7 h-7  rounded-full text-subtle bg-lighter;
+			}
+
+			.auth-stepper-item-text {
+				@apply text-sm text-subtle;
+			}
+		}
+
+		&[data-is-active='true'],
+		&[data-is-done='true'] {
+			.auth-stepper-item-text {
+				@apply text-default font-medium;
+			}
+		}
+
+		&[data-is-active='true'] {
+			.auth-stepper-item-number {
+				@apply bg-brand-primary text-default;
+			}
+			.auth-stepper-item-text {
+				@apply text-default font-medium;
+			}
+		}
+
+		&[data-is-done='true'] {
+			.auth-stepper-item-number {
+				background: transparent !important;
+				@apply border border-brand-primary;
+				svg {
+					@apply text-brand-primary;
+				}
+			}
+		}
+	}
+}

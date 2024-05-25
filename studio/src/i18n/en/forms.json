@@ -1,0 +1,62 @@
+{
+	"required": "{{label}} is required",
+	"invalid": "{{label}} is invalid",
+	"min2": {
+		"error": "{{label}} must be at least 2 characters long",
+		"description": "Minimum 2 characters"
+	},
+	"min3": {
+		"error": "{{label}} must be at least 3 characters long",
+		"description": "Minimum 3 characters"
+	},
+	"min8": {
+		"error": "{{label}} must be at least 8 characters long",
+		"description": "Minimum 8 characters"
+	},
+	"max64": {
+		"error": "{{label}} must be at most 64 characters long",
+		"description": "Maximum 64 characters"
+	},
+	"maxLength": {
+		"error": "Max length must be greater than or equal to 1 and less than or equal to {{length}}",
+		"description": "Maximum {{length}} characters"
+	},
+	"verificationCode": {
+		"length": {
+			"error": "Verification code must be 6 digits long"
+		}
+	},
+	"email": {
+		"error": "Please enter a valid email address"
+	},
+	"url": {
+		"error": "Please enter a valid URL",
+		"without_http_error": "URL must start with http:// or https://",
+		"without_path_error": "Please enter a valid URL without path"
+	},
+	"IP": {
+		"error": "Please enter a valid IP address"
+	},
+	"decimal": {
+		"error": "Please enter a valid decimal number",
+		"decimal_digits": "Please enter a valid decimal number with up to {{decimal_digits}} decimal places",
+		"decimal_digits_range": "Please enter a valid digit number with {{min_decimal_digits}} to {{max_decimal_digits}} decimal places"
+	},
+	"fieldMaxLength": {
+		"error": "Max length cannot be less than the current max length"
+	},
+	"enterAtLeastOne": "Please enter at least one {{label}}",
+	"enterAtLeastOneValue": "Please enter at least one value",
+	"placeholder": "Enter {{label}}",
+	"alphanumeric": "{{label}} must only contain alphanumeric characters",
+	"number": "{{label}} must be a number",
+	"search_to_add": "Search to add {{label}}",
+	"pick_a_date": "Pick a date",
+	"select": "Select {{label}}",
+	"notStartWithNumber": "{{label}} cannot start with a number",
+	"notStartWithUnderscore": "{{label}} cannot start with a dash (-) or underscore (_) character",
+	"reservedWord": "{{label}} is a reserved word and cannot be used",
+	"nameInvalidCharacters": "Name can include only numbers, letters and underscore (_) characters",
+	"invalidSize": "Storage size should be specified in non-zero Mi or Gi (e.g., 500Mi or 1Gi)",
+	"reservedKeyword": "{{keyword}} is a reserved keyword and cannot be used"
+}

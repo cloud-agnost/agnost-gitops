@@ -1,0 +1,44 @@
+.switch-root {
+	@apply inline-flex h-[24px] w-[48px] border-4 shrink-0 cursor-pointer items-center;
+	@apply rounded-full border-transparent transition-colors relative;
+
+	&:focus-visible {
+		@apply outline-none;
+	}
+
+	.switch-thumb {
+		@apply pointer-events-none bg-white block h-4 w-4 rounded-full shadow-lg transition-transform;
+	}
+
+	&[data-state='checked'] {
+		@apply bg-success;
+
+		.switch-thumb {
+			@apply translate-x-6;
+		}
+	}
+
+	&[data-state='unchecked'] {
+		@apply bg-lighter;
+
+		.switch-thumb {
+			@apply translate-x-0;
+		}
+	}
+
+	.switch-lock {
+		@apply hidden;
+	}
+
+	&:disabled {
+		@apply cursor-not-allowed dark:bg-border bg-border;
+
+		.switch-lock {
+			@apply block absolute right-0 dark:text-icon-base text-border;
+		}
+
+		.switch-thumb {
+			@apply bg-icon-disabled;
+		}
+	}
+}

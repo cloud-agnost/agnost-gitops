@@ -1,0 +1,34 @@
+.create-button {
+	@apply w-32 h-32 rounded-3xl;
+	&-container {
+		@apply flex flex-col items-center gap-4;
+	}
+	&-icon {
+		@apply text-icon-disabled;
+	}
+	&-label {
+		@apply text-default text-xl font-semibold;
+	}
+}
+.organization {
+	&-form {
+		@apply py-4;
+		&-item {
+			@apply space-y-1;
+		}
+		&-buttons {
+			@apply flex justify-end gap-4 mt-2;
+		}
+	}
+}
+.members {
+	&-filter {
+		@apply font-sfCompact font-normal flex justify-between items-center;
+		&-icon {
+			@apply text-icon-base mr-2;
+		}
+		&-resend {
+			@apply text-icon-base mr-2 w-4 h-4;
+		}
+	}
+}

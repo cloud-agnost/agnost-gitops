@@ -1,0 +1,57 @@
+{
+	"title": "Storage",
+	"create": "Create New Storage",
+	"edit": "Edit {{name}}",
+	"empty_text": "You do not have any storages for this app version",
+	"delete": {
+		"title": "Delete Storage",
+		"message": "Are you sure you want to delete this storage?",
+		"description": "This action is not reversible — please continue with caution.",
+		"confirmCode": "Confirm resource delete by typing <confirmCode>{{confirmCode}}</confirmCode> below."
+	},
+	"buckets": "Buckets",
+	"bucket": {
+		"create": "Create Bucket",
+		"empty_text": "You do not have any buckets for this storage",
+		"delete": {
+			"title": "Delete Bucket",
+			"message": "Are you sure you want to delete this bucket?",
+			"description": "All files and associated data will be deleted. This action is not reversible — please continue with caution.",
+			"confirmCode": "Confirm resource delete by typing <confirmCode>{{confirmCode}}</confirmCode> below."
+		},
+		"visibility": {
+			"title": "Visibility",
+			"public": "Public",
+			"private": "Private",
+			"desc": "Whether the bucket is publicly accessible or not. Public buckets can be accessed by anyone."
+		},
+		"tags": "Tags",
+		"empty": "Bucket's content has been deleted",
+		"edit_success": "Bucket updated successfully"
+	},
+	"file": {
+		"upload": "Upload File",
+		"path": "Path",
+		"publicPath": "Public Path",
+		"size": "Size",
+		"mimeType": "Mime Type",
+		"empty_text": "No files have been uploaded to this bucket",
+		"edit": "Edit File",
+		"delete": {
+			"title": "Delete File",
+			"message": "Are you sure you want to delete this file? This action is not reversible — please continue with caution."
+		},
+		"copy": "Duplicate File",
+		"copy_success": "File has been duplicated",
+		"replace": "Replace File",
+		"download": "Download File",
+		"replace_success": "File has been replaced",
+		"size_description": "Size of the file in bytes"
+	},
+	"clear": {
+		"title": "Empty Bucket",
+		"message": "Are you sure you want to empty this bucket?"
+	},
+	"edit_success": "Storage updated successfully",
+	"upload_success": "Files uploaded successfully"
+}

@@ -1,0 +1,4 @@
+.label {
+	@apply text-xs text-default;
+	@apply peer-disabled:cursor-not-allowed;
+}

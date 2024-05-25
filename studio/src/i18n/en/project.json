@@ -1,0 +1,62 @@
+{
+	"projects": "Projects",
+	"create": "Create Project",
+	"create-new": "Create New Project",
+	"name": "Project Name",
+	"envName": "Environment Name",
+	"short_name": "Project Name",
+	"enter_name": "Enter projects name",
+	"empty": "You have not created any projects yet!",
+	"search_empty": "No projects matching search criteria",
+	"select": "Select your projects",
+	"create_env": {
+		"title": "Create Blank Environment",
+		"private_desc": "Set this environment as private. Other team members will not be able to view this version, except team members with Admin rights.",
+		"readonly_desc": "Set this environment as private. Other team members will not be able to view this version, except team members with Admin rights."
+	},
+	"settings": {
+		"openEnv": "Open Environment",
+		"editProject": "Edit Project",
+		"leaveTeam": "Leave Team"
+	},
+	"edit_project": "Edit Project",
+	"name_desc": "This is your project's visible name within the platform. For example, the name of your product or service.",
+	"edit_name_success": "Project name has been successfully updated",
+	"avatar": "Project Avatar",
+	"avatar_desc": "Click on the avatar to upload a custom one from your files. An avatar is optional but strongly recommended.",
+	"transfer": "Transfer Project Ownership",
+	"transfer_desc": "The project owner is the person who has created the project or the person to whom the project ownership has been transferred. The Owner has full control over the project and only project owners can delete the project or transfer its ownership to someone else.",
+	"invite": {
+		"title": "Invite Team Members to Project",
+		"subTitle": "Invite Project Members",
+		"description": "Each project member can have different role assigned to authorize certain actions within the project itself.",
+		"delete": "Delete Invitation",
+		"deleteDesc": "Are you sure you want to delete this invitation? This action cannot be undone. The user will not be able to join the project.",
+		"email_disabled": "You need to configure smtp so that you can send invitations.",
+		"configure": "Configure SMTP"
+	},
+	"environment": {
+		"title": "Environments",
+		"search": "Search Environment"
+	},
+	"delete": {
+		"title": "Delete Project",
+		"alert": "Are you sure you want to delete this project?",
+		"description": " You are about to delete the project. After deleting the project you will not be able to access it again.",
+		"confirmCode": "Confirm project delete by typing <confirmCode>{{confirmCode}}</confirmCode> below."
+	},
+	"leave": {
+		"title": "Leave Project Team",
+		"description": "You are about the leave the project team. After leaving the team you will not be able to access it again. Are you sure you would like to leave the team?"
+	},
+	"delete_env": {
+		"title": "Delete Environment",
+		"alert_title": "Are you sure to delete this environment?",
+		"alert_desc": "This action cannot be undone",
+		"confirm_description": "Confirm environment delete by typing <confirmCode>{{confirmCode}}</confirmCode> below."
+	},
+
+	"containers": "Containers",
+	"sourceOrRegistry": "Source or Registry",
+	"source": "Source"
+}

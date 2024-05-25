@@ -1,0 +1,10 @@
+.copy-input-wrapper {
+	@apply relative;
+	.copy-input {
+		@apply pr-14 cursor-default;
+
+		&-button {
+			@apply absolute text-subtle right-1 top-0.5 hover:text-default;
+		}
+	}
+}

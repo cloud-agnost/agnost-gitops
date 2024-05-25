@@ -1,0 +1,49 @@
+{
+	"welcome": "Welcome to Agnost Community Cluster",
+	"account_info": "Account Information",
+	"welcome_desc": "Through this onboarding flow, we will help you set up your cluster and create your organization and first app. Please follow the instructions to complete your cluster set up and start building your apps.",
+	"next": "Next",
+	"previous": "Previous",
+	"skip_and_finish": "Skip & Finish",
+	"finish": "Finish",
+	"app": {
+		"title": "Create Your First App",
+		"desc": "In Agnost, you work on apps and their versions. An app is your workspace that packages all required design and configuration elements to run your backend app services."
+	},
+	"org": {
+		"title": "Create Your Organization",
+		"desc": "Organizations are the top level entities that are used to group your applications and manage organization specific resource (e.g., databases, cache, message brokers)"
+	},
+	"invite": {
+		"title": "Invite Members To App Team",
+		"stepper_title": "Invite Team Members",
+		"desc": "You can invite team members to your application with different role profiles. These team members will also become organization members and can be easily added as member to other organization apps.",
+		"emails_unique": "Emails must be unique"
+	},
+	"smtp": {
+		"title": "SMTP Configuration",
+		"desc": "In order to send invitation emails, you need to configure your SMTP server (email server) connection parameters. This email server configuration will be used to send organization and application invitations and also other platform-related notification messages.",
+		"host": "Host",
+		"port": "Port",
+		"fromName": "From Name",
+		"fromEmail": "From Email",
+		"password": "Password",
+		"username": "User",
+		"enter_username": "Enter username",
+		"enter_host": "Enter hostname",
+		"enter_fromName": "Enter from name",
+		"enter_fromEmail": "Enter from email",
+		"useTLS": "Use TLS",
+		"enter_port": "Enter port",
+		"enter_password": "Enter password",
+		"port_desc": "The port to connect to",
+		"host_desc": "The hostname or IP address to connect to",
+		"fromName_desc": "The name to use in the From field of the email",
+		"fromEmail_desc": "Please make sure the from email address is a valid email address that can send outgoing emails from your SMTP server.",
+		"username_desc": "Username for authentication",
+		"password_desc": "The password for the user"
+	},
+	"add_another_one": "Add Another One",
+	"select_a_role": "Select a role",
+	"role": "Role"
+}

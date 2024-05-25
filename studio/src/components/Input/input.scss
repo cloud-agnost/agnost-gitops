@@ -1,0 +1,41 @@
+.input {
+	@apply flex w-full px-3 py-2 text-sm text-default bg-input-background rounded appearance-none;
+	@apply border border-input-border hover:border-input-hover dark:border-none;
+	@apply file:border-0 file:bg-transparent file:text-sm file:font-medium;
+	@apply placeholder:text-subtle placeholder:text-sm;
+	@apply disabled:cursor-not-allowed disabled:opacity-50;
+	@apply focus:border-input-focus focus:outline-none focus:ring-0;
+	@apply disabled:bg-input-disabled-background disabled:border-input-disabled-border;
+	&-error {
+		@apply border-error;
+	}
+	&-sm {
+		@apply h-7 text-xs placeholder:text-xs file:text-xs;
+	}
+	&-md {
+		@apply h-9 text-sm placeholder:text-sm file:text-sm;
+	}
+	&-lg {
+		@apply h-12;
+	}
+}
+
+/* Chrome, Safari, Edge, Opera */
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+}
+
+/* Firefox */
+.input[type='number'] {
+	-moz-appearance: textfield;
+}
+
+// for autofill
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+	transition: background-color 9999s ease-in-out 0s;
+	-webkit-text-fill-color: rgb(var(--text-base)) !important;
+}

@@ -1,0 +1,80 @@
+.badge {
+	@apply py-1 px-1.5 bg-elements-strong-purple inline-flex justify-center items-center gap-1 rounded;
+	@apply bg-lighter;
+	&-text {
+		@apply text-xs font-sfCompact;
+	}
+	&-green {
+		@apply bg-elements-subtle-green dark:bg-elements-strong-green;
+		@apply text-elements-strong-green dark:text-elements-subtle-green;
+		.badge-dot {
+			@apply bg-elements-strong-green dark:bg-elements-subtle-green;
+		}
+		.badge-clear {
+			@apply hover:bg-elements-green;
+		}
+	}
+	&-blue {
+		@apply bg-elements-subtle-blue dark:bg-elements-strong-blue text-elements-strong-blue dark:text-elements-subtle-blue;
+		.badge-dot {
+			@apply bg-elements-strong-blue dark:bg-elements-subtle-blue;
+		}
+		.badge-clear {
+			@apply hover:bg-elements-blue;
+		}
+	}
+	&-yellow {
+		@apply bg-elements-subtle-yellow dark:bg-elements-strong-yellow text-elements-strong-yellow dark:text-elements-subtle-yellow;
+		.badge-dot {
+			@apply bg-elements-strong-yellow dark:bg-elements-subtle-yellow;
+		}
+		.badge-clear {
+			@apply hover:bg-elements-yellow;
+		}
+	}
+	&-purple {
+		@apply bg-elements-subtle-purple dark:bg-elements-strong-purple text-elements-strong-purple dark:text-elements-subtle-purple;
+		.badge-dot {
+			@apply bg-elements-strong-purple dark:bg-elements-subtle-purple;
+		}
+		.badge-clear {
+			@apply hover:bg-elements-purple;
+		}
+	}
+	&-red {
+		@apply bg-elements-subtle-red dark:bg-elements-strong-red text-elements-strong-red dark:text-elements-subtle-red;
+		.badge-dot {
+			@apply bg-elements-strong-red dark:bg-elements-subtle-red;
+		}
+		.badge-clear {
+			@apply hover:bg-elements-red;
+		}
+	}
+	&-orange {
+		@apply bg-elements-subtle-orange dark:bg-elements-strong-orange text-elements-strong-orange dark:text-elements-subtle-orange;
+		.badge-dot {
+			@apply bg-elements-strong-orange dark:bg-elements-subtle-orange;
+		}
+		.badge-clear {
+			@apply hover:bg-elements-orange;
+		}
+	}
+	&-gray {
+		@apply dark:bg-lighter;
+		.badge-dot {
+			@apply bg-subtle-reverse;
+		}
+		.badge-clear {
+			@apply hover:bg-base;
+		}
+	}
+	&-rounded {
+		@apply rounded-full pr-2;
+	}
+	&-dot {
+		@apply w-2 h-2 rounded-full;
+	}
+	&-clear {
+		@apply text-icon-secondary;
+	}
+}

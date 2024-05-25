@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: monitor
+   labels:
+      app: monitor
+spec:
+   replicas: 1
+   selector:
+      matchLabels:
+         app: monitor
+   template:
+      metadata:
+         labels:
+            app: monitor
+      spec:
+         serviceAccountName: provisioner-sa
+         containers:
+            - name: monitor
+              image: agnost-gitops/monitor
+              # We will be using the minikube docker daemon, since the actual docker daemon on local machine are different
+              # Prevent minikube docker daemon to pull images from central docker hub set imagePullPolicy to Never, so that
+              # it uses the image put in minikube's docker environment, see dev.sh script how we change the docker context to minikube
+              imagePullPolicy: Never
+              ports:
+                 - containerPort: 4000
+              env:
+                 - name: CACHE_HOSTNAME
+                   value: redis-master       
+                 - name: CACHE_PWD
+                   valueFrom:
+                      secretKeyRef:
+                         name: redis-password
+                         key: password
+                 - name: CLUSTER_DB_URI
+                   valueFrom:
+                      secretKeyRef:
+                         name: cluster-secrets
+                         key: clusterDBURI
+                 - name: CLUSTER_DB_USER
+                   value: "mongo-user"
+                 - name: CLUSTER_DB_PWD
+                   valueFrom:
+                      secretKeyRef:
+                         name: mongodb-admin-password
+                         key: password
+                 - name: PASSPHRASE
+                   valueFrom:
+                      secretKeyRef:
+                         name: cluster-secrets
+                         key: passPhrase
+                 - name: MASTER_TOKEN
+                   valueFrom:
+                      secretKeyRef:
+                         name: cluster-secrets
+                         key: masterToken
+                 - name: NAMESPACE
+                   value: default

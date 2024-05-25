@@ -1,0 +1,37 @@
+.select-organization {
+	&-container {
+		@apply flex flex-col items-center justify-center gap-8 lg:gap-20 h-screen;
+	}
+	&-title {
+		@apply text-default text-2xl font-semibold;
+	}
+	&-items {
+		@apply flex flex-wrap justify-center gap-4 w-1/2;
+	}
+	&-item {
+		@apply flex flex-col justify-center items-center gap-4;
+	}
+	&-button {
+		flex: 0 0 calc(25% - 20px);
+		@apply h-[13rem];
+	}
+	&-info {
+		@apply space-y-2 text-center;
+	}
+	&-name {
+		@apply text-default text-xl truncate max-w-[16ch];
+	}
+	&-role {
+		@apply text-default text-sm;
+	}
+}
+
+.members {
+	@apply mt-8;
+	&-header {
+		@apply flex justify-between items-center mb-8;
+	}
+	&-filter {
+		@apply flex justify-end gap-4 flex-1;
+	}
+}

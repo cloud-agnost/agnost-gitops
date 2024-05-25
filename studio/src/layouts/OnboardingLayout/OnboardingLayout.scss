@@ -1,0 +1,15 @@
+.onboarding-layout {
+	@apply grid md:grid-cols-[350px_auto] h-full min-h-screen;
+
+	.onboarding-layout-left {
+		@apply hidden md:flex bg-base p-8 md:p-16 flex-col items-center gap-y-16 sticky top-0 max-h-screen;
+	}
+
+	.onboarding-layout-right {
+		@apply p-8 md:p-16 bg-subtle max-h-screen overflow-y-auto;
+	}
+
+	.onboarding-layout-app-logo {
+		@apply -ml-4  self-start shrink-0;
+	}
+}

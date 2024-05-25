@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dummy-deployment
+  namespace: dummy-namespace
+spec:
+  serviceName: dummy-service
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      partition: 0
+  revisionHistoryLimit: 10
+  podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      app: dummy-deployment
+  template:
+    metadata:
+      labels:
+        app: dummy-deployment
+    spec:
+      containers:
+      - name: dummy-container
+        image: traefik/whoami
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 4000
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        env:
+        - name: DUMMY_KEY_1
+          value: "dummy_value_1"
+        - name: DUMMY_KEY_2
+          value: "dummy_value_2"
+        - name: DUMMY_KEY_3
+          value: "dummy_value_3"
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 60
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 60
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 60
+          failureThreshold: 3
+        volumeMounts:
+        - name: data-volume
+          mountPath: /usr/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain

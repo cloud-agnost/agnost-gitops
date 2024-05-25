@@ -1,0 +1,16 @@
+.vi__wrapper {
+	height: 72px !important;
+}
+.code-input {
+	@apply flex items-center justify-between w-full space-x-4;
+	&-character {
+		@apply border border-input-border text-default bg-inherit rounded-lg;
+		@apply h-[72px] w-[72px] p-2 flex items-center justify-center;
+		&--error {
+			@apply border-error;
+		}
+	}
+}
+.vi__wrapper {
+	@apply flex items-center justify-between w-full;
+}

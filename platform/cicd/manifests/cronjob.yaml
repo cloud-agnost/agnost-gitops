@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dummy-cron-job
+  namespace: dummy-namespace
+spec:
+  schedule: "*/5 * * * *"  # Runs every 5 minutes
+  timezone: "Etc/UTC"  # Set the timezone for the cron schedule
+  concurrencyPolicy: Forbid  # Prevent concurrent jobs from running
+  suspend: false  # Set to true to suspend the cron job
+  successfulJobsHistoryLimit: 3  # Number of successful job history to keep
+  failedJobsHistoryLimit: 1  # Number of failed job history to keep
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: dummy
+            image: alpine
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "1"
+              env:
+              - name: DUMMY_KEY_1
+                value: "dummy_value_1"
+              - name: DUMMY_KEY_2
+                value: "dummy_value_2"
+              - name: DUMMY_KEY_3
+                value: "dummy_value_3"
+            volumeMounts:
+            - name: dummy-volume
+              mountPath: /dummy
+          restartPolicy: OnFailure
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: data-pvc

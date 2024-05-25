@@ -1,0 +1,20 @@
+.version-settings-middlewares {
+	.setting-container-content {
+		@apply p-0;
+	}
+	.middlewares-data-table {
+		.table-container {
+			@apply border-none rounded-none;
+		}
+	}
+
+	.table-head {
+		@apply px-[21px];
+	}
+	.table-head:has([role='checkbox']) {
+		@apply pr-0;
+	}
+	.table-cell {
+		@apply px-[21px];
+	}
+}

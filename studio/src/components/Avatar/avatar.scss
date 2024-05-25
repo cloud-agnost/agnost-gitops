@@ -1,0 +1,45 @@
+.avatar {
+	@apply relative flex shrink-0 overflow-hidden rounded-full;
+	&-image {
+		@apply aspect-square h-full w-full;
+	}
+	&-fallback {
+		@apply flex h-full w-full items-center justify-center font-albert;
+		&-user {
+			@apply text-default-reverse dark:text-default;
+		}
+		&-org {
+			@apply text-default dark:text-default-reverse;
+		}
+	}
+	&-xxs {
+		@apply size-5 text-[10px];
+	}
+	&-xs {
+		@apply size-6 text-xs;
+	}
+	&-sm {
+		@apply size-7 text-xs;
+	}
+	&-md {
+		@apply size-8 text-base;
+	}
+	&-lg {
+		@apply size-12 text-lg;
+	}
+	&-xl {
+		@apply size-14 text-2xl;
+	}
+	&-2xl {
+		@apply size-16 text-2xl;
+	}
+	&-3xl {
+		@apply size-20 text-3xl;
+	}
+	&-4xl {
+		@apply size-32 text-6xl;
+	}
+	&-square {
+		@apply rounded-sm;
+	}
+}

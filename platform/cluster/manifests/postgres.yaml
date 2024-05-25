@@ -1,0 +1,85 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: servername
+  labels:
+    team: agnost
+spec:
+  dockerImage: ghcr.io/zalando/spilo-15:3.0-p1
+  teamId: "agnost"
+  numberOfInstances: 1
+  enableMasterLoadBalancer: false
+  enableReplicaLoadBalancer: false
+  enableConnectionPooler: false
+  postgresql:
+    version: "15"
+    parameters:  # Expert section
+      max_connections: "100"
+      archive_timeout: "60" # to have the wal file max every 60 sec.
+# some other examples
+#      shared_buffers: "32MB"
+#      log_statement: "all"
+  patroni:
+    pg_hba:
+      - hostssl all             all         0.0.0.0/0          md5
+      - host    all             all         0.0.0.0/0          md5
+      - local   all             all                            trust
+      - hostssl all             +zalandos   127.0.0.1/32       pam
+      - host    all             all         127.0.0.1/32       md5
+      - hostssl all             +zalandos   ::1/128            pam
+      - host    all             all         ::1/128            md5
+      - local   replication     standby                        trust
+      - hostssl replication     standby     all                md5
+      - hostnossl all           all         all                reject
+      - hostssl all             +zalandos   all                pam
+      - hostssl all             all         all                md5
+  users:
+    app:
+    - superuser
+    app_migration:
+    - superuser
+  databases:
+    # Do not change! This has to be <DB_NAME>_owner
+    auth: app_owner
+  preparedDatabases:
+    app:
+      schemas:
+        app: {}
+  volume:
+    size: "5Gi"
+#  env:
+#    - name: AWS_ACCESS_KEY_ID
+#      valueFrom:
+#        secretKeyRef:
+#          key: AWS_ACCESS_KEY_ID
+#          name: aws-secrets
+#    - name: AWS_SECRET_ACCESS_KEY
+#      valueFrom:
+#        secretKeyRef:
+#          key: AWS_SECRET_ACCESS_KEY
+#          name: aws-secrets
+#    - name: AWS_REGION
+#      value: us-east-1
+#    - name: WAL_S3_BUCKET
+#      value: poc-zalando-postgres
+#    - name: WAL_BUCKET_SCOPE_PREFIX
+#      value: ""
+#    - name: WAL_BUCKET_SCOPE_SUFFIX
+#      value: ""
+#    - name: WALG_DISABLE_S3_SSE
+#      value: "true"
+#    - name: USE_WALG_BACKUP
+#      value: "true"
+#    - name: USE_WALG_RESTORE
+#      value: "true"
+#    - name: BACKUP_SCHEDULE
+#      value: "00 10 * * *"
+#    - name: BACKUP_NUM_TO_RETAIN
+#      value: "10"
+#  resources:
+#    requests:
+#      cpu: 50m
+#      memory: 100Mi
+#    limits:
+#      cpu: 500m
+#      memory: 500Mi

@@ -1,0 +1,26 @@
+.dialog {
+	&-portal {
+		@apply fixed inset-0 z-[999] flex items-start justify-center sm:items-center;
+	}
+	&-overlay {
+		@apply fixed inset-0 z-50 bg-base/80 backdrop-blur-sm transition-all duration-100 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in;
+	}
+	&-content {
+		@apply fixed z-50 grid w-full gap-4 rounded-b-lg bg-subtle p-6 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:slide-in-from-bottom-10 sm:max-w-xl sm:rounded-lg sm:zoom-in-90 data-[state=open]:sm:slide-in-from-bottom-0;
+	}
+	&-close {
+		@apply absolute right-4 top-4 aspect-square w-10 h-10 text-icon-base hover:text-icon-secondary;
+	}
+	&-header {
+		@apply flex flex-col space-y-1.5 text-center sm:text-left;
+	}
+	&-footer {
+		@apply flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2;
+	}
+	&-title {
+		@apply text-xl text-default font-semibold leading-8;
+	}
+	&-description {
+		@apply text-sm text-subtle;
+	}
+}

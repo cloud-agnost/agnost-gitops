@@ -1,0 +1,21 @@
+.avatar {
+	&-actions {
+		@apply inline-flex relative;
+		&-button {
+			@apply absolute bottom-0 left-1/2 bg-base/70 w-full hidden;
+			@apply transform -translate-x-1/2 rounded-none space-x-2;
+		}
+		&:hover {
+			.avatar-actions-button {
+				@apply flex items-center justify-center;
+			}
+		}
+		&-icon {
+			@apply w-5 h-5;
+		}
+		&-loading {
+			@apply text-icon-secondary;
+			@apply absolute top-[20%] left-[20%];
+		}
+	}
+}

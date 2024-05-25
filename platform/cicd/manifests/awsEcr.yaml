@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-ecr-secrets
+stringData:
+  AWS_ACCESS_KEY_ID: aws_access_key
+  AWS_SECRET_ACCESS_KEY: aws_secret_key
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: regcred-rotate-cm
+data:
+  AWS_REGION: eu-west-1
+  AWS_ACCOUNT: "acc_id"
+  DOCKER_SECRET_NAME: regcred
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-regcred-rotate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: role-update-ecr-secret
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "delete"]
+  resourceNames: []
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: regcred-rotate-role-binding
+subjects:
+- kind: ServiceAccount
+  name: sa-regcred-rotate
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: role-update-ecr-secret
+  apiGroup: ""
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: regcred-rotate
+spec:
+  schedule: "0 */10 * * *"
+  successfulJobsHistoryLimit: 3
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sa-regcred-rotate
+          containers:
+          - name: regcred-rotate
+            image: gcr.io/agnost-community/aws-kubectl:2.15.10-1.29.0
+            imagePullPolicy: IfNotPresent
+            envFrom:
+              - secretRef:
+                  name: aws-ecr-secrets
+              - configMapRef:
+                  name: regcred-rotate-cm
+            command:
+              - /bin/sh
+              - -c
+              - |-
+                ECR_TOKEN=$(aws ecr get-login-password --region ${AWS_REGION})
+                kubectl delete secret --ignore-not-found $DOCKER_SECRET_NAME
+                kubectl create secret docker-registry $DOCKER_SECRET_NAME \
+                --docker-server=https://${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+                --docker-username=AWS \
+                --docker-password="${ECR_TOKEN}"
+                echo "Secret was successfully updated at $(date)"
+          restartPolicy: Never

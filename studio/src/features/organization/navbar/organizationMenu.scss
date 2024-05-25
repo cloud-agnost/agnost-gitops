@@ -1,0 +1,28 @@
+.org-menu {
+	@apply flex items-end justify-center h-full mx-auto;
+	&-container {
+		@apply h-[72px] border-b border-border;
+		@apply sticky top-0 z-50 bg-base;
+	}
+	&-item {
+		@apply list-none;
+		&-name {
+			@apply text-default text-xs font-sfCompact;
+		}
+		&.active {
+			.org-menu-link {
+				@apply border-b-brand-primary;
+			}
+			.org-menu-icon {
+				@apply text-brand-primary;
+			}
+		}
+	}
+	&-link {
+		@apply flex items-center justify-center gap-2 pb-4 px-8;
+		@apply border-b-3 border-transparent;
+	}
+	&-icon {
+		@apply text-icon-base;
+	}
+}

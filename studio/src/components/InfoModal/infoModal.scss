@@ -1,0 +1,18 @@
+.info-modal {
+	@apply flex flex-col items-center gap-y-6;
+
+	&-actions {
+		@apply flex justify-center items-center gap-4;
+	}
+	&-text {
+		@apply space-y-1;
+
+		&-title {
+			@apply text-xl text-default leading-8 font-semibold text-center;
+		}
+
+		&-desc {
+			@apply text-sm leading-6 text-subtle text-center font-normal tracking-wide;
+		}
+	}
+}

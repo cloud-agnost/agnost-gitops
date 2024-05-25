@@ -1,0 +1,7 @@
+{
+    "session": {
+        "accessTokenExpiry": 31536000,
+        "refreshTokenExpiry": 31536000,
+        "refreshTokenDelete": 60
+      }
+}

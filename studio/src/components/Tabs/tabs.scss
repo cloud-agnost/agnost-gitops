@@ -1,0 +1,35 @@
+.tab-list-container {
+	@apply flex items-center py-6 gap-6;
+
+	&.center {
+		@apply justify-center;
+	}
+	&.start {
+		@apply justify-start;
+	}
+	&.end {
+		@apply justify-end;
+	}
+
+	&.has-title {
+		@apply justify-between flex-col lg:flex-row;
+	}
+}
+.tab-list-title {
+	@apply text-default font-semibold text-[26px] leading-[36px];
+}
+.tab-list {
+	@apply inline-flex h-9 bg-lighter p-1 text-subtle gap-1 rounded-full max-w-full lg:max-w-none overflow-x-auto no-scrollbar;
+}
+
+.tab-trigger {
+	@apply inline-flex whitespace-nowrap font-sfCompact rounded-full text-[13px] leading-6 items-center justify-center py-1 px-4 lg:px-6 font-normal transition-all disabled:pointer-events-none disabled:opacity-50;
+
+	&[data-state='active'] {
+		@apply bg-button-primary text-default-reverse dark:text-default;
+	}
+}
+
+.tab-content {
+	@apply w-full;
+}

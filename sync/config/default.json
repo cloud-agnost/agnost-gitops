@@ -1,0 +1,23 @@
+{
+    "server": {
+        "host": "localhost",
+        "port": 4000,
+        "timeout": 3600000
+     },
+     "rateLimiters": [{      
+        "rateLimitWindowSec": 30,
+        "rateLimitMaxHits": 300}],
+     "database": {
+        "maxPoolSize": 3
+     },
+     "sync": {
+      "pingTimeout": 30000,
+      "pingInterval": 10000,
+      "upgradeTimeout": 10000,
+      "serveClient": false,
+      "path": "/sync/"
+   },
+   "cache": {
+      "port": 6379
+   }
+}

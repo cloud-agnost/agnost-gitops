@@ -1,0 +1,274 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: github-push-binding
+  namespace: tekton-builds
+spec:
+  params:
+    - name: kind
+      value: willbereplaced
+    - name: resourcename
+      value: willbereplaced
+    - name: resourcenamespace
+      value: willbereplaced
+    - name: containerregistry
+      value: willbereplaced
+    - name: githubpat
+      value: willbereplaced
+    - name: gitbranch
+      value: willbereplaced
+    - name: gitsubpath
+      value: willbereplaced
+    - name: imagename
+      value: willbereplaced
+    - name: dockerfile
+      value: willbereplaced
+    - name: gitrevision
+      value: $(body.head_commit.id)
+    - name: gitrepo
+      value: $(body.repository.git_url)
+    - name: gitcommitter
+      value: $(body.head_commit.committer.username)
+    - name: gitcommiturl
+      value: $(body.head_commit.url)
+    - name: gitrepourl
+      value: $(body.repository.html_url)
+    - name: gitreponame
+      value: $(body.repository.full_name)
+    - name: gitcommitmessage
+      value: $(body.head_commit.message)
+    - name: gitcommittimestamp
+      value: $(body.head_commit.timestamp)
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: github-template
+  namespace: tekton-builds
+spec:
+  params:
+    - name: kind
+    - name: resourcename
+    - name: resourcenamespace
+    - name: containerregistry
+    - name: githubpat
+    - name: gitbranch
+    - name: gitsubpath
+    - name: gitrevision
+    - name: gitrepo
+    - name: imagename
+    - name: dockerfile
+    - name: gitcommitter
+    - name: gitcommiturl
+    - name: gitrepourl
+    - name: gitreponame
+    - name: gitcommitmessage
+    - name: gitcommittimestamp
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: TaskRun
+      metadata:
+        generateName: github-run-
+      spec:
+        serviceAccountName: tekton-triggers-github-sa
+        workspaces:
+        - name: ws
+          emptyDir: {}
+        taskSpec:
+          workspaces:
+          - name: ws
+          volumes:
+          - name: regcred
+            secret:
+              secretName: ghcr-regcred
+              items:
+              - key: .dockerconfigjson
+                path: config.json
+          steps:
+          - name: setup
+            image: alpine
+            env:
+            - name: GIT_REPO
+              value: $(tt.params.gitrepo)
+            - name: GIT_BRANCH
+              value: $(tt.params.gitbranch)
+            - name: GIT_REVISION
+              value: $(tt.params.gitrevision)
+            - name: GIT_COMMITTER_USERNAME
+              value: $(tt.params.gitcommitter)
+            - name: SUB_PATH
+              value: $(tt.params.gitsubpath)
+            - name: GIT_COMMIT_URL
+              value: $(tt.params.gitcommiturl)
+            - name: GIT_REPO_URL
+              value: $(tt.params.gitrepourl)
+            - name: GIT_REPO_NAME
+              value: $(tt.params.gitreponame)
+            - name: GIT_COMMIT_MESSAGE
+              value: $(tt.params.gitcommitmessage)
+            - name: GIT_COMMIT_TIMESTAMP
+              value: $(tt.params.gitcommittimestamp)
+            script: |
+              #!/bin/sh
+              echo "$(tt.params.containerregistry)/$(tt.params.imagename):$(echo $(tt.params.gitrevision) | head -c 7)" > $(workspaces.ws.path)/image
+          - name: build
+            image: gcr.io/kaniko-project/executor:v1.21.1-debug
+            script: |
+              #!/busybox/sh
+              export IMAGE=$(cat $(workspaces.ws.path)/image)
+              export CONTEXT=$(echo $(tt.params.gitrepo) | sed "s|git://|git://$(tt.params.githubpat)@|")
+              if [ "$(tt.params.containerregistry)" == "local-registry.default:5000" ]; then
+                /kaniko/executor \
+                  --destination=${IMAGE} \
+                  --context=${CONTEXT} \
+                  --context-sub-path=$(tt.params.gitsubpath) \
+                  --git branch=$(tt.params.gitbranch) \
+                  --dockerfile=$(tt.params.dockerfile) \
+                  --no-push \
+                  --tar-path=$(workspaces.ws.path)/image.tar
+              else
+                /kaniko/executor \
+                  --destination=${IMAGE} \
+                  --context=${CONTEXT} \
+                  --context-sub-path=$(tt.params.gitsubpath) \
+                  --dockerfile=$(tt.params.dockerfile) \
+                  --git branch=$(tt.params.gitbranch)
+              fi
+            volumeMounts:
+            - name: regcred
+              mountPath: /kaniko/.docker/
+          - image: quay.io/skopeo/stable:latest
+            name: local-push
+            script: |
+              #!/bin/bash
+              if [ "$(tt.params.containerregistry)" == "local-registry.default:5000" ]; then
+                export IMAGE=$(cat $(workspaces.ws.path)/image)
+                skopeo --insecure-policy copy \
+                  --dest-authfile /root/.docker/config.json \
+                  --dest-tls-verify=false --format=oci \
+                  docker-archive:$(workspaces.ws.path)/image.tar docker://${IMAGE}
+              else
+                echo "Not using local registry, skipping ..."
+              fi
+            volumeMounts:
+            - mountPath: /root/.docker/
+              name: regcred
+          - name: deploy
+            image: bitnami/kubectl:1.29.2
+            script: |
+              #!/usr/bin/bash
+              export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/local-registry.default:5000/localhost:30050/')
+              kubectl set image $(tt.params.kind)/$(tt.params.resourcename) $(tt.params.resourcename)=${IMAGE} -n $(tt.params.resourcenamespace)
+              kubectl rollout status $(tt.params.kind)/$(tt.params.resourcename) -n $(tt.params.resourcenamespace) -w
+              kubectl annotate $(tt.params.kind)/$(tt.params.resourcename) kubernetes.io/change-cause="Update image to ${IMAGE}" -n $(tt.params.resourcenamespace)
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-triggers-github-sa
+  namespace: tekton-builds
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-secret
+  namespace: tekton-builds
+type: Opaque
+stringData:
+  secretToken: "1234567"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: triggers-github-eventlistener-binding
+  namespace: tekton-builds
+subjects:
+- kind: ServiceAccount
+  name: tekton-triggers-github-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: triggers-github-eventlistener-clusterbinding
+subjects:
+- kind: ServiceAccount
+  name: tekton-triggers-github-sa
+  namespace: tekton-builds
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-clusterroles
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: github-listener
+  namespace: tekton-builds
+spec:
+  triggers:
+    - name: github-listener
+      interceptors:
+        - ref:
+            name: "github"
+          params:
+            - name: "secretRef"
+              value:
+                secretName: github-secret
+                secretKey: secretToken
+            - name: "eventTypes"
+              value: ["push"]
+        - name: "Only for the specific branch"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: "body.ref == 'refs/heads/master'"
+            - name: "filter"
+              value: "will be replaced or removed"
+      bindings:
+        - ref: github-push-binding
+      template:
+        ref: github-template
+  resources:
+    kubernetesResource:
+      spec:
+        template:
+          spec:
+            serviceAccountName: tekton-triggers-github-sa
+            containers:
+              - resources:
+                  requests:
+                    memory: "64Mi"
+                    cpu: "250m"
+                  limits:
+                    memory: "128Mi"
+                    cpu: "500m"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tekton-ingress
+  namespace: tekton-builds
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 500m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '6000'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '6000'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '6000'
+    nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: '6000'
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /tekton-github/(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: el-github-listener
+            port:
+               number: 8080
