@@ -1,4 +1,3 @@
-import axios from "axios";
 import express from "express";
 import auditCtrl from "../controllers/audit.js";
 import prjEnvCtrl from "../controllers/environment.js";
@@ -11,6 +10,8 @@ import { validateEnvironment } from "../middlewares/validateEnvironment.js";
 import { authorizeProjectAction } from "../middlewares/authorizeProjectAction.js";
 import { applyRules } from "../schemas/environment.js";
 import { validate } from "../middlewares/validate.js";
+import { createNamespace, deleteNamespaces } from "../handlers/ns.js";
+import { deleteTCPProxyPorts } from "../handlers/tcpproxy.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -134,12 +135,7 @@ router.post(
 			);
 
 			// Create the Kubernetes namespace of the environment
-			await axios.post(helper.getWorkerUrl() + "/v1/cicd/env", environment, {
-				headers: {
-					Authorization: process.env.ACCESS_TOKEN,
-					"Content-Type": "application/json",
-				},
-			});
+			await createNamespace(environment);
 
 			// Commit transaction
 			await prjEnvCtrl.commit(session);
@@ -194,7 +190,7 @@ router.get(
 /*
 @route      /v1/org/:orgId/project/:projectId/env/:envId
 @method     PUT
-@desc       Updates the environment name, private flat and readOnly flag
+@desc       Updates the environment name, private and readOnly flags
 @access     private
 */
 router.put(
@@ -319,17 +315,10 @@ router.delete(
 			// Delete all environment related data
 			await prjEnvCtrl.deleteEnvironment(session, org, project, environment);
 
-			// Deletes the Kubernetes namespace of the environment
-			await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/env/delete",
-				{ environmentiids: [environment.iid], tcpProxyPorts },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
+			// Delete namespaces
+			await deleteNamespaces([environment.iid]);
+			// Remove exposed TCP proxy ports
+			await deleteTCPProxyPorts(tcpProxyPorts);
 
 			// Commit the database transaction
 			await prjEnvCtrl.commit(session);

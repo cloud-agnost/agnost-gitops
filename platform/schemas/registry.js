@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { registryTypes } from "../config/constants.js";
 
 /**
- * The definition for a Docker image registry where Docker images are stored and retrieved from.
+ * The definition for a private image registries where Docker images are stored and retrieved from.
  */
 export const RegistryModel = mongoose.model(
 	"registry",

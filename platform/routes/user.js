@@ -8,6 +8,7 @@ import orgMemberCtrl from "../controllers/organizationMember.js";
 import prjCtrl from "../controllers/project.js";
 import authCtrl from "../controllers/auth.js";
 import orgCtrl from "../controllers/organization.js";
+import gitCtrl from "../controllers/gitProvider.js";
 import { applyRules } from "../schemas/user.js";
 import { authSession } from "../middlewares/authSession.js";
 import { checkContentType } from "../middlewares/contentType.js";
@@ -176,7 +177,7 @@ router.delete("/", authSession, async (req, res) => {
 				},
 			});
 
-			sendNotification(project.orgId, {
+			sendNotification(project._id, {
 				actor: {
 					userId: user._id,
 					name: user.name,
@@ -512,7 +513,7 @@ router.post(
 		// Start new database transaction session
 		const session = await userCtrl.startSession();
 		try {
-			const { token } = req.query;
+			const { token, accessToken, refreshToken } = req.query;
 			const { gitUser } = req.body;
 
 			let invite = await orgInvitationCtrl.getOneByQuery(
@@ -588,6 +589,24 @@ router.post(
 					},
 					{ session }
 				);
+
+				// Create a new git provider entry for the user
+				await gitCtrl.create(
+					{
+						iid: helper.generateSlug("git"),
+						userId: userId,
+						providerUserId: gitUser.providerUserId,
+						provider: gitUser.provider,
+						accessToken: helper.encryptText(accessToken),
+						refreshToken: refreshToken
+							? helper.encryptText(refreshToken)
+							: null,
+						username: gitUser.username,
+						email: gitUser.email,
+						avatar: gitUser.avatar,
+					},
+					{ session }
+				);
 			}
 
 			// Accept invitation
@@ -646,7 +665,7 @@ router.post(
 		// Start new database transaction session
 		const session = await userCtrl.startSession();
 		try {
-			const { token } = req.query;
+			const { token, accessToken, refreshToken } = req.query;
 			const { gitUser } = req.body;
 
 			let invite = await prjInvitationCtrl.getOneByQuery(
@@ -681,7 +700,7 @@ router.post(
 			});
 
 			if (user) {
-				// Check whether the user is already a member of the app team or not
+				// Check whether the user is already a member of the project team or not
 				let projectMember = invite.projectId.team.find(
 					(entry) => entry.userId.toString() === user._id.toString()
 				);
@@ -736,6 +755,24 @@ router.post(
 						providerUserId: gitUser.providerUserId,
 						notifications: notificationTypes,
 						status: "Active",
+					},
+					{ session }
+				);
+
+				// Create a new git provider entry for the user
+				await gitCtrl.create(
+					{
+						iid: helper.generateSlug("git"),
+						userId: userId,
+						providerUserId: gitUser.providerUserId,
+						provider: gitUser.provider,
+						accessToken: helper.encryptText(accessToken),
+						refreshToken: refreshToken
+							? helper.encryptText(refreshToken)
+							: null,
+						username: gitUser.username,
+						email: gitUser.email,
+						avatar: gitUser.avatar,
 					},
 					{ session }
 				);
@@ -938,7 +975,7 @@ router.post(
 			// Transfer cluster ownership to the new user
 			transferredUser = await userCtrl.updateOneById(
 				transferredUser._id,
-				{ isClusterOwner: true },
+				{ isClusterOwner: true, canCreateOrg: true },
 				{},
 				{ session, cacheKey: transferredUser._id }
 			);

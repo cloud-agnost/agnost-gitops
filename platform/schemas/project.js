@@ -170,7 +170,7 @@ export const applyRules = (type) => {
 					.notEmpty()
 					.withMessage(t("Required field, cannot be left empty"))
 					.bail()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
 							throw new AgnostError(t("Not a valid user identifier"));
 
@@ -210,7 +210,7 @@ export const applyRules = (type) => {
 					.notEmpty()
 					.withMessage(t("Required field, cannot be left empty"))
 					.bail()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
 							throw new AgnostError(t("Not a valid user identifier"));
 
@@ -224,7 +224,7 @@ export const applyRules = (type) => {
 					.notEmpty()
 					.withMessage(t("Required field, cannot be left empty"))
 					.bail()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
 							throw new AgnostError(t("Not a valid user identifier"));
 

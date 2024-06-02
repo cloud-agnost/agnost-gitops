@@ -690,7 +690,7 @@ export const checkStorageConfig = (containerType, actionType) => {
 			)
 			.isArray()
 			.withMessage(t("Access modes need to be an array of strings"))
-			.custom((value, { req }) => {
+			.custom((value) => {
 				if (value.length === 0) {
 					throw new AgnostError(
 						t("At least one access mode needs to be specified.")
@@ -1359,130 +1359,5 @@ export const checkCronJobConfig = (containerType, actionType) => {
 			.isBoolean()
 			.withMessage(t("Not a valid boolean value"))
 			.toBoolean(),
-	];
-};
-
-export const checkKnativeServiceConfig = (containerType, actionType) => {
-	return [
-		body("knativeConfig.concurrency")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.bail()
-			.isInt({ min: 1, max: 1000 })
-			.withMessage("Concurrency must be an integer between 1 and 1000")
-			.toInt(),
-		body("knativeConfig.scalingMetric")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.isIn(["concurrency", "rps", "cpu", "memory"])
-			.withMessage(t("Unsupported scaling metric")),
-		body("knativeConfig.scalingMetricTarget")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.custom((value, { req }) => {
-				if (req.body.knativeConfig.scalingMetric === "concurrency") {
-					// First check if the value is a number
-					if (isNaN(value)) {
-						throw new AgnostError(t("Concurrency target must be a number"));
-					}
-
-					const intVal = parseInt(value);
-					if (intVal.toString() !== value.toString()) {
-						throw new AgnostError("Concurrency target must be a valid integer");
-					}
-
-					if (intVal < 0 || intVal > 100) {
-						throw new AgnostError(
-							"Concurrency target must be between 0 and 100"
-						);
-					}
-				} else if (req.body.knativeConfig.scalingMetric === "rps") {
-					// First check if the value is a number
-					if (isNaN(value)) {
-						throw new AgnostError(t("RPS target must be a number"));
-					}
-
-					const intVal = parseInt(value);
-					if (intVal.toString() !== value.toString()) {
-						throw new AgnostError("RPS target must be a valid integer");
-					}
-				} else if (req.body.knativeConfig.scalingMetric === "cpu") {
-					checkCPU(value, "millicores");
-				} else if (req.body.knativeConfig.scalingMetric === "memory") {
-					checkMemory(value, "mebibyte");
-				}
-
-				return true;
-			}),
-		body("knativeConfig.initialScale")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.isInt({ min: 1, max: 100 })
-			.withMessage("Initial scale must be an integer between 1 and 100")
-			.toInt(),
-		body("knativeConfig.minScale")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.isInt({ min: 0, max: 100 })
-			.withMessage("Min scale must be a number between 0 and 100")
-			.toInt()
-			.custom((value, { req }) => {
-				const minReplicas = parseInt(value, 10);
-				const maxReplicas = parseInt(req.body.knativeConfig.maxScale, 10);
-
-				if (maxReplicas < minReplicas) {
-					throw new AgnostError("Min scale cannot be larger than max scale");
-				}
-
-				return true;
-			}),
-		body("knativeConfig.maxScale")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.isInt({ min: 1, max: 100 })
-			.withMessage("Max scale must be an integer between 1 and 100")
-			.toInt()
-			.custom((value, { req }) => {
-				const minReplicas = parseInt(req.body.knativeConfig.minScale, 10);
-				const maxReplicas = parseInt(value, 10);
-
-				if (maxReplicas < minReplicas) {
-					throw new AgnostError("Max scale cannot be smaller than min scale");
-				}
-
-				return true;
-			}),
-		body("knativeConfig.scaleDownDelay")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.isInt({ min: 0, max: 3600 })
-			.withMessage(
-				"Scale down delay period must be a number between 0 and 3600"
-			)
-			.toInt(),
-		body("knativeConfig.scaleToZeroPodRetentionPeriod")
-			.trim()
-			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
-			.bail()
-			.isInt({ min: 0, max: 3600 })
-			.withMessage(
-				"Scale to zero last pod retention period must be a number between 0 and 3600"
-			)
-			.toInt(),
 	];
 };

@@ -45,7 +45,6 @@ export const ProjectInvitationModel = mongoose.model(
 			required: true,
 			index: true,
 			enum: projectRoles,
-			required: true,
 		},
 		orgRole: {
 			type: String,
@@ -53,7 +52,6 @@ export const ProjectInvitationModel = mongoose.model(
 			index: true,
 			enum: orgRoles,
 			default: "Developer",
-			required: true,
 		},
 		status: {
 			type: String,
@@ -172,15 +170,18 @@ export const applyRules = (type) => {
 					.notEmpty()
 					.withMessage(t("Required parameter, cannot be left empty")),
 			];
-		case "resend-invite":
+		case "delete-invite-multi":
 			return [
-				query("token")
+				body("tokens")
+					.notEmpty()
+					.withMessage(t("Required parameter, cannot be left empty"))
+					.bail()
+					.isArray()
+					.withMessage(t("Invitation tokens needs to be an array of strings")),
+				body("tokens.*")
 					.trim()
 					.notEmpty()
 					.withMessage(t("Required parameter, cannot be left empty")),
-				query("uiBaseURL")
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty")),
 			];
 		case "get-invites":
 			return [
@@ -257,19 +258,6 @@ export const applyRules = (type) => {
 						)
 					)
 					.toInt(),
-			];
-		case "delete-invite-multi":
-			return [
-				body("tokens")
-					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty"))
-					.bail()
-					.isArray()
-					.withMessage(t("Invitation tokens needs to be an array of strings")),
-				body("tokens.*")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty")),
 			];
 		default:
 			return [];

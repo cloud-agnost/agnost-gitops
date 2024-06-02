@@ -1,5 +1,4 @@
 import express from "express";
-import axios from "axios";
 import sharp from "sharp";
 import prjCtrl from "../controllers/project.js";
 import auditCtrl from "../controllers/audit.js";
@@ -17,10 +16,10 @@ import {
 } from "../middlewares/authorizeProjectAction.js";
 import { applyRules } from "../schemas/project.js";
 import { validate } from "../middlewares/validate.js";
-
 import { fileUploadMiddleware } from "../middlewares/handleFile.js";
 import { storage } from "../init/storage.js";
-import { CICDManager } from "../cicd/CICDManager.js";
+import { createNamespace, deleteNamespaces } from "../handlers/ns.js";
+import { deleteTCPProxyPorts } from "../handlers/tcpproxy.js";
 import ERROR_CODES from "../config/errorCodes.js";
 
 const router = express.Router({ mergeParams: true });
@@ -81,18 +80,12 @@ router.post(
 			);
 
 			// Create the namespace in the Kubernetes cluster for the environment
-			const cicdManager = new CICDManager();
-			await cicdManager.createNamespace(environment);
+			await createNamespace(environment);
 
 			await prjCtrl.commit(session);
 
 			// Set project team member information
-			project.team[0].userId = {
-				...user,
-				loginProfiles: undefined,
-				notifications: undefined,
-				editorSettings: undefined,
-			};
+			project.team[0].userId = user;
 
 			res.json({
 				project,
@@ -139,7 +132,6 @@ router.get(
 					{
 						lookup: {
 							path: "team.userId",
-							select: "-loginProfiles -notifications -editorSettings",
 						},
 					}
 				);
@@ -153,7 +145,6 @@ router.get(
 					{
 						lookup: {
 							path: "team.userId",
-							select: "-loginProfiles -notifications -editorSettings",
 						},
 					}
 				);
@@ -168,7 +159,7 @@ router.get(
 /*
 @route      /v1/org/:orgId/project/all
 @method     GET
-@desc       Get all organization projects
+@desc       Get all projets of the organization 
 @access     private
 */
 router.get(
@@ -187,7 +178,6 @@ router.get(
 				{
 					lookup: {
 						path: "team.userId",
-						select: "-loginProfiles -notifications -editorSettings",
 					},
 				}
 			);
@@ -230,7 +220,6 @@ router.put(
 			let projectWithTeam = await prjCtrl.getOneById(project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 
@@ -316,7 +305,6 @@ router.put(
 			let projectWithTeam = await prjCtrl.getOneById(req.project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 
@@ -367,7 +355,6 @@ router.delete(
 			let projectWithTeam = await prjCtrl.getOneById(req.project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 
@@ -408,7 +395,6 @@ router.get(
 			let projectWithTeam = await prjCtrl.getOneById(project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 
@@ -480,17 +466,10 @@ router.delete(
 			// Delete all project related data, associted environments and containers
 			await prjCtrl.deleteProject(session, org, project);
 
-			// Deletes the Kubernetes namespaces of the environments
-			await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/env/delete",
-				{ environmentiids, tcpProxyPorts },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
+			// Delete namespaces
+			await deleteNamespaces(environmentiids);
+			// Remove exposed TCP proxy ports
+			await deleteTCPProxyPorts(tcpProxyPorts);
 
 			// Commit transaction
 			await prjCtrl.commit(session);

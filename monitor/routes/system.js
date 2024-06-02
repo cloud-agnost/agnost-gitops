@@ -1,12 +1,11 @@
 import express from "express";
-import { authAccessToken } from "../middlewares/authAccessToken.js";
 
 const router = express.Router({ mergeParams: true });
 
 /*
 @route      /health
 @method     GET
-@desc       Checks liveliness of engine worker
+@desc       Checks liveliness of monitoring server
 @access     public
 */
 router.get("/health", (req, res) => {
@@ -14,7 +13,7 @@ router.get("/health", (req, res) => {
 		.status(200)
 		.send(
 			new Date().toISOString() +
-				" - Healthy engine worker server" +
+				" - Healthy monitoring server" +
 				" - " +
 				process.env.RELEASE_NUMBER
 		);
@@ -23,21 +22,11 @@ router.get("/health", (req, res) => {
 /*
 @route      /ping
 @method     GET
-@desc       Checks liveliness of engine worker
+@desc       Checks liveliness of monitoring server
 @access     public
 */
 router.get("/ping", (req, res) => {
 	res.status(200).send(new Date().toISOString() + " - Pong!");
-});
-
-/*
-@route      /validate
-@method     GET
-@desc       Checks access token
-@access     public
-*/
-router.get("/validate", authAccessToken, (req, res) => {
-	res.status(200).send(new Date().toISOString() + " - Access token validated");
 });
 
 export default router;

@@ -108,14 +108,13 @@ export const applyRules = (type) => {
 					.custom(async (value, { req }) => {
 						// Check whether a user with the provided email is already a member of the organization
 						let user = await userCtrl.getOneByQuery({
-							"loginProfiles.provider": "agnost",
-							"loginProfiles.email": value,
+							email: value,
 						});
 
 						if (user) {
 							let member = await orgMemberCtrl.getOneByQuery(
-								{ orgId: req.org._id, userId: user._id }
-								//{ cacheKey: `${req.org._id}.${user._id}` }
+								{ orgId: req.org._id, userId: user._id },
+								{ cacheKey: `${req.org._id}.${user._id}` }
 							);
 							if (member)
 								throw new AgnostError(

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
    name: monitor
+   namespace: agnost
    labels:
       app: monitor
 spec:
@@ -25,34 +26,30 @@ spec:
               ports:
                  - containerPort: 4000
               env:
-                 - name: CACHE_HOSTNAME
-                   value: redis-master       
-                 - name: CACHE_PWD
-                   valueFrom:
-                      secretKeyRef:
-                         name: redis-password
-                         key: password
                  - name: CLUSTER_DB_URI
                    valueFrom:
                       secretKeyRef:
-                         name: cluster-secrets
-                         key: clusterDBURI
+                         name: mongodb
+                         key: databaseURI
                  - name: CLUSTER_DB_USER
-                   value: "mongo-user"
+                   valueFrom:
+                      secretKeyRef:
+                         name: mongodb
+                         key: username
                  - name: CLUSTER_DB_PWD
                    valueFrom:
                       secretKeyRef:
-                         name: mongodb-admin-password
+                         name: mongodb
                          key: password
                  - name: PASSPHRASE
                    valueFrom:
                       secretKeyRef:
-                         name: cluster-secrets
+                         name: agnost
                          key: passPhrase
                  - name: MASTER_TOKEN
                    valueFrom:
                       secretKeyRef:
-                         name: cluster-secrets
+                         name: agnost
                          key: masterToken
                  - name: NAMESPACE
-                   value: default
+                   value: agnost

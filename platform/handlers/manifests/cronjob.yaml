@@ -14,6 +14,7 @@ spec:
     spec:
       template:
         spec:
+          restartPolicy: OnFailure
           containers:
           - name: dummy
             image: alpine
@@ -34,7 +35,6 @@ spec:
             volumeMounts:
             - name: dummy-volume
               mountPath: /dummy
-          restartPolicy: OnFailure
           volumes:
           - name: data-volume
             persistentVolumeClaim:

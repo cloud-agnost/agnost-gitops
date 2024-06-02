@@ -3,7 +3,6 @@ import ERROR_CODES from "../config/errorCodes.js";
 
 // Middleware to handle undefined paths or posts
 export const checkContentType = (req, res, next) => {
-	console.log("**here Content-Type", req.get("Content-Type"));
 	// Check content type
 	if (req.get("Content-Type") !== "application/json") {
 		return res.status(415).json({

@@ -5,10 +5,7 @@ import {
 	orgRoleDesc,
 	projectRoles,
 	projectRoleDesc,
-	phoneAuthSMSProviders,
-	resourceVersions,
 } from "../config/constants.js";
-
 import { timezones } from "../config/timezones.js";
 
 const router = express.Router({ mergeParams: true });
@@ -25,8 +22,6 @@ router.get("/all", authSession, (req, res) => {
 		orgRoleDesc,
 		projectRoles,
 		projectRoleDesc,
-		phoneAuthSMSProviders,
-		resourceVersions,
 		timezones,
 	});
 });

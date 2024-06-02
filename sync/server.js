@@ -107,7 +107,19 @@ async function initExpress(i18n) {
 	// Spin up sync server. We need to make sure that sync server is spin up after the express server starts
 	const syncServer = setUpSyncServer(server);
 
+	// Set up garbage collector to manage memory consumption of the websotket server
+	setUpGC();
+
 	return { expressServer: server, syncServer };
+}
+
+function setUpGC() {
+	setInterval(() => {
+		if (global.gc) {
+			// Manually hangle gc to boost performance of our websotket server, gc is an expensive operation
+			global.gc();
+		}
+	}, config.get("general.gcSeconds") * 1000);
 }
 
 function handleProcessExit(expressServer, syncServer) {

@@ -41,68 +41,12 @@ export const registryTypes = [
 	"GAR", // Google Artifact Registry
 	"Quay", // Quay.io
 	"GHCR", // GitHub Container Registry
-	"Docker Public", // Docker Hub Public
-	"Docker Private", // Docker Hub Private
+	"Docker", // Docker Hub Private
 	"Custom", // Generic registry
 ];
 
 // Types of containers that can be created in an environment
-export const containerTypes = [
-	"deployment",
-	"stateful set",
-	"cron job",
-	"knative service",
-];
+export const containerTypes = ["deployment", "statefulset", "cronjob"];
 
 // Invitation statuses
 export const invitationStatus = ["Pending", "Accepted", "Rejected"];
-
-export const cacheTypes = ["Redis"];
-
-// List of components that can be customized in terms of min and max replicas
-export const clusterComponents = [
-	{
-		deploymentName: "platform",
-		hpaName: "platform-hpa",
-	},
-	{
-		deploymentName: "sync",
-		hpaName: "sync-hpa",
-	},
-	{
-		deploymentName: "studio",
-		hpaName: "studio-hpa",
-	},
-];
-
-// List of resources that can be customized in terms of storage size
-export const clusterResources = [
-	{
-		name: "mongodb",
-		type: "database",
-		instance: "MongoDB",
-		k8sName: "mongodb",
-	},
-	{
-		name: "redis-master",
-		type: "cache",
-		instance: "Redis",
-		k8sName: "redis",
-	},
-	{
-		name: "minio-storage",
-		type: "storage",
-		instance: "Minio",
-		k8sName: "minio-storage",
-	},
-];
-
-export const clusterComponentStatus = ["OK", "Error", "Updating"];
-
-export const resourceVersions = {
-	MongoDB: ["7.0.1", "6.0.11", "5.0.21", "4.4.25"],
-	PostgreSQL: ["15", "14", "13", "12"],
-	MySQL: ["8.1.0", "8.0.34"],
-	RabbitMQ: ["3.12.6", "3.11.23"],
-	Redis: ["7.2.1", "7.0.13", "6.2.13"],
-};

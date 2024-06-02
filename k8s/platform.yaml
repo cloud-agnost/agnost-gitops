@@ -1,87 +1,93 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-   name: platform
-   labels:
-      app: platform
+  name: platform
+  namespace: agnost
+  labels:
+    app: platform
 spec:
-   replicas: 1
-   selector:
-      matchLabels:
-         app: platform
-   template:
-      metadata:
-         labels:
-            app: platform
-      spec:
-         serviceAccountName: provisioner-sa
-         containers:
-            - name: platform
-              image: agnost-gitops/platform
-              # We will be using the minikube docker daemon, since the actual docker daemon on local machine are different
-              # Prevent minikube docker daemon to pull images from central docker hub set imagePullPolicy to Never, so that
-              # it uses the image put in minikube's docker environment, see dev.sh script how we change the docker context to minikube
-              imagePullPolicy: Never
-              ports:
-                 - containerPort: 4000
-              env:
-                 - name: CACHE_HOSTNAME
-                   value: redis-master        
-                 - name: CACHE_PWD
-                   valueFrom:
-                      secretKeyRef:
-                         name: redis-password
-                         key: password
-                 - name: CLUSTER_DB_URI
-                   valueFrom:
-                      secretKeyRef:
-                         name: cluster-secrets
-                         key: clusterDBURI
-                 - name: CLUSTER_DB_USER
-                   value: "mongo-user"
-                 - name: CLUSTER_DB_PWD
-                   valueFrom:
-                      secretKeyRef:
-                         name: mongodb-admin-password
-                         key: password
-                 - name: PASSPHRASE
-                   valueFrom:
-                      secretKeyRef:
-                         name: cluster-secrets
-                         key: passPhrase
-                 - name: CLUSTER_ACCESS_TOKEN
-                   valueFrom:
-                      secretKeyRef:
-                         name: cluster-secrets
-                         key: clusterAccessToken
-                 - name: MASTER_TOKEN
-                   valueFrom:
-                      secretKeyRef:
-                         name: cluster-secrets
-                         key: masterToken
-                 - name: MINIO_ENDPOINT
-                   valueFrom:
-                      secretKeyRef:
-                         name: minio-credentials
-                         key: endpoint
-                 - name: MINIO_PORT
-                   valueFrom:
-                      secretKeyRef:
-                         name: minio-credentials
-                         key: port
-                 - name: MINIO_ACCESS_KEY
-                   valueFrom:
-                      secretKeyRef:
-                         name: minio-credentials
-                         key: rootUser
-                 - name: MINIO_SECRET_KEY
-                   valueFrom:
-                      secretKeyRef:
-                         name: minio-credentials
-                         key: rootPassword
-                 - name: NAMESPACE
-                   value: default
-                 - name: RELEASE_NUMBER
-                   value: "v1.0.0"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform
+  template:
+    metadata:
+      labels:
+        app: platform
+    spec:
+      serviceAccountName: provisioner-sa
+      containers:
+        - name: platform
+          image: agnost-gitops/platform
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 4000
+          env:
+            - name: CACHE_HOSTNAME
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: hostname
+            - name: CACHE_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: password
+            - name: CLUSTER_DB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: databaseURI
+            - name: CLUSTER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: username
+            - name: CLUSTER_DB_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: password
+            - name: PASSPHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: agnost
+                  key: passPhrase
+            - name: CLUSTER_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: agnost
+                  key: clusterAccessToken
+            - name: MASTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: agnost
+                  key: masterToken
+            - name: MINIO_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: endpoint
+            - name: MINIO_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: port
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: accessKey
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: secretKey
+            - name: NGINX_NAMESPACE
+              value: "ingress-nginx"
+            - name: NAMESPACE
+              value: agnost
+            - name: RELEASE_NUMBER
+              value: "v1.0.0"
 
 

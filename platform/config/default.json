@@ -1,56 +1,59 @@
 {
-  "server": {
-    "host": "localhost",
-    "port": 4000,
-    "timeout": 3600000,
-    "maxBodySize": "50mb"
-  },
-  "rateLimiters": [
-    {
-      "rateLimitWindowSec": 10,
-      "rateLimitMaxHits": 500
-    }
-  ],
-  "session": {
-    "accessTokenExpiry": 300,
-    "refreshTokenExpiry": 31536000,
-    "refreshTokenDelete": 60
-  },
-  "database": {
-    "maxPoolSize": 3
-  },
-  "sync": {
-    "namespace": "",
-    "reconnection": true,
-    "reconnectionDelay": 500,
-    "path": "/sync/"
-  },
-  "general": {
-    "storageBucket": "cluster-storage",
-    "minNameLength": 2,
-    "maxTextLength": 64,
-    "maxImageSizeMB": 3,
-    "profileImgSizePx": 512,
-    "minPageSize": 1,
-    "maxPageSize": 500,
-    "minCacheSizeMi": 256,
-    "minQueueSizeMi": 256,
-    "minDatabaseSizeMi": 512,
-    "maxClusterCustomDomains": 3,
-    "tcpProxyPortStart": 35000,
-    "containers": {
-      "minMillicores": 10,
-      "maxMillicores": 1000,
-      "minCPU": 0.1,
-      "maxCPU": 4,
-      "minMiB": 10,
-      "maxMiB": 1024,
-      "minGiB": 0.1,
-      "maxGiB": 16,
-      "minStorageMiB": 10,
-      "maxStorageMiB": 1024,
-      "minStorageGiB": 0.1,
-      "maxStorageGiB": 5000
-    }
-  }
+	"server": {
+		"host": "localhost",
+		"port": 4000,
+		"timeout": 3600000,
+		"maxBodySize": "50mb"
+	},
+	"rateLimiters": [
+		{
+			"rateLimitWindowSec": 10,
+			"rateLimitMaxHits": 500
+		}
+	],
+	"session": {
+		"accessTokenExpiry": 300,
+		"refreshTokenExpiry": 31536000,
+		"refreshTokenDelete": 60
+	},
+	"database": {
+		"maxPoolSize": 3
+	},
+	"sync": {
+		"namespace": "",
+		"reconnection": true,
+		"reconnectionDelay": 500,
+		"path": "/sync/"
+	},
+	"cache": {
+		"port": 6379
+	},
+	"general": {
+		"storageBucket": "cluster-storage",
+		"minNameLength": 2,
+		"maxTextLength": 64,
+		"maxImageSizeMB": 3,
+		"profileImgSizePx": 512,
+		"minPageSize": 1,
+		"maxPageSize": 500,
+		"minCacheSizeMi": 256,
+		"minQueueSizeMi": 256,
+		"minDatabaseSizeMi": 512,
+		"maxClusterCustomDomains": 3,
+		"tcpProxyPortStart": 35000,
+		"containers": {
+			"minMillicores": 10,
+			"maxMillicores": 1000,
+			"minCPU": 0.1,
+			"maxCPU": 4,
+			"minMiB": 10,
+			"maxMiB": 1024,
+			"minGiB": 0.1,
+			"maxGiB": 16,
+			"minStorageMiB": 10,
+			"maxStorageMiB": 1024,
+			"minStorageGiB": 0.1,
+			"maxStorageGiB": 5000
+		}
+	}
 }

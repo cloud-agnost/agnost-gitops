@@ -3,7 +3,6 @@ import { body } from "express-validator";
 import deploymentRules from "./rules/deployment.js";
 import statefulSetRules from "./rules/statefulSet.js";
 import cronJobRules from "./rules/cronJob.js";
-import knativeServiceRules from "./rules/knativeService.js";
 import { containerTypes } from "../config/constants.js";
 
 /**
@@ -52,7 +51,6 @@ export const ContainerModel = mongoose.model(
 			},
 			pipelineStatus: {
 				type: String,
-				default: "Connected",
 			},
 			variables: [
 				{
@@ -182,7 +180,6 @@ export const ContainerModel = mongoose.model(
 				cpuLimit: {
 					type: Number,
 					default: 1,
-					default: "cores",
 				},
 				cpuLimitType: {
 					type: String,
@@ -568,8 +565,6 @@ export const applyRules = (actionType) => {
 			executeMiddlewareArray(statefulSetRules(actionType), req, res, next);
 		else if (req.body.type === "cron job")
 			executeMiddlewareArray(cronJobRules(actionType), req, res, next);
-		else if (req.body.type === "knative service")
-			executeMiddlewareArray(knativeServiceRules(actionType), req, res, next);
 		else
 			executeMiddlewareArray(
 				[

@@ -5,6 +5,11 @@ import { authSession } from "../middlewares/authSession.js";
 import { checkContentType } from "../middlewares/contentType.js";
 import { validate } from "../middlewares/validate.js";
 import { validateGitProvider } from "../middlewares/validateGitProvider.js";
+import {
+	revokeGitProviderAccessToken,
+	getGitProviderRepos,
+	getGitProviderRepoBranches,
+} from "../handlers/git.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -105,7 +110,7 @@ router.delete(
 			const { gitProvider } = req;
 
 			// First revoke the access token
-			await helper.revokeGitProviderAccessToken(
+			await revokeGitProviderAccessToken(
 				gitProvider.provider,
 				gitProvider.accessToken,
 				gitProvider.refreshToken
@@ -135,7 +140,7 @@ router.get(
 		try {
 			const { gitProvider } = req;
 
-			const repos = await helper.getGitProviderRepos(gitProvider);
+			const repos = await getGitProviderRepos(gitProvider);
 
 			res.json(repos);
 		} catch (error) {
@@ -161,7 +166,7 @@ router.get(
 			const { gitProvider } = req;
 			const { owner, repo } = req.query;
 
-			const branches = await helper.getGitProviderRepoBranches(
+			const branches = await getGitProviderRepoBranches(
 				gitProvider,
 				owner,
 				repo

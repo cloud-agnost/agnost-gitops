@@ -8,12 +8,18 @@ const k8sCustomApi = kubeconfig.makeApiClient(k8s.CustomObjectsApi);
 
 var watchRequest = null; // To store the watch request
 
+/**
+ * Watches build events and updates the build status of containers.
+ */
 export async function watchBuildEvents() {
 	if (watchRequest) return;
 
 	const watch = new k8s.Watch(kubeconfig);
 	const namespace = "tekton-builds";
 
+	/**
+	 * Starts watching build events.
+	 */
 	async function startWatching() {
 		try {
 			logger.info("Started watching build events...");
@@ -45,48 +51,64 @@ export async function watchBuildEvents() {
 						// Get task run name from the involved object
 						let taskRunName = event.involvedObject.name;
 						// Get the taskrun object
-						getTaskRun(taskRunName)
-							.then((taskRunObj) => {
-								const eventListenerName =
-									taskRunObj.metadata.labels[
-										"triggers.tekton.dev/eventlistener"
-									];
-								if (!eventListenerName) return;
+						getTaskRun(taskRunName).then((taskRunObj) => {
+							const eventListenerName =
+								taskRunObj.metadata.labels["triggers.tekton.dev/eventlistener"];
+							if (!eventListenerName) return;
 
-								const regex = /[a-zA-Z]+-[a-zA-Z0-9]+$/;
-								const match = eventListenerName.match(regex);
-								let containeriid = match ? match[0] : null;
+							// Extract containeriid from the event listener name
+							const regex = /[a-zA-Z]+-[a-zA-Z0-9]+$/;
+							const match = eventListenerName.match(regex);
+							let containeriid = match ? match[0] : null;
 
-								if (containeriid) {
-									//Make api call to the platform to update the build status of the container
-									axios
-										.post(
-											helper.getPlatformUrl() + "/v1/telemetry/pipeline-status",
-											{
-												containeriid,
-												status: event.reason?.replace("TaskRun", ""),
+							if (containeriid) {
+								logger.info(
+									`Updating the build status of container ${containeriid}. ${JSON.stringify(
+										result
+									)}`
+								);
+								//Make api call to the platform to update the build status of the container
+								axios
+									.post(
+										helper.getPlatformUrl() + "/v1/telemetry/pipeline/status",
+										{
+											containeriid,
+											status: event.reason?.replace("TaskRun", ""),
+										},
+										{
+											headers: {
+												Authorization: process.env.MASTER_TOKEN,
+												"Content-Type": "application/json",
 											},
-											{
-												headers: {
-													Authorization: process.env.MASTER_TOKEN,
-													"Content-Type": "application/json",
-												},
-											}
-										)
-										.catch((error) => {});
-								}
-							})
-							.catch((error) => {});
+										}
+									)
+									.catch((err) => {
+										logger.error(
+											`Cannot send build pipeline run status data of container ${containeriid} to platform. ${
+												err.response?.body?.message ?? err.message
+											}`
+										);
+									});
+							}
+						});
 					}
 				},
 				(err) => {
-					console.error("Watch error:", err);
+					console.error(
+						`Error while watching for build events. ${
+							err.response?.body?.message ?? err.message
+						}`
+					);
 					// Retry the watch after a delay
-					setTimeout(startWatching, 1000);
+					setTimeout(startWatching, 2000);
 				}
 			);
 		} catch (err) {
-			console.error("Exception caught:", err);
+			console.error(
+				`Error while watching for build events. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
 			// Retry the watch after a delay if still watching
 			setTimeout(startWatching, 1000);
 		}
@@ -95,18 +117,26 @@ export async function watchBuildEvents() {
 	startWatching();
 }
 
+/**
+ * Stops watching build events.
+ */
 export function stopWatchingBuildEvents() {
 	try {
 		if (watchRequest) {
 			watchRequest.abort();
 			watchRequest = null;
-			console.log("Stopped watching build events stopped.");
+			console.log("Stopped watching build events.");
 		}
 	} catch (err) {
 		watchRequest = null;
 	}
 }
 
+/**
+ * Retrieves information about a TaskRun
+ * @param {string} taskRunName - The name of the TaskRun.
+ * @returns {Promise<Object|null>} - A Promise that resolves to the TaskRun object if found, or null if not found.
+ */
 async function getTaskRun(taskRunName) {
 	try {
 		const response = await k8sCustomApi.getNamespacedCustomObject(
@@ -119,6 +149,11 @@ async function getTaskRun(taskRunName) {
 
 		return response.body;
 	} catch (err) {
+		logger.error(
+			`Cannot get TaskRun ${taskRunName} in namespace tekton-builds. ${
+				err.response?.body?.message ?? err.message
+			}`
+		);
 		return null;
 	}
 }

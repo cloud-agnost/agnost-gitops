@@ -1,18 +1,16 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: dummy-deployment
   namespace: dummy-namespace
 spec:
-  serviceName: dummy-service
   replicas: 1
-  updateStrategy:
+  strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1
-      partition: 0
+      maxSurge: 30%
+      maxUnavailable: 0
   revisionHistoryLimit: 10
-  podManagementPolicy: OrderedReady
   selector:
     matchLabels:
       app: dummy-deployment
@@ -21,6 +19,7 @@ spec:
       labels:
         app: dummy-deployment
     spec:
+      restartPolicy: Always
       containers:
       - name: dummy-container
         image: traefik/whoami
@@ -42,9 +41,11 @@ spec:
         - name: DUMMY_KEY_3
           value: "dummy_value_3"
         startupProbe:
-          httpGet:
-            path: /health
-            port: 4000
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "random_exec_command"
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 60
@@ -68,14 +69,7 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: /usr/data
-  volumeClaimTemplates:
-  - metadata:
-      name: data-volume
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 1Gi
-  persistentVolumeClaimRetentionPolicy:
-    whenDeleted: Retain
-    whenScaled: Retain
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: data-pvc

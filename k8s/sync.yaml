@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
    name: sync
+   namespace: agnost
    labels:
       app: sync
 spec:
@@ -25,11 +26,14 @@ spec:
                  - containerPort: 4000
               env:
                  - name: CACHE_HOSTNAME
-                   value: redis-master      
+                   valueFrom:
+                      secretKeyRef:
+                         name: redis
+                         key: hostname 
                  - name: CACHE_PWD
                    valueFrom:
                       secretKeyRef:
-                         name: redis-password
+                         name: redis
                          key: password
                  - name: NAMESPACE
-                   value: default
+                   value: agnost

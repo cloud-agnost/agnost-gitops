@@ -17,7 +17,8 @@ import {
 import { validate } from "../middlewares/validate.js";
 import { fileUploadMiddleware } from "../middlewares/handleFile.js";
 import { storage } from "../init/storage.js";
-import { CICDManager } from "../cicd/CICDManager.js";
+import { deleteNamespaces } from "../handlers/ns.js";
+import { deleteTCPProxyPorts } from "../handlers/tcpproxy.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -96,7 +97,6 @@ router.post(
 		// Start new database transaction session
 		const session = await orgCtrl.startSession();
 		try {
-			let orgId = helper.generateId();
 			const { name } = req.body;
 			const { user } = req;
 			// Check if the user can create an organization or not
@@ -112,6 +112,7 @@ router.post(
 			}
 
 			// Create the new organization object
+			let orgId = helper.generateId();
 			let orgObj = await orgCtrl.create(
 				{
 					_id: orgId,
@@ -261,10 +262,10 @@ router.delete(
 			// Delete all organization related data
 			await orgCtrl.deleteOrganization(session, org);
 
-			// Delete all organization related resources in k8s cluster
-			const cicdManager = new CICDManager();
-			// The body of the request is an array of namespace names (environment iids) that will be deleted
-			await cicdManager.deleteNamespaces({ environmentiids, tcpProxyPorts });
+			// Delete namespaces
+			await deleteNamespaces(environmentiids);
+			// Remove exposed TCP proxy ports
+			await deleteTCPProxyPorts(tcpProxyPorts);
 
 			// Commit transaction
 			await orgCtrl.commit(session);

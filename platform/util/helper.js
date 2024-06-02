@@ -1,11 +1,9 @@
-import axios from "axios";
 import mongoose from "mongoose";
 import net from "net";
 import randomColor from "randomcolor";
 import { customAlphabet } from "nanoid";
 import cyripto from "crypto-js";
-import tcpProxyPortCtrl from "../controllers/tcpProxyPort.js";
-import { getKey, setKey, incrementKey } from "../init/cache.js";
+import ERROR_CODES from "../config/errorCodes.js";
 
 const constants = {
 	"1hour": 3600, // in seconds
@@ -56,6 +54,18 @@ function generateSlug(prefix, length = 12) {
 	const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 	const nanoid = customAlphabet(alphabet, length);
 	return `${prefix}-${nanoid()}`;
+}
+
+/**
+ * Generates a secret name for a certificate.
+ * @param {number} [length=12] - The length of the secret name. Default is 12.
+ * @returns {string} - The generated secret name.
+ */
+function getCertSecretName(length = 12) {
+	// Kubernetes resource names need to be alphanumeric and in lowercase letters
+	const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
+	const nanoid = customAlphabet(alphabet, length);
+	return `cert-secret-${nanoid()}`;
 }
 
 /**
@@ -181,22 +191,6 @@ function decryptSensitiveData(access) {
 }
 
 /**
- * Helper function to convert memory string to bytes
- * @param  {string} memoryStr Memory size such as 500Mi or 1Gi
- */
-function memoryToBytes(memoryStr) {
-	const value = parseInt(memoryStr, 10);
-
-	if (memoryStr.endsWith("Mi")) {
-		return value * Math.pow(2, 20); // Convert mebibytes to bytes
-	}
-
-	if (memoryStr.endsWith("Gi")) {
-		return value * Math.pow(2, 30); // Convert gibibytes to bytes
-	}
-}
-
-/**
  * Checks if the given IP address is a private IP address which are not routable on the internet.
  * Private IP addresses include:
  * - 10.x.x.x
@@ -236,7 +230,7 @@ function isPrivateIP(ip) {
 }
 
 function getSyncUrl() {
-	return `http://platform-sync-clusterip-service.${process.env.NAMESPACE}.svc.cluster.local:4000`;
+	return `http://sync.${process.env.NAMESPACE}.svc.cluster.local:4000`;
 }
 
 /**
@@ -249,259 +243,6 @@ function escapeStringRegexp(text) {
 	// Escape characters with special meaning either inside or outside character sets.
 	// Use a simple backslash escape when it’s always valid, and a `\xnn` escape when the simpler form would be disallowed by Unicode patterns’ stricter grammar.
 	return text.replace(/[|\\{}()[\]^$+*?.\/]/g, "\\$&").replace(/-/g, "\\x2d");
-}
-
-/**
- * Checks if the provided access token is valid for the given Git provider.
- *
- * @param {string} accessToken - The access token to be validated.
- * @param {string} gitProvider - The Git provider (e.g., "github").
- * @returns {Promise<Object>} - A promise that resolves to an object containing the validation result.
- * @throws {Error} - If an error occurs during the validation process.
- */
-async function isValidGitProviderAccessToken(accessToken, gitProvider) {
-	if (gitProvider === "github") {
-		try {
-			const result = await axios.get("https://api.github.com/user", {
-				headers: { Authorization: `token ${accessToken}` },
-			});
-
-			const email = await getGitHubUserEmail(accessToken);
-
-			return {
-				valid: true,
-				user: {
-					providerUserId: result.data.id.toString(),
-					username: result.data.login,
-					email: email,
-					avatar: result.data.avatar_url,
-					provider: gitProvider,
-				},
-			};
-		} catch (error) {
-			if (error.response && error.response.status === 401) {
-				return { valid: false, error: t("Invalid or expired token.") }; // Token is invalid
-			} else {
-				return { valid: false, error: error.message }; // Other errors
-			}
-		}
-	}
-	return { valid: false, error: t("Unsupported Git repository provider.") };
-}
-
-/**
- * Retrieves the primary email address associated with the GitHub user.
- * @param {string} accessToken - The access token for authenticating the request.
- * @returns {Promise<string|null>} The primary email address of the GitHub user, or null if not found.
- */
-async function getGitHubUserEmail(accessToken) {
-	try {
-		let result = await axios.get("https://api.github.com/user/emails", {
-			headers: {
-				Accept: "application/vnd.github.v3+json",
-				"User-Agent": "OAuth App",
-				Authorization: `token ${accessToken}`,
-			},
-		});
-
-		if (result.data) {
-			for (let i = 0; i < result.data.length; i++) {
-				const emeilEntry = result.data[i];
-				if (emeilEntry && emeilEntry.primary && emeilEntry.email)
-					return emeilEntry.email;
-			}
-		}
-
-		return null;
-	} catch (err) {}
-
-	return null;
-}
-
-/**
- * Revokes the access token and refresh token for a given Git provider.
- *
- * @param {string} provider - The Git provider name.
- * @param {string} accessToken - The access token to be revoked.
- * @param {string} refreshToken - The refresh token to be revoked.
- * @returns {Promise<void>} - A Promise that resolves when the tokens are revoked.
- */
-async function revokeGitProviderAccessToken(
-	provider,
-	accessToken,
-	refreshToken
-) {
-	try {
-		await axios.post(
-			`https://auth.agnost.dev/provider/${provider}/revoke`,
-			{ accessToken, refreshToken },
-			{
-				headers: {
-					Accept: "application/vnd.github.v3+json",
-					"User-Agent": "OAuth App",
-					Authorization: `token ${accessToken}`,
-				},
-			}
-		);
-	} catch (err) {}
-}
-
-/**
- * Fetches all pages of data from the specified URL used to fetch git repositories.
- *
- * @param {string} url - The URL to fetch the data from.
- * @param {object} config - The configuration object for the request.
- * @returns {Promise<Array>} - A promise that resolves to an array of fetched data.
- */
-async function fetchAllPages(url, config) {
-	let results = [];
-	let page = 1;
-	let moreData = true;
-
-	while (moreData) {
-		const response = await axios.get(
-			`${url}?page=${page}&per_page=100`,
-			config
-		);
-		if (response.data.length > 0) {
-			results = results.concat(response.data);
-			page++;
-		} else {
-			moreData = false;
-		}
-	}
-
-	return results;
-}
-
-/**
- * Retrieves the repositories of a given Git provider.
- *
- * @param {Object} gitProvider - The Git provider object.
- * @param {string} gitProvider.provider - The name of the Git provider (e.g., "github").
- * @param {string} gitProvider.accessToken - The access token for the Git provider.
- * @returns {Promise<Array<Object>>} - A promise that resolves to an array of repository objects.
- */
-async function getGitProviderRepos(gitProvider) {
-	if (gitProvider.provider === "github") {
-		try {
-			const config = {
-				headers: {
-					Authorization: `Bearer ${gitProvider.accessToken}`,
-					"X-GitHub-Api-Version": "2022-11-28",
-				},
-			};
-
-			const userRepos = await fetchAllPages(
-				"https://api.github.com/user/repos",
-				config
-			);
-
-			const userReposData = userRepos.map((entry) => ({
-				repoId: entry.id,
-				owner: entry.owner.login,
-				repo: entry.name,
-				fullName: entry.full_name,
-				private: entry.private,
-				url: entry.html_url,
-			}));
-
-			return userReposData;
-		} catch (error) {
-			return [];
-		}
-	}
-}
-
-/**
- * Retrieves the branches of a repository from a Git provider.
- *
- * @param {Object} gitProvider - The Git provider object.
- * @param {string} gitProvider.provider - The name of the Git provider (e.g., "github").
- * @param {string} gitProvider.accessToken - The access token for the Git provider.
- * @param {string} owner - The owner of the repository.
- * @param {string} repo - The name of the repository.
- * @param {number} [maxPages=100] - The maximum number of pages to retrieve.
- * @returns {Promise<Array<Object>>} - A promise that resolves to an array of branch objects.
- * Each branch object has a `name` property representing the branch name and a `protected` property indicating if the branch is protected.
- */
-async function getGitProviderRepoBranches(
-	gitProvider,
-	owner,
-	repo,
-	maxPages = 100
-) {
-	if (gitProvider.provider === "github") {
-		try {
-			let url = `https://api.github.com/repos/${owner}/${repo}/branches?per_page=${maxPages}`;
-			const branches = [];
-			let pageCount = 0;
-
-			while (url && pageCount < maxPages) {
-				const response = await axios.get(url, {
-					headers: {
-						Authorization: `Bearer ${gitProvider.accessToken}`,
-						Accept: "application/vnd.github.v3+json",
-					},
-				});
-
-				response.data.forEach((branch) => {
-					branches.push({ name: branch.name, protected: branch.protected });
-				});
-
-				const linkHeader = response.headers.link;
-				if (linkHeader) {
-					const matches = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
-					url = matches ? matches[1] : null;
-				} else {
-					url = null; // No more pages
-				}
-
-				pageCount++;
-			}
-
-			return branches;
-		} catch (error) {
-			return [];
-		}
-	}
-}
-
-/**
- * Retrieves a new TCP port number.
- * If a key-value pair for "agnost_tcp_proxy_port_number" exists, it returns the latest port number.
- * If not, it checks the database for the latest port number. If found, it sets the latest port number in cache.
- * If not found, it sets the key-value pair to the value specified in the configuration.
- * It then increments the key-value pair by 1 and saves the new port number to the database.
- * @returns {Promise<number>} The new TCP port number.
- */
-async function getNewTCPPortNumber() {
-	// First check if we have key value
-	const latestPortNumber = await getKey("agnost_tcp_proxy_port_number");
-	// Ok we do not have it set it to the latest value
-	if (!latestPortNumber) {
-		// First check if we have a database entry
-		const entry = await tcpProxyPortCtrl.getOneByQuery(
-			{},
-			{ sort: { port: "desc" } }
-		);
-
-		if (entry) {
-			// Set the latest port number to the latest value
-			await setKey("agnost_tcp_proxy_port_number", entry.port);
-		} else {
-			// Set the latest port number to the latest value
-			await setKey(
-				"agnost_tcp_proxy_port_number",
-				config.get("general.tcpProxyPortStart")
-			);
-		}
-	}
-
-	const newPortNumber = await incrementKey("agnost_tcp_proxy_port_number", 1);
-	// Save new port number to database
-	await tcpProxyPortCtrl.create({ port: newPortNumber });
-	return newPortNumber;
 }
 
 /**
@@ -548,57 +289,21 @@ function handleError(req, res, error) {
 	logger.info(JSON.stringify(entry, null, 2));
 }
 
-/**
- * Generates a secret name for a certificate.
- * @param {number} [length=12] - The length of the secret name. Default is 12.
- * @returns {string} - The generated secret name.
- */
-function getCertSecretName(length = 12) {
-	// Kubernetes resource names need to be alphanumeric and in lowercase letters
-	const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-	const nanoid = customAlphabet(alphabet, length);
-	return `cert-secret-${nanoid()}`;
-}
-
 export default {
 	constants,
-	isObject,
-	isEmptyJson,
 	getIP,
 	generateColor,
 	generateSlug,
-	generatePassword,
-	generateUsername,
+	getCertSecretName,
 	generateId,
 	objectId,
 	isValidId,
-	getDateStr,
-	appendQueryParams,
 	encryptText,
 	decryptText,
 	encyrptSensitiveData,
 	decryptSensitiveData,
-	isValidDomain,
-	isValidIPAddress,
-	getQueryString,
-	getAsObject,
-	memoryToBytes,
 	isPrivateIP,
-	decryptVersionData,
-	decryptResourceData,
-	getTypedValue,
 	getSyncUrl,
-	getRealtimeUrl,
-	getPlatformUrl,
-	getWorkerUrl,
 	escapeStringRegexp,
-	highlight,
-	isValidGitProviderAccessToken,
-	getGitHubUserEmail,
-	revokeGitProviderAccessToken,
-	getGitProviderRepos,
-	getGitProviderRepoBranches,
-	getNewTCPPortNumber,
 	handleError,
-	getCertSecretName,
 };

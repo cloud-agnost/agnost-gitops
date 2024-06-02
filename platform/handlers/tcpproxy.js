@@ -1,0 +1,343 @@
+import k8s from "@kubernetes/client-node";
+import { getK8SResource } from "./util.js";
+
+// Kubernetes client configuration
+const kc = new k8s.KubeConfig();
+kc.loadFromDefault();
+
+const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
+const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
+
+export async function isTCPProxyAlreadyEnabled(publicPort) {
+	if (!publicPort) return false;
+
+	const resourceNamespace = "ingress-nginx";
+	const deployments = await k8sAppsApi.listNamespacedDeployment(
+		resourceNamespace
+	);
+
+	for (const deployment of deployments.body.items) {
+		if (deployment.metadata.name.includes("ingress-nginx-controller")) {
+			const deployName = deployment.metadata.name;
+			const dply = await k8sAppsApi.readNamespacedDeployment(
+				deployName,
+				resourceNamespace
+			);
+
+			// To eliminate duplicates remove already exiting public port if any
+			const exists = dply.body.spec.template.spec.containers[0].ports.find(
+				(entry) => entry.containerPort.toString() === publicPort.toString()
+			);
+
+			if (exists) return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Enables the TCP proxy for the service, mainly exposes the service to outside world through ingress at a specific port number
+ *
+ * @param {string} serviceName - The name of the service to enable TCP proxy.
+ * @param {number} portNumber - The port number to open.
+ * @param {number} resourcePort - The resource object port number (internal resource port number).
+ * @returns {Promise<void>} - A promise that resolves when the TCP proxy is enabled.
+ */
+export async function createTCPProxy(
+	serviceName,
+	namespace,
+	portNumber,
+	resourcePort
+) {
+	/*  We need to patch below on ingress-nginx namespace:
+                1. ConfigMap/tcp-services
+                2. Service/ingress-nginx-controller
+                3. Deployment/ingress-nginx-controller */
+
+	const configMapName = "tcp-services";
+	const resourceNamespace = "ingress-nginx";
+
+	// get the backend service information
+	let backendSvc = await getK8SResource("Service", serviceName, namespace);
+	let protocol =
+		backendSvc.body.spec.ports.find((entry) => entry.port === resourcePort)
+			.protocol ?? "TCP";
+
+	try {
+		// patch configmap/tcp-service
+		const cfgmap = await k8sCoreApi.readNamespacedConfigMap(
+			configMapName,
+			resourceNamespace
+		);
+
+		cfgmap.body.data = {
+			...cfgmap.body.data,
+			[portNumber]: `${namespace}/${serviceName}:${resourcePort}`,
+		};
+
+		await k8sCoreApi.replaceNamespacedConfigMap(
+			configMapName,
+			resourceNamespace,
+			cfgmap.body
+		);
+	} catch (error) {
+		if (error.body.code === 404 && error.body.details.name == "tcp-services") {
+			const configMap = {
+				apiVersion: "v1",
+				kind: "ConfigMap",
+				metadata: { name: configMapName },
+				data: { [portNumber]: `${namespace}/${serviceName}:${resourcePort}` },
+			};
+			await k8sCoreApi.createNamespacedConfigMap(resourceNamespace, configMap);
+		} else {
+			throw error;
+		}
+	}
+
+	// patch service/ingress-nginx-controller
+	const portName = "proxied-tcp-" + portNumber;
+	k8sCoreApi.listNamespacedService(resourceNamespace).then((res) => {
+		res.body.items.forEach(async (service) => {
+			if (service.metadata.name.includes("ingress-nginx-controller")) {
+				const svcName = service.metadata.name;
+				const svc = await k8sCoreApi.readNamespacedService(
+					svcName,
+					resourceNamespace
+				);
+				const newPort = {
+					name: portName,
+					port: portNumber,
+					targetPort: portNumber,
+					protocol: protocol,
+				};
+				// To eliminate duplicates remove already exiting public port if any
+				svc.body.spec.ports = svc.body.spec.ports.filter(
+					(svcPort) => svcPort.port.toString() !== portNumber.toString()
+				);
+				svc.body.spec.ports.push(newPort);
+				await k8sCoreApi.replaceNamespacedService(
+					svcName,
+					resourceNamespace,
+					svc.body
+				);
+			}
+		});
+	});
+
+	// patch deployment/ingress-nginx-controller
+	k8sAppsApi.listNamespacedDeployment(resourceNamespace).then((res) => {
+		res.body.items.forEach(async (deployment) => {
+			if (deployment.metadata.name.includes("ingress-nginx-controller")) {
+				const deployName = deployment.metadata.name;
+				const dply = await k8sAppsApi.readNamespacedDeployment(
+					deployName,
+					resourceNamespace
+				);
+
+				const configmapArg =
+					"--tcp-services-configmap=ingress-nginx/tcp-services";
+				const configmapArg2 =
+					"--tcp-services-configmap=$(POD_NAMESPACE)/tcp-services";
+				if (
+					!dply.body.spec.template.spec.containers[0].args.includes(
+						configmapArg
+					) &&
+					!dply.body.spec.template.spec.containers[0].args.includes(
+						configmapArg2
+					)
+				) {
+					dply.body.spec.template.spec.containers[0].args.push(configmapArg);
+				}
+
+				const newContainerPort = {
+					containerPort: portNumber,
+					hostPort: portNumber,
+					protocol: protocol,
+				};
+
+				// To eliminate duplicates remove already exiting public port if any
+				dply.body.spec.template.spec.containers[0].ports =
+					dply.body.spec.template.spec.containers[0].ports.filter(
+						(entry) => entry.containerPort.toString() !== portNumber.toString()
+					);
+				dply.body.spec.template.spec.containers[0].ports.push(newContainerPort);
+				await k8sAppsApi.replaceNamespacedDeployment(
+					deployName,
+					resourceNamespace,
+					dply.body
+				);
+			}
+		});
+	});
+
+	console.log(`TCP proxy port '${portNumber}' exposed successfully`);
+}
+
+// Definition is networking
+export async function updateTCPProxy(
+	definition,
+	isContainerPortChanged,
+	name,
+	namespace
+) {
+	const enabled = await isTCPProxyAlreadyEnabled(
+		definition.tcpProxy.publicPort
+	);
+	if (definition.tcpProxy.enabled) {
+		if (!enabled) {
+			await createTCPProxy(
+				name,
+				namespace,
+				definition.tcpProxy.publicPort,
+				definition.containerPort
+			);
+			return;
+		} else if (isContainerPortChanged) {
+			await deleteTCPProxy(definition.tcpProxy.publicPort);
+			await createTCPProxy(
+				name,
+				namespace,
+				definition.tcpProxy.publicPort,
+				definition.containerPort
+			);
+			return;
+		}
+	} else {
+		if (enabled) await deleteTCPProxy(definition.tcpProxy.publicPort);
+		return;
+	}
+}
+
+export async function deleteTCPProxy(portNumber) {
+	if (!portNumber) return;
+	const configMapName = "tcp-services";
+	const resourceNamespace = "ingress-nginx";
+
+	// patch configmap/tcp-service
+	const cfgmap = await k8sCoreApi.readNamespacedConfigMap(
+		configMapName,
+		resourceNamespace
+	);
+	delete cfgmap.body.data[portNumber];
+	await k8sCoreApi.replaceNamespacedConfigMap(
+		configMapName,
+		resourceNamespace,
+		cfgmap.body
+	);
+
+	// patch service/ingress-nginx-controller
+	k8sCoreApi.listNamespacedService(resourceNamespace).then((res) => {
+		res.body.items.forEach(async (service) => {
+			if (service.metadata.name.includes("ingress-nginx-controller")) {
+				const svcName = service.metadata.name;
+				const svc = await k8sCoreApi.readNamespacedService(
+					svcName,
+					resourceNamespace
+				);
+				svc.body.spec.ports = svc.body.spec.ports.filter(
+					(svcPort) => svcPort.port.toString() !== portNumber.toString()
+				);
+				await k8sCoreApi.replaceNamespacedService(
+					svcName,
+					resourceNamespace,
+					svc.body
+				);
+			}
+		});
+	});
+
+	// patch deployment/ingress-nginx-controller
+	k8sAppsApi.listNamespacedDeployment(resourceNamespace).then((res) => {
+		res.body.items.forEach(async (deployment) => {
+			if (deployment.metadata.name.includes("ingress-nginx-controller")) {
+				const deployName = deployment.metadata.name;
+				const dply = await k8sAppsApi.readNamespacedDeployment(
+					deployName,
+					resourceNamespace
+				);
+				dply.body.spec.template.spec.containers[0].ports =
+					dply.body.spec.template.spec.containers[0].ports.filter(
+						(contPort) =>
+							contPort.containerPort.toString() !== portNumber.toString()
+					);
+				await k8sAppsApi.replaceNamespacedDeployment(
+					deployName,
+					resourceNamespace,
+					dply.body
+				);
+			}
+		});
+	});
+
+	console.log(`TCP proxy port '${portNumber}' unexposed successfully`);
+}
+
+export async function deleteTCPProxyPorts(portNumbers) {
+	if (!portNumbers || portNumbers.length === 0) return;
+	const configMapName = "tcp-services";
+	const resourceNamespace = "ingress-nginx";
+	portNumbers = portNumbers.map((portNumber) => portNumber.toString());
+
+	// patch configmap/tcp-service
+	const cfgmap = await k8sCoreApi.readNamespacedConfigMap(
+		configMapName,
+		resourceNamespace
+	);
+	portNumbers.forEach((portNumber) => {
+		delete cfgmap.body.data[portNumber];
+	});
+	await k8sCoreApi.replaceNamespacedConfigMap(
+		configMapName,
+		resourceNamespace,
+		cfgmap.body
+	);
+
+	// patch service/ingress-nginx-controller
+	k8sCoreApi.listNamespacedService(resourceNamespace).then((res) => {
+		res.body.items.forEach(async (service) => {
+			if (service.metadata.name.includes("ingress-nginx-controller")) {
+				const svcName = service.metadata.name;
+				const svc = await k8sCoreApi.readNamespacedService(
+					svcName,
+					resourceNamespace
+				);
+				svc.body.spec.ports = svc.body.spec.ports.filter(
+					(svcPort) => !portNumbers.includes(svcPort.port.toString())
+				);
+				await k8sCoreApi.replaceNamespacedService(
+					svcName,
+					resourceNamespace,
+					svc.body
+				);
+			}
+		});
+	});
+
+	// patch deployment/ingress-nginx-controller
+	k8sAppsApi.listNamespacedDeployment(resourceNamespace).then((res) => {
+		res.body.items.forEach(async (deployment) => {
+			if (deployment.metadata.name.includes("ingress-nginx-controller")) {
+				const deployName = deployment.metadata.name;
+				const dply = await k8sAppsApi.readNamespacedDeployment(
+					deployName,
+					resourceNamespace
+				);
+				dply.body.spec.template.spec.containers[0].ports =
+					dply.body.spec.template.spec.containers[0].ports.filter(
+						(contPort) =>
+							!portNumbers.includes(contPort.containerPort.toString())
+					);
+				await k8sAppsApi.replaceNamespacedDeployment(
+					deployName,
+					resourceNamespace,
+					dply.body
+				);
+			}
+		});
+	});
+
+	console.log(
+		`TCP proxy ports '${portNumbers.join(", ")}' unexposed successfully`
+	);
+}

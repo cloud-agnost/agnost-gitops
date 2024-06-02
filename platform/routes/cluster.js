@@ -9,15 +9,12 @@ import { applyRules } from "../schemas/cluster.js";
 import { validate } from "../middlewares/validate.js";
 import { validateCluster } from "../middlewares/validateCluster.js";
 import { validateClusterIPs } from "../middlewares/validateClusterIPs.js";
-import { validateClusterResource } from "../middlewares/validateClusterResource.js";
 import { checkContentType } from "../middlewares/contentType.js";
-import { clusterComponents } from "../config/constants.js";
-import { ClusterManager } from "../cluster/clusterManager.js";
 import {
 	addClusterCustomDomain,
 	deleteClusterCustomDomains,
 	updateEnforceSSLAccessSettings,
-} from "../cicd/CICDManager.js";
+} from "../handlers/ingress.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -166,114 +163,6 @@ router.get("/components", authSession, async (req, res) => {
 });
 
 /*
-@route      /v1/cluster/components
-@method     PUT
-@desc       Updates a specific cluster component and its HPA
-@access     public
-*/
-router.put(
-	"/components",
-	checkContentType,
-	authSession,
-	applyRules("update-component"),
-	validate,
-	async (req, res) => {
-		try {
-			const { user } = req;
-			if (!user.isClusterOwner) {
-				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to manage cluster components. Only the cluster owner can manage cluster core components."
-					),
-					code: ERROR_CODES.unauthorized,
-				});
-			}
-
-			const { deploymentName, hpaName, replicas, minReplicas, maxReplicas } =
-				req.body;
-			const deploymentInfo = clusterComponents.find(
-				(entry) => entry.deploymentName === deploymentName
-			);
-
-			if (deploymentInfo.hpaName !== hpaName) {
-				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"The specified HPA name '%s' does not match with its deployment name '%s'.",
-						hpaName,
-						deploymentName
-					),
-					code: ERROR_CODES.notAllowed,
-				});
-			}
-
-			let manager = new ClusterManager();
-			await manager.updateDeployment(deploymentName, replicas);
-			await manager.updateHPA(hpaName, minReplicas, maxReplicas);
-
-			res.json();
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
-@route      /v1/cluster/:componentName/update
-@method     PUT
-@desc       Updates a specific cluster component namely mongodb, redis-master and minio-storage
-@access     public
-*/
-router.put(
-	"/:componentName/update",
-	checkContentType,
-	authSession,
-	validateClusterResource,
-	applyRules("update-config"),
-	validate,
-	async (req, res) => {
-		try {
-			const { user, resource, resInfo } = req;
-			if (!user.isClusterOwner) {
-				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to manage cluster components. Only the cluster owner can manage cluster core components."
-					),
-					code: ERROR_CODES.unauthorized,
-				});
-			}
-
-			// In case of database resource the size and other parameters (replicas/instances and version) need to be upated separately
-			if (resource.type === "database") {
-				if (req.body.updateType === "size") {
-					req.body.config = { ...resource.config, size: req.body.config.size };
-				} else {
-					req.body.config = {
-						...req.body.config.config,
-						size: resource.config.size,
-					};
-				}
-			}
-
-			if (resource.instance === "Redis") {
-				// Cluster redis does not have a read replica
-				req.body.config.readReplica = false;
-			}
-
-			const { name, instance, config } = req.body;
-			let manager = new ClusterManager();
-			await manager.updateClusterOtherResource(name, instance, config);
-
-			res.json({ ...resInfo, config: req.body.config });
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
 @route      /v1/cluster/update-release
 @method     PUT
 @desc       Updates the version of cluster's default deployments to the versions' specified in the release
@@ -363,7 +252,7 @@ router.put(
 			if (requiredUpdates.length === 0) return res.json(cluster);
 
 			let manager = new ClusterManager();
-			for (const update of updates) {
+			for (const update of requiredUpdates) {
 				await manager.updateDeployment(
 					update.deploymentName,
 					null,
@@ -450,8 +339,6 @@ router.post(
 				});
 			}
 
-			const ingresses = ["platform-ingress", "sync-ingress", "studio-ingress"];
-
 			// Get all container ingresses that will be impacted
 			let containers = await cntrCtrl.getManyByQuery(
 				{
@@ -468,19 +355,6 @@ router.post(
 				};
 			});
 
-			// Update ingresses
-			let manager = new ClusterManager(null);
-			await manager.initializeCertificateIssuer();
-			const secretName = helper.getCertSecretName();
-			for (const ingress of ingresses) {
-				await manager.addClusterCustomDomain(
-					ingress,
-					domain,
-					secretName,
-					cluster.enforceSSLAccess ?? false
-				);
-			}
-
 			if (containers?.length > 0) {
 				for (const entry of containers) {
 					await addClusterCustomDomain(
@@ -488,7 +362,7 @@ router.post(
 						entry.namespace,
 						domain,
 						entry.containerPort,
-						enforceSSLAccess
+						cluster.enforceSSLAccess
 					);
 				}
 			}
@@ -538,8 +412,6 @@ router.delete(
 			const domains = cluster.domains ?? [];
 			const { domain } = req.body;
 
-			const ingresses = ["platform-ingress", "sync-ingress", "studio-ingress"];
-
 			// Get all container ingresses that will be impacted
 			let containers = await cntrCtrl.getManyByQuery(
 				{
@@ -551,12 +423,6 @@ router.delete(
 			containers = containers.map((entry) => {
 				return { containeriid: entry.iid, namespace: entry.environmentId.iid };
 			});
-
-			// Update ingresses
-			let manager = new ClusterManager();
-			for (const ingress of ingresses) {
-				await manager.deleteClusterCustomDomains(ingress, [domain]);
-			}
 
 			if (containers.length > 0) {
 				for (const entry of containers) {
@@ -632,8 +498,6 @@ router.put(
 				});
 			}
 
-			const ingresses = ["platform-ingress", "sync-ingress", "studio-ingress"];
-
 			// Get all container ingresses that will be impacted
 			let containers = await cntrCtrl.getManyByQuery(
 				{
@@ -653,12 +517,6 @@ router.put(
 					customDomain: entry.networking.customDomain.enabled,
 				};
 			});
-
-			let manager = new ClusterManager();
-			await manager.initializeCertificateIssuer();
-			for (const ingress of ingresses) {
-				await manager.updateEnforceSSLAccessSettings(ingress, enforceSSLAccess);
-			}
 
 			if (containers?.length > 0) {
 				for (const entry of containers) {

@@ -1,13 +1,5 @@
 import mongoose from "mongoose";
 import { body } from "express-validator";
-import {
-	clusterResources,
-	clusterComponents,
-	clusterComponentStatus,
-} from "../config/constants.js";
-import configDatabaseRules from "./rules/database.js";
-import configCacheRules from "./rules/cache.js";
-import configStorageRules from "./rules/storage.js";
 import domainCtrl from "../controllers/domain.js";
 
 /**
@@ -44,24 +36,6 @@ export const ClusterModel = mongoose.model(
 					timestamp: { type: Date, default: Date.now, immutable: true },
 				},
 			],
-			clusterResourceStatus: [
-				{
-					name: {
-						type: String,
-						required: true,
-						enum: [
-							...clusterComponents.map((entry) => entry.deploymentName),
-							"monitor",
-						],
-					},
-					status: {
-						type: String,
-						required: true,
-						enum: clusterComponentStatus,
-					},
-					lastUpdateAt: { type: Date, default: Date.now },
-				},
-			],
 			// Custom domains associted with the cluster
 			domains: {
 				type: [String],
@@ -96,103 +70,6 @@ export const ClusterModel = mongoose.model(
 
 export const applyRules = (type) => {
 	switch (type) {
-		case "update-component":
-			return [
-				body("deploymentName")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
-					.bail()
-					.isIn(clusterComponents.map((entry) => entry.deploymentName))
-					.withMessage(t("Unsupported cluster component type")),
-				body("hpaName")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
-					.bail()
-					.isIn(clusterComponents.map((entry) => entry.hpaName))
-					.withMessage(t("Unsupported cluster HPA type")),
-				body("replicas")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
-					.bail()
-					.isInt({
-						min: 1,
-					})
-					.withMessage(t("Initial replicas needs to be a positive integer"))
-					.bail()
-					.toInt(),
-				body("minReplicas")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
-					.bail()
-					.isInt({
-						min: 1,
-					})
-					.withMessage(t("Minimum replicas needs to be a positive integer"))
-					.bail()
-					.toInt(),
-				body("maxReplicas")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
-					.bail()
-					.isInt({
-						min: 1,
-					})
-					.withMessage(t("Maximum replicas needs to be a positive integer"))
-					.bail()
-					.toInt()
-					.custom(async (value, { req }) => {
-						if (req.body.minReplicas > value)
-							throw new AgnostError(
-								t("Maximum replicas cannot be smaller than minimum replicas")
-							);
-
-						return true;
-					}),
-			];
-		case "update-config":
-			return [
-				body("type")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
-					.bail()
-					.isIn(clusterResources.map((entry) => entry.type))
-					.withMessage(t("Unsupported cluster component type")),
-				body("instance")
-					.trim()
-					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
-					.bail()
-					.custom((value, { req }) => {
-						let clusterResource = clusterResources.find(
-							(entry) => entry.type === req.body.type
-						);
-						if (!clusterResource)
-							throw new AgnostError(
-								t(
-									"Cannot identify the instance for the provided cluster component type"
-								)
-							);
-
-						if (value !== clusterResource.instance)
-							throw new AgnostError(
-								t(
-									"Not a valid instance for cluster component type '%s'",
-									req.body.type
-								)
-							);
-
-						return true;
-					}),
-				...configDatabaseRules(type),
-				...configCacheRules(type),
-				...configStorageRules(type),
-			];
 		case "update-version":
 			return [
 				body("release")

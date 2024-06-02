@@ -1,4 +1,3 @@
-import axios from "axios";
 import express from "express";
 import auditCtrl from "../controllers/audit.js";
 import cntrCtrl from "../controllers/container.js";
@@ -12,6 +11,16 @@ import { validateContainer } from "../middlewares/validateContainer.js";
 import { authorizeProjectAction } from "../middlewares/authorizeProjectAction.js";
 import { applyRules } from "../schemas/container.js";
 import { validate } from "../middlewares/validate.js";
+import { manageContainer } from "../handlers/k8s.js";
+import {
+	getContainerPods,
+	getContainerEvents,
+	getContainerLogs,
+	getContainerTaskRuns,
+	getTaskRunLogs,
+} from "../handlers/status.js";
+
+import ERROR_CODES from "../config/errorCodes.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -106,12 +115,12 @@ router.post(
 				case "cron job":
 					prefix = "crj";
 					break;
-				case "knative service":
-					prefix = "kns";
-					break;
 				default:
 					break;
 			}
+
+			// Set initial pipeline status
+			if (body.repo.connected) body.pipelineStatus = "Connected";
 
 			const container = await cntrCtrl.create(
 				{
@@ -127,16 +136,12 @@ router.post(
 			);
 
 			// Create the container in the Kubernetes cluster
-			await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container",
-				{ container, environment, gitProvider, action: "create" },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
+			await manageContainer({
+				container,
+				environment,
+				gitProvider,
+				action: "create",
+			});
 
 			res.json(container);
 
@@ -199,7 +204,6 @@ router.put(
 	"/:containerId",
 	checkContentType,
 	authSession,
-
 	validateOrg,
 	validateProject,
 	validateEnvironment,
@@ -256,15 +260,7 @@ router.put(
 					container.deploymentConfig.revisionHistoryLimit;
 			}
 
-			if (container.knativeConfig && body.knativeConfig) {
-				body.knativeConfig.revisionHistoryLimit =
-					container.knativeConfig.revisionHistoryLimit;
-			}
-
-			if (
-				container.type !== "cron job" &&
-				container.type !== "knative service"
-			) {
+			if (container.type !== "cronjob") {
 				// If there already a port number assignment then use it otherwise generate a new one
 				body.networking.tcpProxy.publicPort =
 					container.networking.tcpProxy.publicPort ??
@@ -272,7 +268,7 @@ router.put(
 			}
 
 			// Once a stateful set is created, some storage properties cannot be changed
-			if (container.type === "stateful set") {
+			if (container.type === "statefulset") {
 				body.storageConfig.enabled = container.storageConfig.enabled;
 				body.storageConfig.accessModes = container.storageConfig.accessModes;
 			} else {
@@ -299,42 +295,31 @@ router.put(
 				}
 			);
 
-			console.log("***here", updatedContainer.repo);
-
-			// Deletes the container in the Kubernetes cluster
-			await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container",
-				{
-					container: updatedContainer,
-					environment,
-					gitProvider,
-					changes: {
-						containerPort:
-							container.networking.containerPort !==
-							updatedContainer.networking.containerPort,
-						customDomain:
-							container.networking.customDomain.domain !==
-							updatedContainer.networking.customDomain.domain,
-						gitRepo:
-							container.repo.type !== updatedContainer.repo.type ||
-							container.repo.connected !== updatedContainer.repo.connected ||
-							container.repo.name !== updatedContainer.repo.name ||
-							container.repo.url !== updatedContainer.repo.url ||
-							container.repo.branch !== updatedContainer.repo.branch ||
-							container.repo.path !== updatedContainer.repo.path ||
-							container.repo.dockerfile !== updatedContainer.repo.dockerfile ||
-							container.repo.gitProviderId?.toString() !==
-								updatedContainer.repo.gitProviderId?.toString(),
-					},
-					action: "update",
+			// Updates the container in the Kubernetes cluster
+			await manageContainer({
+				container: updatedContainer,
+				environment,
+				gitProvider,
+				changes: {
+					containerPort:
+						container.networking.containerPort !==
+						updatedContainer.networking.containerPort,
+					customDomain:
+						container.networking.customDomain.domain !==
+						updatedContainer.networking.customDomain.domain,
+					gitRepo:
+						container.repo.type !== updatedContainer.repo.type ||
+						container.repo.connected !== updatedContainer.repo.connected ||
+						container.repo.name !== updatedContainer.repo.name ||
+						container.repo.url !== updatedContainer.repo.url ||
+						container.repo.branch !== updatedContainer.repo.branch ||
+						container.repo.path !== updatedContainer.repo.path ||
+						container.repo.dockerfile !== updatedContainer.repo.dockerfile ||
+						container.repo.gitProviderId?.toString() !==
+							updatedContainer.repo.gitProviderId?.toString(),
 				},
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
+				action: "update",
+			});
 
 			res.json(updatedContainer);
 
@@ -369,7 +354,6 @@ router.delete(
 	"/:containerId",
 	checkContentType,
 	authSession,
-
 	validateOrg,
 	validateProject,
 	validateEnvironment,
@@ -408,17 +392,14 @@ router.delete(
 						gitProvider.refreshToken
 					);
 			}
+
 			// Deletes the container in the Kubernetes cluster
-			await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container",
-				{ container, environment, gitProvider, action: "delete" },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
+			await manageContainer({
+				container,
+				environment,
+				gitProvider,
+				action: "delete",
+			});
 
 			// Commit the database transaction
 			await cntrCtrl.commit(session);
@@ -465,18 +446,8 @@ router.get(
 	async (req, res) => {
 		try {
 			const { container, environment } = req;
-			const result = await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container/pods",
-				{ container, environment },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
-
-			res.json(result.data.payload);
+			const pods = await getContainerPods({ container, environment });
+			res.json(pods);
 		} catch (err) {
 			helper.handleError(req, res, err);
 		}
@@ -501,18 +472,8 @@ router.get(
 	async (req, res) => {
 		try {
 			const { container, environment } = req;
-			const result = await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container/events",
-				{ container, environment },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
-
-			res.json(result.data.payload);
+			const events = await getContainerEvents({ container, environment });
+			res.json(events);
 		} catch (err) {
 			helper.handleError(req, res, err);
 		}
@@ -537,18 +498,8 @@ router.get(
 	async (req, res) => {
 		try {
 			const { container, environment } = req;
-			const result = await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container/logs",
-				{ container, environment },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
-
-			res.json(result.data.payload);
+			const logs = await getContainerLogs({ container, environment });
+			res.json(logs);
 		} catch (err) {
 			helper.handleError(req, res, err);
 		}
@@ -573,18 +524,8 @@ router.get(
 	async (req, res) => {
 		try {
 			const { container, environment } = req;
-			const result = await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container/pipelines",
-				{ container, environment },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
-
-			res.json(result.data.payload);
+			const pipelines = await getContainerTaskRuns({ container, environment });
+			res.json(pipelines);
 		} catch (err) {
 			helper.handleError(req, res, err);
 		}
@@ -610,18 +551,12 @@ router.get(
 		try {
 			const { pipelineName } = req.params;
 			const { container, environment } = req;
-			const result = await axios.post(
-				helper.getWorkerUrl() + "/v1/cicd/container/taskrun-logs",
-				{ container, environment, taskRunName: pipelineName },
-				{
-					headers: {
-						Authorization: process.env.ACCESS_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			);
-
-			res.json(result.data.payload);
+			const logs = await getTaskRunLogs({
+				container,
+				environment,
+				taskRunName: pipelineName,
+			});
+			res.json(logs);
 		} catch (err) {
 			helper.handleError(req, res, err);
 		}

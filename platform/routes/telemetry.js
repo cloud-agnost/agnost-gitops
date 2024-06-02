@@ -53,98 +53,6 @@ router.post(
 );
 
 /*
-@route      /v1/cluster/status
-@method     POST
-@desc       Updates the status of cluster's default deployments
-@access     public
-*/
-router.post(
-	"/cluster/status",
-	checkContentType,
-	authMasterToken,
-	async (req, res) => {
-		try {
-			// Update cluster configuration
-			await clsCtrl.updateOneByQuery(
-				{
-					clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-				},
-				{ clusterResourceStatus: req.body }
-			);
-
-			res.json();
-
-			// Send realtime notification message that cluster deployment status has changed
-			sendMessage("cluster", {
-				action: "update",
-				object: "cluster",
-				description: t("Status of cluster defaul deployments has changed"),
-				timestamp: Date.now(),
-				data: req.body,
-			});
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
-@route      /v1/telemetry/webhook/set
-@method     POST
-@desc       Updates the webhook id of the container repo
-@access     public
-*/
-router.post(
-	"/webhook/set",
-	checkContentType,
-	authMasterToken,
-	async (req, res) => {
-		try {
-			const { container, webHookId } = req.body;
-			await cntrCtrl.updateOneById(
-				container._id,
-				{
-					"repo.webHookId": webHookId,
-				},
-				{},
-				{ cacheKey: container._id }
-			);
-
-			res.json();
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
-@route      /v1/telemetry/webhook/remove
-@method     POST
-@desc       Removes the webhook id of the container repo
-@access     public
-*/
-router.post(
-	"/webhook/remove",
-	checkContentType,
-	authMasterToken,
-	async (req, res) => {
-		try {
-			const { container } = req.body;
-			await cntrCtrl.updateOneById(
-				container._id,
-				{},
-				{ "repo.webHookId": "" },
-				{ cacheKey: container._id }
-			);
-
-			res.json();
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
 @route      /v1/telemetry/pipeline/status
 @method     POST
 @desc       Sets the pipeline status of the container
@@ -160,7 +68,7 @@ router.post(
 			const container = await cntrCtrl.getOneByQuery({ iid: containeriid });
 			if (!container) return res.json();
 
-			let updatedContainer = await cntrCtrl.updateOneById(
+			let updatedContainer = await cntrCtrl.updateOneByQuery(
 				container._id,
 				{
 					pipelineStatus: status,

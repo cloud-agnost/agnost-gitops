@@ -1,4 +1,3 @@
-import axios from "axios";
 import express from "express";
 import authCtrl from "../controllers/auth.js";
 import userCtrl from "../controllers/user.js";
@@ -18,6 +17,7 @@ import {
 } from "../middlewares/checkClusterSetupStatus.js";
 import ERROR_CODES from "../config/errorCodes.js";
 import { notificationTypes } from "../config/constants.js";
+import { createNamespace } from "../handlers/ns.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -25,7 +25,7 @@ const router = express.Router({ mergeParams: true });
 @route      /v1/auth/setup/start
 @method     POST
 @desc       Initializes the cluster set-up. Signs up the cluster owner using the signup credentials (e.g., gitProvider, accessToken, refreshToken).
-			Using the signup credentials of the user also creates a git provider entry for the user.
+			Using the signup credentials of the user, it also creates a git provider entry for the user.
 			Creates the cluster configuration entry in the database.
 @access     public
 */
@@ -78,11 +78,6 @@ router.post(
 				{ session }
 			);
 
-			// Get cluster configuration
-			const cluster = await clsCtrl.getOneByQuery({
-				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-			});
-
 			// Initialize cluster configuration. Creates the cluster organization, project, environment and default cluster containers
 			await clsCtrl.initializeCluster(session, userObj);
 
@@ -121,7 +116,7 @@ router.post(
 @access     public
 */
 router.post(
-	"/v1/auth/setup/end",
+	"/setup/end",
 	checkContentType,
 	hasClusterSetUpCompleted,
 	authSession,
@@ -145,8 +140,8 @@ router.post(
 				});
 			}
 
-			// Check whether cluster set up has been finalized or not. If we have an organization then it means that cluster set-up has been finalized
-			const org = await orgCtrl.getOneByQuery({});
+			// Check whether cluster set up has been finalized or not. If we have a non-cluster organization then it means that cluster set-up has been finalized
+			const org = await orgCtrl.getOneByQuery({ isClusterEntity: false });
 			if (org) {
 				await userCtrl.endSession(session);
 
@@ -189,6 +184,9 @@ router.post(
 				projectName,
 				environmentName
 			);
+
+			// Create the namespace in the Kubernetes cluster
+			await createNamespace(environment);
 
 			// Commit changes to the database
 			await userCtrl.commit(session);

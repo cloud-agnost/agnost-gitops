@@ -5,7 +5,7 @@ const router = express.Router({ mergeParams: true });
 /*
 @route      /
 @method     GET
-@desc       Checks liveliness of platform core
+@desc       Checks liveliness of platform server
 @access     public
 */
 router.get("/health", (req, res) => {
@@ -13,7 +13,7 @@ router.get("/health", (req, res) => {
 		.status(200)
 		.send(
 			new Date().toISOString() +
-				" - Healthy platform core server" +
+				" - Healthy platform server" +
 				" - " +
 				process.env.RELEASE_NUMBER
 		);
@@ -22,7 +22,7 @@ router.get("/health", (req, res) => {
 /*
 @route      /ping
 @method     GET
-@desc       Checks liveliness of platform core
+@desc       Checks liveliness of platform server
 @access     public
 */
 router.get("/ping", (req, res) => {

@@ -201,7 +201,6 @@ router.put(
 			let projectWithTeam = await prjCtrl.getOneById(project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 
@@ -261,6 +260,7 @@ router.delete(
 			let member = project.team.find(
 				(entry) => entry.userId.toString() === userId
 			);
+
 			if (!member) {
 				return res.status(404).json({
 					error: t("Not a Member"),
@@ -305,7 +305,6 @@ router.delete(
 			let projectWithTeam = await prjCtrl.getOneById(project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 
@@ -381,7 +380,6 @@ router.post(
 			let projectWithTeam = await prjCtrl.getOneById(project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 
@@ -458,7 +456,6 @@ router.delete(
 			let projectWithTeam = await prjCtrl.getOneById(project._id, {
 				lookup: {
 					path: "team.userId",
-					select: "-loginProfiles -notifications -editorSettings",
 				},
 			});
 

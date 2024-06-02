@@ -7,7 +7,7 @@ import { checkContentType } from "../middlewares/contentType.js";
 import { validateOrg } from "../middlewares/validateOrg.js";
 import { validateProject } from "../middlewares/validateProject.js";
 import { authorizeProjectAction } from "../middlewares/authorizeProjectAction.js";
-import { applyRules as invitationApplyRules } from "../schemas/projectInvitation.js";
+import { applyRules } from "../schemas/projectInvitation.js";
 import { validate } from "../middlewares/validate.js";
 import { sendMessage as sendNotification } from "../init/sync.js";
 
@@ -28,7 +28,7 @@ router.post(
 	validateOrg,
 	validateProject,
 	authorizeProjectAction("project.invite.create"),
-	invitationApplyRules("invite"),
+	applyRules("invite"),
 	validate,
 	async (req, res) => {
 		try {
@@ -123,7 +123,7 @@ router.put(
 	validateOrg,
 	validateProject,
 	authorizeProjectAction("project.invite.update"),
-	invitationApplyRules("update-invite"),
+	applyRules("update-invite"),
 	validate,
 	async (req, res) => {
 		try {
@@ -160,7 +160,7 @@ router.put(
 
 			// If there are alreay a user account with provided email then send them realtime notifications
 			let matchingUser = await userCtrl.getOneByQuery({
-				"loginProfiles.email": invite.email,
+				email: invite.email,
 				status: "Active",
 			});
 
@@ -221,7 +221,7 @@ router.delete(
 	validateOrg,
 	validateProject,
 	authorizeProjectAction("project.invite.delete"),
-	invitationApplyRules("delete-invite"),
+	applyRules("delete-invite"),
 	validate,
 	async (req, res) => {
 		try {
@@ -270,7 +270,7 @@ router.delete(
 	validateOrg,
 	validateProject,
 	authorizeProjectAction("project.invite.delete"),
-	invitationApplyRules("delete-invite-multi"),
+	applyRules("delete-invite-multi"),
 	validate,
 	async (req, res) => {
 		try {
@@ -309,7 +309,7 @@ router.get(
 	validateOrg,
 	validateProject,
 	authorizeProjectAction("project.invite.view"),
-	invitationApplyRules("get-invites"),
+	applyRules("get-invites"),
 	validate,
 	async (req, res) => {
 		try {
@@ -368,7 +368,7 @@ router.get(
 	validateOrg,
 	validateProject,
 	authorizeProjectAction("project.team.view"),
-	invitationApplyRules("list-eligible"),
+	applyRules("list-eligible"),
 	validate,
 	async (req, res) => {
 		try {

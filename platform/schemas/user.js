@@ -6,6 +6,7 @@ import {
 	userStatus,
 } from "../config/constants.js";
 import userCtrl from "../controllers/user.js";
+import { isValidGitProviderAccessToken } from "../handlers/git.js";
 
 /**
  * Models the user information. Users will be associated with organizations and projects. Project users will be part of the organization
@@ -100,11 +101,10 @@ export const applyRules = (type) => {
 					.withMessage(t("Required field, cannot be left empty"))
 					.bail()
 					.custom(async (value, { req }) => {
-						const { valid, error, user } =
-							await helper.isValidGitProviderAccessToken(
-								value,
-								req.body.provider
-							);
+						const { valid, error, user } = await isValidGitProviderAccessToken(
+							value,
+							req.body.provider
+						);
 
 						if (!valid) throw new AgnostError(error);
 
@@ -217,11 +217,10 @@ export const applyRules = (type) => {
 					.withMessage(t("Required field, cannot be left empty"))
 					.bail()
 					.custom(async (value, { req }) => {
-						const { valid, error, user } =
-							await helper.isValidGitProviderAccessToken(
-								value,
-								req.body.provider
-							);
+						const { valid, error, user } = await isValidGitProviderAccessToken(
+							value,
+							req.body.provider
+						);
 
 						if (!valid) throw new AgnostError(error);
 

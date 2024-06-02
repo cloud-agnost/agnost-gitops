@@ -1,29 +1,16 @@
 {
-    "server": {
-        "host": "localhost",
-        "port": 4000,
-        "timeout": 3600000
-     },
-     "rateLimiters": [{      
-        "rateLimitWindowSec": 30,
-        "rateLimitMaxHits": 300}],
-    "general": {  
-        "monitoringInterval": 3000,
-        "resourcePaginationSize": 100,
-        "containerPaginationSize": 100,
-        "initialDelaySeconds": 30,
-        "maxResourceOpWaitMinues": 5,
-        "gcSeconds": 30
-    },
-    "database": {
-        "maxPoolSize": 3
-     },
-     "cache": {
-        "port": 6379
-     },
-     "queue": {
-        "port": 5672,
-        "reconnectInterval": 1000,
-        "retryCount": 30
-     }
+	"server": {
+		"host": "localhost",
+		"port": 4000,
+		"timeout": 3600000
+	},
+	"general": {
+		"monitoringInterval": 3000,
+		"resourcePaginationSize": 100,
+		"containerPaginationSize": 100,
+		"gcSeconds": 30
+	},
+	"database": {
+		"maxPoolSize": 3
+	}
 }

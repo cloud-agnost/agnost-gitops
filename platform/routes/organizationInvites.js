@@ -3,7 +3,6 @@ import orgMemberCtrl from "../controllers/organizationMember.js";
 import userCtrl from "../controllers/user.js";
 import orgInvitationCtrl from "../controllers/organizationInvitation.js";
 import auditCtrl from "../controllers/audit.js";
-import clsCtrl from "../controllers/cluster.js";
 import { applyRules } from "../schemas/organizationInvitation.js";
 import { authSession } from "../middlewares/authSession.js";
 import { checkContentType } from "../middlewares/contentType.js";
@@ -35,11 +34,6 @@ router.post(
 			const { user, org } = req;
 			const { uiBaseURL } = req.query;
 
-			// Get cluster configuration
-			let cluster = await clsCtrl.getOneByQuery({
-				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-			});
-
 			// Prepare the invitations array to store in the database
 			let invitations = [];
 			req.body.forEach((entry) => {
@@ -58,7 +52,7 @@ router.post(
 
 			res.json(result);
 
-			// If there are alreay user accounts with provided emails then send them realtime notifications
+			// If there are already user accounts with provided emails then send them realtime notifications
 			let matchingUsers = await userCtrl.getManyByQuery({
 				email: { $in: invitations.map((entry) => entry.email) },
 				status: "Active",

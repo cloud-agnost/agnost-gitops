@@ -30,8 +30,9 @@ build:
 deploy:
    statusCheckDeadlineSeconds: 300
    kubectl:
-      defaultNamespace: default
+      defaultNamespace: agnost
       manifests:
          - platform.yaml
-         - sync.yaml
          - monitor.yaml
+         - sync.yaml
+

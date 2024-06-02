@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { body, query } from "express-validator";
-
+import { isValidGitProviderAccessToken } from "../handlers/git.js";
 /**
  * Message cron job and its handler definition
  */
@@ -73,11 +73,10 @@ export const applyRules = (type) => {
 					.withMessage(t("Required field, cannot be left empty"))
 					.bail()
 					.custom(async (value, { req }) => {
-						const { valid, error, user } =
-							await helper.isValidGitProviderAccessToken(
-								value,
-								req.body.provider
-							);
+						const { valid, error, user } = await isValidGitProviderAccessToken(
+							value,
+							req.body.provider
+						);
 
 						if (!valid) throw new AgnostError(error);
 

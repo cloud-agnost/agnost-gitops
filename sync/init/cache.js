@@ -30,11 +30,11 @@ export const connectToRedisCache = async () => {
 		});
 
 		client.on("error", function (err) {
-			logger.error(`Cannot connect to the cache server`, { details: err });
+			logger.error(`Cannot connect to the cache server. ${err}`);
 			process.exit(1);
 		});
 	} catch (err) {
-		logger.error(`Cannot connect to the cache server`, { details: err });
+		logger.error(`Cannot connect to the cache server. ${err}`);
 		process.exit(1);
 	}
 
@@ -67,15 +67,11 @@ export const connectToRedisCache = async () => {
 			});
 
 			clientReadReplica.on("error", function (err) {
-				logger.error(`Cannot connect to the replica cache server`, {
-					details: err,
-				});
+				logger.error(`Cannot connect to the replica cache server. ${err}`);
 				process.exit(1);
 			});
 		} catch (err) {
-			logger.error(`Cannot connect to the cache read replica server`, {
-				details: err,
-			});
+			logger.error(`Cannot connect to the cache read replica server. ${err}`);
 			process.exit(1);
 		}
 	}

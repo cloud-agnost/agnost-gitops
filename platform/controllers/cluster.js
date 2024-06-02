@@ -1,10 +1,11 @@
 import BaseController from "./base.js";
 import { ClusterModel } from "../schemas/cluster.js";
-import registryCtrl from "./registry.js";
 import orgCtrl from "./organization.js";
 import orgMemberCtrl from "./organizationMember.js";
 import prjCtrl from "./project.js";
 import prjEnvCtrl from "./environment.js";
+
+import { getClusterIPs } from "../handlers/cluster.js";
 
 class ClusterController extends BaseController {
 	constructor() {
@@ -29,23 +30,10 @@ class ClusterController extends BaseController {
 				releaseHistory: [
 					{ release: process.env.RELEASE_NUMBER, timestamp: Date.now() },
 				],
-				ips: await helper.getClusterIPs(),
+				ips: await getClusterIPs(),
 				createdBy: user._id,
 			},
 			{ session }
-		);
-
-		// Create the public Docker registry
-		const registryId = helper.generateId();
-		const registry = await registryCtrl.create(
-			{
-				_id: registryId,
-				name: "Docker Hub",
-				type: "Docker Public",
-				isClusterEntity: true,
-				createdBy: user._id,
-			},
-			{ session, cacheKey: registryId }
 		);
 
 		// Create the new organization object
@@ -86,12 +74,6 @@ class ClusterController extends BaseController {
 				team: [{ userId: user._id, role: "Admin" }],
 				createdBy: user._id,
 				isClusterEntity: true,
-				team: [
-					{
-						userId: user._id,
-						role: "Admin",
-					},
-				],
 			},
 			{ session, cacheKey: projectId }
 		);
@@ -104,7 +86,7 @@ class ClusterController extends BaseController {
 				orgId: org._id,
 				projectId: project._id,
 				iid: process.env.NAMESPACE, // Namespace is used as the environment iid
-				name: envName,
+				name: process.env.NAMESPACE,
 				private: false,
 				readOnly: true,
 				createdBy: user._id,
@@ -114,6 +96,7 @@ class ClusterController extends BaseController {
 		);
 
 		// Create cluster containers (e.g., platform, sync, monitor, mongodb, redis, minio)
+		// TODO: Create cluster containers
 	}
 }
 

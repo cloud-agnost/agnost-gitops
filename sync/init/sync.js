@@ -76,7 +76,7 @@ export function setUpSyncServer(expressServer) {
 			});
 		});
 	} catch (err) {
-		logger.error(`Cannot connect to the sync cache server`, { details: err });
+		logger.error(`Cannot connect to the sync cache server. ${err}`);
 		process.exit(1);
 	}
 
