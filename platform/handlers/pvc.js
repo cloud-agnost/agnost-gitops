@@ -37,7 +37,9 @@ export async function createPVC(definition, name, namespace) {
 	// Create the PVC
 	await k8sCoreApi.createNamespacedPersistentVolumeClaim(namespace, resource);
 
-	console.log(`PVC '${name}' in namespace '${namespace}' created successfully`);
+	console.info(
+		`PVC '${name}' in namespace '${namespace}' created successfully`
+	);
 }
 
 // Definition is storageConfig
@@ -72,7 +74,9 @@ export async function updatePVC(definition, name, namespace) {
 		namespace,
 		payload.body
 	);
-	console.log(`PVC '${name}' in namespace '${namespace}' updated successfully`);
+	console.info(
+		`PVC '${name}' in namespace '${namespace}' updated successfully`
+	);
 }
 
 export async function deletePVC(name, namespace) {
@@ -80,7 +84,9 @@ export async function deletePVC(name, namespace) {
 
 	try {
 		await k8sCoreApi.deleteNamespacedPersistentVolumeClaim(name, namespace);
-		console.log(`PVC '${name}' in namespace ${namespace} deleted successfully`);
+		console.info(
+			`PVC '${name}' in namespace ${namespace} deleted successfully`
+		);
 	} catch (err) {
 		console.error(
 			`Error deleting PVC '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
@@ -136,7 +142,7 @@ export async function updateStatefulSetPVC(
 					namespace,
 					pvc
 				);
-				console.log(
+				console.info(
 					`PVC '${metadata.name}' in namespace '${namespace}' updated successfully`
 				);
 			} catch (err) {

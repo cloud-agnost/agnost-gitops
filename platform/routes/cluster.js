@@ -1,3 +1,4 @@
+import config from "config";
 import axios from "axios";
 import express from "express";
 import userCtrl from "../controllers/user.js";
@@ -15,6 +16,7 @@ import {
 	deleteClusterCustomDomains,
 	updateEnforceSSLAccessSettings,
 } from "../handlers/ingress.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -32,7 +34,7 @@ router.get("/setup-status", async (req, res) => {
 		let user = await userCtrl.getOneByQuery({ isClusterOwner: true });
 		res.status(200).json({ status: user ? true : false });
 	} catch (error) {
-		handleError(req, res, error);
+		helper.handleError(req, res, error);
 	}
 });
 
@@ -47,10 +49,9 @@ router.get("/info", authSession, async (req, res) => {
 		const { user } = req;
 		if (!user.isClusterOwner) {
 			return res.status(401).json({
-				error: t("Not Authorized"),
-				details: t(
-					"You are not authorized to view cluster information. Only the cluster owner can view and manage cluster info."
-				),
+				error: "Not Authorized",
+				details:
+					"You are not authorized to view cluster information. Only the cluster owner can view and manage cluster info.",
 				code: ERROR_CODES.unauthorized,
 			});
 		}
@@ -100,8 +101,8 @@ router.get("/release-info", authSession, async (req, res) => {
 
 		if (!cluster.release) {
 			return res.status(404).json({
-				error: t("Not Found"),
-				details: t("Release information not found."),
+				error: "Not Found",
+				details: "Release information not found.",
 				code: ERROR_CODES.notFound,
 			});
 		}
@@ -145,18 +146,17 @@ router.get("/components", authSession, async (req, res) => {
 		const { user } = req;
 		if (!user.isClusterOwner) {
 			return res.status(401).json({
-				error: t("Not Authorized"),
-				details: t(
-					"You are not authorized to view cluster components. Only the cluster owner can manage cluster core components."
-				),
+				error: "Not Authorized",
+				details:
+					"You are not authorized to view cluster components. Only the cluster owner can manage cluster core components.",
 				code: ERROR_CODES.unauthorized,
 			});
 		}
 
-		let manager = new ClusterManager();
-		const clusterInfo = await manager.getClusterInfo();
+		//let manager = new ClusterManager();
+		//const clusterInfo = await manager.getClusterInfo();
 
-		res.json(clusterInfo);
+		res.json();
 	} catch (error) {
 		helper.handleError(req, res, error);
 	}
@@ -179,10 +179,9 @@ router.put(
 			const { user } = req;
 			if (!user.isClusterOwner) {
 				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to update cluster release number. Only the cluster owner can manage cluster core components."
-					),
+					error: "Not Authorized",
+					details:
+						"You are not authorized to update cluster release number. Only the cluster owner can manage cluster core components.",
 					code: ERROR_CODES.unauthorized,
 				});
 			}
@@ -210,9 +209,10 @@ router.put(
 					}
 				);
 			} catch (err) {
+				console.error(err);
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("There is no such Agnost release '%s'.", cluster.release),
+					error: "Not Found",
+					details: `There is no such Agnost release '${cluster.release}'.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -227,9 +227,10 @@ router.put(
 					}
 				);
 			} catch (err) {
+				console.error(err);
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("There is no such Agnost release '%s'.", release),
+					error: "Not Found",
+					details: `There is no such Agnost release '${release}'.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -251,14 +252,14 @@ router.put(
 			// If no updates do nothing
 			if (requiredUpdates.length === 0) return res.json(cluster);
 
-			let manager = new ClusterManager();
+			/* 			let manager = new ClusterManager();
 			for (const update of requiredUpdates) {
 				await manager.updateDeployment(
 					update.deploymentName,
 					null,
 					update.image
 				);
-			}
+			} */
 
 			// Update cluster release information
 			let updatedCluster = await clsCtrl.updateOneByQuery(
@@ -317,10 +318,9 @@ router.post(
 			const { user, cluster } = req;
 			if (!user.isClusterOwner) {
 				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to add custom domain to the cluster. Only the cluster owner can manage cluster custom domains."
-					),
+					error: "Not Authorized",
+					details:
+						"You are not authorized to add custom domain to the cluster. Only the cluster owner can manage cluster custom domains.",
 					code: ERROR_CODES.unauthorized,
 				});
 			}
@@ -330,11 +330,10 @@ router.post(
 
 			if (domains.length >= config.get("general.maxClusterCustomDomains")) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You can add maximum '%s' custom domains to a cluster.",
-						config.get("general.maxClusterCustomDomains")
-					),
+					error: "Not Allowed",
+					details: `You can add maximum '${config.get(
+						"general.maxClusterCustomDomains"
+					)}' custom domains to a cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -401,10 +400,9 @@ router.delete(
 			const { user, cluster } = req;
 			if (!user.isClusterOwner) {
 				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to manage custom domains of the cluster. Only the cluster owner can manage cluster custom domains."
-					),
+					error: "Not Authorized",
+					details:
+						"You are not authorized to manage custom domains of the cluster. Only the cluster owner can manage cluster custom domains.",
 					code: ERROR_CODES.unauthorized,
 				});
 			}
@@ -478,10 +476,9 @@ router.put(
 			const { user, cluster } = req;
 			if (!user.isClusterOwner) {
 				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to manage cluster SSL access settings. Only the cluster owner can manage cluster access settings."
-					),
+					error: "Not Authorized",
+					details:
+						"You are not authorized to manage cluster SSL access settings. Only the cluster owner can manage cluster access settings.",
 					code: ERROR_CODES.unauthorized,
 				});
 			}
@@ -490,10 +487,9 @@ router.put(
 
 			if (enforceSSLAccess && cluster.domains.length === 0) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You can enforce SSL access to your cluster only if you have a least one domain added to the custom domains list."
-					),
+					error: "Not Allowed",
+					details:
+						"You can enforce SSL access to your cluster only if you have a least one domain added to the custom domains list.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}

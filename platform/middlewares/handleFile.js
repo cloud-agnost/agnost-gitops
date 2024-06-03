@@ -1,3 +1,4 @@
+import config from "config";
 import multer, { memoryStorage } from "multer";
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -15,30 +16,23 @@ export const fileUploadMiddleware = (req, res, next) => {
 			// Handle Multer-specific errors
 			if (err.code === "LIMIT_FILE_SIZE") {
 				return res.status(400).json({
-					error: t("File Too Large"),
+					error: "File Too Large",
 					code: ERROR_CODES.fileSizeTooLarge,
-					details: t(
-						"File size exceeds the limit of %sMB.",
-						config.get("general.maxImageSizeMB")
-					),
+					details: `File size exceeds the limit of ${config.get(
+						"general.maxImageSizeMB"
+					)}MB.`,
 				});
 			}
 			return res.status(500).json({
-				error: t("File Upload Error"),
+				error: "File Upload Error",
 				code: ERROR_CODES.fileUploadError,
-				details: t(
-					"An error has occured when uploading the file. %s",
-					err.message
-				),
+				details: `An error has occured when uploading the file. ${err.message}`,
 			});
 		} else if (err) {
 			return res.status(500).json({
-				error: t("File Upload Error"),
+				error: "File Upload Error",
 				code: ERROR_CODES.fileUploadError,
-				details: t(
-					"An error has occured when uploading the file. %s",
-					err.message
-				),
+				details: "An error has occured when uploading the file. ${err.message}",
 			});
 		}
 		// If everything went fine, move to the next middleware

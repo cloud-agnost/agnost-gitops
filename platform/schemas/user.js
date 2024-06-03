@@ -1,3 +1,4 @@
+import config from "config";
 import mongoose from "mongoose";
 import { body, param, query } from "express-validator";
 import {
@@ -7,6 +8,7 @@ import {
 } from "../config/constants.js";
 import userCtrl from "../controllers/user.js";
 import { isValidGitProviderAccessToken } from "../handlers/git.js";
+import helper from "../util/helper.js";
 
 /**
  * Models the user information. Users will be associated with organizations and projects. Project users will be part of the organization
@@ -91,14 +93,14 @@ export const applyRules = (type) => {
 				body("provider")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(["github"])
-					.withMessage(t("Unsupported Git repository provider")),
+					.withMessage("Unsupported Git repository provider"),
 				body("accessToken")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value, { req }) => {
 						const { valid, error, user } = await isValidGitProviderAccessToken(
@@ -106,7 +108,7 @@ export const applyRules = (type) => {
 							req.body.provider
 						);
 
-						if (!valid) throw new AgnostError(error);
+						if (!valid) throw new Error(error);
 
 						// Assign git user to the request body
 						req.body.gitUser = user;
@@ -119,38 +121,35 @@ export const applyRules = (type) => {
 				body("orgName")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({ max: config.get("general.maxTextLength") })
 					.withMessage(
-						t(
-							"Name must be at most %s characters long",
-							config.get("general.maxTextLength")
-						)
+						`Name must be at most ${config.get(
+							"general.maxTextLength"
+						)} characters long`
 					),
 				body("projectName")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({ max: config.get("general.maxTextLength") })
 					.withMessage(
-						t(
-							"Name must be at most %s characters long",
-							config.get("general.maxTextLength")
-						)
+						`Name must be at most ${config.get(
+							"general.maxTextLength"
+						)} characters long`
 					),
 				body("environmentName")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({ max: config.get("general.maxTextLength") })
 					.withMessage(
-						t(
-							"Name must be at most %s characters long",
-							config.get("general.maxTextLength")
-						)
+						`Name must be at most ${config.get(
+							"general.maxTextLength"
+						)} characters long`
 					),
 			];
 		case "update-name":
@@ -158,18 +157,18 @@ export const applyRules = (type) => {
 				body("name")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({
 						min: config.get("general.minNameLength"),
 						max: config.get("general.maxTextLength"),
 					})
 					.withMessage(
-						t(
-							"Name must be minimum %s and maximum %s characters long",
-							config.get("general.minNameLength"),
-							config.get("general.maxTextLength")
-						)
+						`Name must be minimum ${config.get(
+							"general.minNameLength"
+						)} and maximum ${config.get(
+							"general.maxTextLength"
+						)} characters long`
 					),
 			];
 		case "update-notifications":
@@ -177,10 +176,10 @@ export const applyRules = (type) => {
 				body("notifications.*")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required value, cannot be left empty"))
+					.withMessage("Required value, cannot be left empty")
 					.bail()
 					.isIn(notificationTypes)
-					.withMessage(t("Unsupported notification type")),
+					.withMessage("Unsupported notification type"),
 			];
 		case "upload-picture":
 			return [
@@ -188,13 +187,13 @@ export const applyRules = (type) => {
 					.trim()
 					.optional({ nullable: true })
 					.isInt({ min: 1 })
-					.withMessage(t("Width needs to be a positive integer"))
+					.withMessage("Width needs to be a positive integer")
 					.toInt(),
 				query("height")
 					.trim()
 					.optional({ nullable: true })
 					.isInt({ min: 1 })
-					.withMessage(t("Height needs to be a positive integer"))
+					.withMessage("Height needs to be a positive integer")
 					.toInt(),
 			];
 		case "accept-org-invite":
@@ -203,26 +202,26 @@ export const applyRules = (type) => {
 				query("token")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty")),
+					.withMessage("Required parameter, cannot be left empty"),
 				query("provider")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(["github"])
-					.withMessage(t("Unsupported Git repository provider")),
+					.withMessage("Unsupported Git repository provider"),
 				query("accessToken")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value, { req }) => {
 						const { valid, error, user } = await isValidGitProviderAccessToken(
 							value,
-							req.body.provider
+							req.query.provider
 						);
 
-						if (!valid) throw new AgnostError(error);
+						if (!valid) throw new Error(error);
 
 						// Assign git user to the request body
 						req.body.gitUser = user;
@@ -230,29 +229,31 @@ export const applyRules = (type) => {
 					}),
 				query("refreshToken").trim().optional(),
 			];
+		case "accept-org-invite-session":
+		case "accept-project-invite-session":
 		case "reject-org-invite":
 		case "reject-project-invite":
 			return [
 				query("token")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty")),
+					.withMessage("Required parameter, cannot be left empty"),
 			];
 		case "transfer":
 			return [
 				param("userId")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					})
 					.bail()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						let userObj = await userCtrl.getOneByQuery(
 							{
 								_id: value,
@@ -261,19 +262,14 @@ export const applyRules = (type) => {
 						);
 
 						if (!userObj) {
-							throw new AgnostError(
-								t(
-									"The user identified with id '%s' is not a member the Agnost Cluster. Cluster ownership can only be transferred to an existing cluster member in 'Active' status.",
-									value
-								)
+							throw new Error(
+								`The user identified with id '${value}' is not a member the Agnost Cluster. Cluster ownership can only be transferred to an existing cluster member in 'Active' status.`
 							);
 						}
 
 						if (userObj.status !== "Active") {
-							throw new AgnostError(
-								t(
-									"Cluster ownership can only be transferred to an existing cluster member in 'Active' status."
-								)
+							throw new Error(
+								"Cluster ownership can only be transferred to an existing cluster member in 'Active' status."
 							);
 						}
 

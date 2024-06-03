@@ -29,7 +29,7 @@ export async function isValidGitProviderAccessToken(accessToken, gitProvider) {
 			};
 		} catch (error) {
 			if (error.response && error.response.status === 401) {
-				return { valid: false, error: t("Invalid or expired token.") }; // Token is invalid
+				return { valid: false, error: "Invalid or expired token." }; // Token is invalid
 			} else {
 				return {
 					valid: false,
@@ -38,7 +38,7 @@ export async function isValidGitProviderAccessToken(accessToken, gitProvider) {
 			}
 		}
 	}
-	return { valid: false, error: t("Unsupported Git repository provider.") };
+	return { valid: false, error: "Unsupported Git repository provider." };
 }
 
 /**
@@ -65,7 +65,9 @@ export async function getGitHubUserEmail(accessToken) {
 		}
 
 		return null;
-	} catch (err) {}
+	} catch (err) {
+		console.error(err);
+	}
 
 	return null;
 }
@@ -95,7 +97,9 @@ export async function revokeGitProviderAccessToken(
 				},
 			}
 		);
-	} catch (err) {}
+	} catch (err) {
+		console.error(err);
+	}
 }
 
 /**
@@ -159,7 +163,8 @@ export async function getGitProviderRepos(gitProvider) {
 			}));
 
 			return userReposData;
-		} catch (error) {
+		} catch (err) {
+			console.error(err);
 			return [];
 		}
 	}
@@ -213,7 +218,8 @@ export async function getGitProviderRepoBranches(
 			}
 
 			return branches;
-		} catch (error) {
+		} catch (err) {
+			console.error(err);
 			return [];
 		}
 	}

@@ -91,10 +91,11 @@ export async function getK8SResource(kind, name, namespace) {
 					namespace
 				);
 			default:
-				console.log(`Skipping: ${kind}`);
+				console.info(`Skipping: ${kind}`);
 				return null;
 		}
 	} catch (err) {
+		console.error(err);
 		return null;
 	}
 }

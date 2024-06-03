@@ -19,6 +19,7 @@ import {
 	getContainerTaskRuns,
 	getTaskRunLogs,
 } from "../handlers/status.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -90,11 +91,8 @@ router.post(
 
 			if (environment.isClusterEntity) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are not allowed to create a new container within environment '%s' which is the default environment of the cluster.",
-						environment.name
-					),
+					error: "Not Allowed",
+					details: `You are not allowed to create a new container within environment '${environment.name}' which is the default environment of the cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -151,7 +149,7 @@ router.post(
 				user,
 				"org.project.environment.container",
 				"create",
-				t("Created new '%s' named '%s'", body.type, body.name),
+				`Created new '${body.type}' named '${body.name}'`,
 				container,
 				{
 					orgId: org._id,
@@ -329,7 +327,7 @@ router.put(
 				user,
 				"org.project.environment.container",
 				"update",
-				t("Updated '%s' named '%s'", body.type, body.name),
+				`Updated '${body.type}' named '${body.name}'`,
 				updatedContainer,
 				{
 					orgId: org._id,
@@ -367,11 +365,8 @@ router.delete(
 
 			if (container.isClusterEntity) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are not allowed to delete container '%s' which is one of the default containers of the cluster.",
-						container.name
-					),
+					error: "Not Allowed",
+					details: `You are not allowed to delete container '${container.name}' which is one of the default containers of the cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -412,7 +407,7 @@ router.delete(
 				user,
 				"org.project.environment.container",
 				"delete",
-				t("Deleted '%s' named '%s'", body.type, body.name),
+				`Deleted '${body.type}' named '${body.name}'`,
 				{},
 				{
 					orgId: org._id,

@@ -79,7 +79,9 @@ export async function createHPA(definition, name, namespace) {
 		namespace,
 		resource
 	);
-	console.log(`HPA '${name}' in namespace '${namespace}' created successfully`);
+	console.info(
+		`HPA '${name}' in namespace '${namespace}' created successfully`
+	);
 }
 
 // Definition is deploymentConfig
@@ -152,7 +154,9 @@ export async function updateHPA(definition, name, namespace) {
 		namespace,
 		payload.body
 	);
-	console.log(`HPA '${name}' in namespace '${namespace}' updated successfully`);
+	console.info(
+		`HPA '${name}' in namespace '${namespace}' updated successfully`
+	);
 }
 
 export async function deleteHPA(name, namespace) {
@@ -163,7 +167,9 @@ export async function deleteHPA(name, namespace) {
 			name,
 			namespace
 		);
-		console.log(`HPA '${name}' in namespace ${namespace} deleted successfully`);
+		console.info(
+			`HPA '${name}' in namespace ${namespace} deleted successfully`
+		);
 	} catch (err) {
 		console.error(
 			`Error deleting HPA '${name}' in namespace ${namespace}. ${err.response?.body?.message}`

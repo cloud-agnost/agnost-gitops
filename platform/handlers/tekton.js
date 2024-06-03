@@ -7,6 +7,7 @@ import axios from "axios";
 import { fileURLToPath } from "url";
 import { getClusterRecord } from "./util.js";
 import { initializeClusterCertificateIssuer } from "./ingress.js";
+import helper from "../util/helper.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
@@ -212,9 +213,9 @@ export async function createTektonPipeline(
 					}
 					break;
 				default:
-					console.log(`!!! Skipping: ${kind}`);
+					console.info(`!!! Skipping: ${kind}`);
 			}
-			console.log(`${kind} ${resource.metadata.name} created...`);
+			console.info(`${kind} ${resource.metadata.name} created...`);
 		} catch (err) {
 			console.error(
 				`Error applying tekton pipeline resource ${resource.kind} ${resource.metadata.name}...`,
@@ -259,7 +260,7 @@ export async function createTektonPipeline(
 			);
 			break;
 		default:
-			throw new AgnostError("Unknown repo type: " + gitRepoType);
+			throw new Error("Unknown repo type: " + gitRepoType);
 	}
 
 	if (webHookId) {
@@ -275,7 +276,9 @@ export async function createTektonPipeline(
 					},
 				}
 			)
-			.catch((error) => {});
+			.catch((err) => {
+				console.error(err);
+			});
 	}
 }
 
@@ -366,9 +369,9 @@ export async function deleteTektonPipeline(
 					);
 					break;
 				default:
-					console.log(`!!! Skipping: ${kind}`);
+					console.info(`!!! Skipping: ${kind}`);
 			}
-			console.log(`${kind} ${resource.metadata.name} deleted...`);
+			console.info(`${kind} ${resource.metadata.name} deleted...`);
 		} catch (err) {
 			console.error(
 				`Error deleting tekton pipeline resource ${resource.kind} ${resource.metadata.name}...`,
@@ -385,7 +388,7 @@ export async function deleteTektonPipeline(
 			await deleteGitlabWebhook(gitPat, gitRepoUrl, hookId);
 			break;
 		default:
-			throw new AgnostError("Unknown repo type: " + gitRepoType);
+			throw new Error("Unknown repo type: " + gitRepoType);
 	}
 
 	// At this stage we have successfully deleted the webhook, update the container database to remove the webhook id
@@ -401,7 +404,7 @@ export async function deleteTektonPipeline(
 			}
 		)
 		.catch((error) => {
-			console.log("Error updating github webhook in platform-core", error);
+			console.info("Error updating github webhook in platform-core", error);
 		});
 }
 
@@ -445,7 +448,7 @@ async function createGithubWebhook(
 		},
 	});
 
-	console.log("GitHub repo webhook created");
+	console.info("GitHub repo webhook created");
 	return githubHook.data.id;
 }
 
@@ -463,7 +466,7 @@ async function deleteGithubWebhook(gitPat, gitRepoUrl, hookId) {
 				"X-GitHub-Api-Version": "2022-11-28",
 			},
 		});
-		console.log("GitHub repo webhook deleted");
+		console.info("GitHub repo webhook deleted");
 	} catch (err) {
 		console.error("Error deleting GitLab repo webhook", err);
 	}
@@ -488,7 +491,7 @@ async function createGitlabWebhook(
 		headers: { "PRIVATE-TOKEN": gitPat },
 	});
 	if (!responseUser.ok) {
-		throw new AgnostError("Failed to fetch user data");
+		throw new Error("Failed to fetch user data");
 	}
 	const user = await responseUser.json();
 	const userId = user.id;
@@ -501,7 +504,7 @@ async function createGitlabWebhook(
 		}
 	);
 	if (!responseProject.ok) {
-		throw new AgnostError("Failed to fetch project data");
+		throw new Error("Failed to fetch project data");
 	}
 	const projects = await responseProject.json();
 
@@ -537,10 +540,10 @@ async function createGitlabWebhook(
 		}
 	);
 	if (!response.ok) {
-		throw new AgnostError("Network response was not ok");
+		throw new Error("Network response was not ok");
 	}
 	const webhook = await response.json();
-	console.log("GitLab repo webhook created");
+	console.info("GitLab repo webhook created");
 
 	return webhook.id;
 }
@@ -559,7 +562,7 @@ async function deleteGitlabWebhook(gitPat, gitRepoUrl, hookId) {
 			headers: { "PRIVATE-TOKEN": gitPat },
 		});
 		if (!responseUser.ok) {
-			throw new AgnostError("Failed to fetch GitLab user data");
+			throw new Error("Failed to fetch GitLab user data");
 		}
 		const user = await responseUser.json();
 		const userId = user.id;
@@ -572,7 +575,7 @@ async function deleteGitlabWebhook(gitPat, gitRepoUrl, hookId) {
 			}
 		);
 		if (!responseProject.ok) {
-			throw new AgnostError("Failed to fetch project data");
+			throw new Error("Failed to fetch project data");
 		}
 		const projects = await responseProject.json();
 
@@ -596,9 +599,9 @@ async function deleteGitlabWebhook(gitPat, gitRepoUrl, hookId) {
 			}
 		);
 		if (!response.ok) {
-			throw new AgnostError("Network response was not ok");
+			throw new Error("Network response was not ok");
 		}
-		console.log("GitLab repo webhook deleted");
+		console.info("GitLab repo webhook deleted");
 	} catch (err) {
 		console.error("Error deleting GitLab repo webhook", err);
 	}

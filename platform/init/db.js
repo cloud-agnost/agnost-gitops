@@ -1,3 +1,4 @@
+import config from "config";
 import mongoose from "mongoose";
 
 export const connectToDatabase = async () => {
@@ -9,14 +10,14 @@ export const connectToDatabase = async () => {
 			maxPoolSize: config.get("database.maxPoolSize"),
 		});
 
-		logger.info(`Connected to the database @${process.env.CLUSTER_DB_URI}`);
+		console.info(`Connected to the database @${process.env.CLUSTER_DB_URI}`);
 	} catch (err) {
-		logger.error(`Cannot connect to the database`, { details: err });
+		console.error(`Cannot connect to the database`, { details: err });
 		process.exit(1);
 	}
 };
 
 export const disconnectFromDatabase = async () => {
 	await mongoose.disconnect();
-	logger.info("Disconnected from the database");
+	console.info("Disconnected from the database");
 };

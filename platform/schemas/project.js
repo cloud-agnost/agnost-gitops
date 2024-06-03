@@ -1,6 +1,8 @@
+import config from "config";
 import mongoose from "mongoose";
 import { body, param, query } from "express-validator";
 import { projectRoles } from "../config/constants.js";
+import helper from "../util/helper.js";
 
 /**
  * An project is your workspace that packages all project environments and associated containers.
@@ -86,36 +88,32 @@ export const applyRules = (type) => {
 				body("name")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({
 						min: config.get("general.minNameLength"),
 						max: config.get("general.maxTextLength"),
 					})
 					.withMessage(
-						t(
-							"Name must be minimum %s and maximum %s characters long",
-							config.get("general.minNameLength"),
-							config.get("general.maxTextLength")
-						)
+						`Name must be minimum ${config.get(
+							"general.minNameLength"
+						)} and maximum ${config.get(
+							"general.maxTextLength"
+						)} characters long`
 					)
 					.bail()
 					.custom((value) => {
 						let regex = /^[A-Za-z0-9 _.-]+$/;
 						if (!regex.test(value)) {
-							throw new AgnostError(
-								t(
-									"Project names can include only numbers, letters, spaces, dash, dot and underscore characters"
-								)
+							throw new Error(
+								"Project names can include only numbers, letters, spaces, dash, dot and underscore characters"
 							);
 						}
 
 						let regex2 = /^[ _-].*$/;
 						if (regex2.test(value)) {
-							throw new AgnostError(
-								t(
-									"Project names cannot start with a dash or underscore character"
-								)
+							throw new Error(
+								"Project names cannot start with a dash or underscore character"
 							);
 						}
 
@@ -126,36 +124,32 @@ export const applyRules = (type) => {
 					.if(() => type === "create")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({
 						min: config.get("general.minNameLength"),
 						max: config.get("general.maxTextLength"),
 					})
 					.withMessage(
-						t(
-							"Name must be minimum %s and maximum %s characters long",
-							config.get("general.minNameLength"),
-							config.get("general.maxTextLength")
-						)
+						`Name must be minimum ${config.get(
+							"general.minNameLength"
+						)} and maximum ${config.get(
+							"general.maxTextLength"
+						)} characters long`
 					)
 					.bail()
 					.custom((value) => {
 						let regex = /^[A-Za-z0-9 _.-]+$/;
 						if (!regex.test(value)) {
-							throw new AgnostError(
-								t(
-									"Project environment names can include only numbers, letters, spaces, dash, dot and underscore characters"
-								)
+							throw new Error(
+								"Project environment names can include only numbers, letters, spaces, dash, dot and underscore characters"
 							);
 						}
 
 						let regex2 = /^[ _-].*$/;
 						if (regex2.test(value)) {
-							throw new AgnostError(
-								t(
-									"Project environment names cannot start with a dash or underscore character"
-								)
+							throw new Error(
+								"Project environment names cannot start with a dash or underscore character"
 							);
 						}
 
@@ -168,32 +162,32 @@ export const applyRules = (type) => {
 				param("userId")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					}),
 				body("role")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(projectRoles)
-					.withMessage(t("Unsupported team member role")),
+					.withMessage("Unsupported team member role"),
 			];
 		case "remove-member":
 			return [
 				param("userId")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					}),
@@ -202,17 +196,17 @@ export const applyRules = (type) => {
 			return [
 				body("userIds")
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.isArray()
-					.withMessage(t("User identifiers need to be an array of strings")),
+					.withMessage("User identifiers need to be an array of strings"),
 				body("userIds.*")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					}),
@@ -222,11 +216,11 @@ export const applyRules = (type) => {
 				param("userId")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					})
@@ -238,20 +232,14 @@ export const applyRules = (type) => {
 						);
 
 						if (!projectMember) {
-							throw new AgnostError(
-								t(
-									"The user identified with id '%s' is not a member of project '%s'. Project ownership can only be transferred to an existing project member with 'Admin' role.",
-									value,
-									req.project.name
-								)
+							throw new Error(
+								`The user identified with id '${value}' is not a member of project '${req.project.name}'. Project ownership can only be transferred to an existing project member with 'Admin' role.`
 							);
 						}
 
 						if (projectMember.role !== "Admin") {
-							throw new AgnostError(
-								t(
-									"Project ownership can only be transferred to an existing project member with 'Admin' role."
-								)
+							throw new Error(
+								"Project ownership can only be transferred to an existing project member with 'Admin' role."
 							);
 						}
 
@@ -264,13 +252,13 @@ export const applyRules = (type) => {
 					.trim()
 					.optional({ nullable: true })
 					.isInt({ min: 1 })
-					.withMessage(t("Width needs to be a positive integer"))
+					.withMessage("Width needs to be a positive integer")
 					.toInt(),
 				query("height")
 					.trim()
 					.optional({ nullable: true })
 					.isInt({ min: 1 })
-					.withMessage(t("Height needs to be a positive integer"))
+					.withMessage("Height needs to be a positive integer")
 					.toInt(),
 			];
 		default:

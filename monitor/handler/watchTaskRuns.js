@@ -18,7 +18,7 @@ export async function watchBuildEvents() {
 	const namespace = "tekton-builds";
 
 	/**
-	 * Starts watching build events.
+	 * Start watching build events.
 	 */
 	async function startWatching() {
 		try {
@@ -96,7 +96,7 @@ export async function watchBuildEvents() {
 				(err) => {
 					console.error(
 						`Error while watching for build events. ${
-							err.response?.body?.message ?? err.message
+							err?.response?.body?.message ?? err.message
 						}`
 					);
 					// Retry the watch after a delay

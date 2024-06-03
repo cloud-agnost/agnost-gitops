@@ -11,26 +11,21 @@ export const userStatus = ["Active", "Deleted"];
 // Organization roles
 export const orgRoles = ["Admin", "Member"];
 export const orgRoleDesc = {
-	Admin: t(
-		"Full control over the organization. Can manage organization properties, organization team and can create new projects and organizations."
-	),
-	Member: t(
-		"Can view organization and its members but cannot update them and cannot create new projects and organizations."
-	),
+	Admin:
+		"Full control over the organization. Can manage organization properties, organization team and can create new projects and organizations.",
+	Member:
+		"Can view organization and its members but cannot update them and cannot create new projects and organizations.",
 };
 
 // Project team member roles
 export const projectRoles = ["Admin", "Developer", "Viewer"];
 export const projectRoleDesc = {
-	Admin: t(
-		"Full control over the project, its environments, containers and team members. Can manage all project environments even the ones marked as private or read-only."
-	),
-	Developer: t(
-		"Has read-write access over the containers of his project environment. Can view environments marked as public by other project members but cannot manage project team and edit read-only environments."
-	),
-	Viewer: t(
-		"Read-only access to public project environments and project properties."
-	),
+	Admin:
+		"Full control over the project, its environments, containers and team members. Can manage all project environments even the ones marked as private or read-only.",
+	Developer:
+		"Has read-write access over the containers of his project environment. Can view environments marked as public by other project members but cannot manage project team and edit read-only environments.",
+	Viewer:
+		"Read-only access to public project environments and project properties.",
 };
 
 // Types of Docker image registries supported

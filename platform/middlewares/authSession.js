@@ -1,6 +1,7 @@
 import userCtrl from "../controllers/user.js";
 import authCtrl from "../controllers/auth.js";
 import { getKey } from "../init/cache.js";
+import helper from "../util/helper.js";
 import ERROR_CODES from "../config/errorCodes.js";
 
 export const authSession = async (req, res, next) => {
@@ -10,8 +11,8 @@ export const authSession = async (req, res, next) => {
 	// Check if there is token
 	if (!token) {
 		return res.status(401).json({
-			error: t("Unauthorized"),
-			details: t("No access token was found in 'Authorization' header."),
+			error: "Unauthorized",
+			details: "No access token was found in 'Authorization' header.",
 			code: ERROR_CODES.missingAccessToken,
 		});
 	}
@@ -39,8 +40,8 @@ export const authSession = async (req, res, next) => {
 
 				if (!session) {
 					return res.status(401).json({
-						error: t("Unauthorized"),
-						details: t("The access token was not authorized or has expired."),
+						error: "Unauthorized",
+						details: "The access token was not authorized or has expired.",
 						code: ERROR_CODES.invalidSession,
 					});
 				} else {
@@ -49,15 +50,15 @@ export const authSession = async (req, res, next) => {
 				}
 			} else {
 				return res.status(401).json({
-					error: t("Unauthorized"),
-					details: t("The access token was not authorized or has expired."),
+					error: "Unauthorized",
+					details: "The access token was not authorized or has expired.",
 					code: ERROR_CODES.invalidSession,
 				});
 			}
 		} else {
 			return res.status(401).json({
-				error: t("Unauthorized"),
-				details: t("The access token was not authorized or has expired."),
+				error: "Unauthorized",
+				details: "The access token was not authorized or has expired.",
 				code: ERROR_CODES.invalidSession,
 			});
 		}
@@ -70,8 +71,8 @@ export const authSession = async (req, res, next) => {
 
 	if (!user || user.status !== "Active") {
 		return res.status(403).json({
-			error: t("Unauthorized"),
-			details: t("No such user exists or the user account is not active."),
+			error: "Unauthorized",
+			details: "No such user exists or the user account is not active.",
 			code: ERROR_CODES.invalidUser,
 		});
 	}

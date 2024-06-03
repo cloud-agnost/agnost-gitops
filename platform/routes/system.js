@@ -12,10 +12,9 @@ router.get("/health", (req, res) => {
 	res
 		.status(200)
 		.send(
-			new Date().toISOString() +
-				" - Healthy platform server" +
-				" - " +
+			`${new Date().toISOString()} - Healthy platform server - ${
 				process.env.RELEASE_NUMBER
+			}`
 		);
 });
 
@@ -26,7 +25,7 @@ router.get("/health", (req, res) => {
 @access     public
 */
 router.get("/ping", (req, res) => {
-	res.status(200).send(new Date().toISOString() + " - Pong!");
+	res.status(200).send(`${new Date().toISOString()} - Pong!`);
 });
 
 export default router;

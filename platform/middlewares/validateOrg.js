@@ -1,5 +1,6 @@
 import orgCtrl from "../controllers/organization.js";
 import orgMemberCtrl from "../controllers/organizationMember.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -12,11 +13,8 @@ export const validateOrg = async (req, res, next) => {
 
 		if (!org) {
 			return res.status(404).json({
-				error: t("Not Found"),
-				details: t(
-					"No such organization with the provided id '%s' exists.",
-					orgId
-				),
+				error: "Not Found",
+				details: `No such organization with the provided id '${orgId}' exists.`,
 				code: ERROR_CODES.notFound,
 			});
 		}
@@ -44,11 +42,8 @@ export const validateOrg = async (req, res, next) => {
 
 				if (!orgMember) {
 					return res.status(401).json({
-						error: t("Not Authorized"),
-						details: t(
-							"You are not a member of the organization '%s'",
-							org.name
-						),
+						error: "Not Authorized",
+						details: `You are not a member of the organization '${org.name}'`,
 						code: ERROR_CODES.unauthorized,
 					});
 				}

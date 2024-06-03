@@ -1,4 +1,6 @@
+import config from "config";
 import { io } from "socket.io-client";
+import helper from "../util/helper.js";
 
 var socket = null;
 
@@ -12,13 +14,13 @@ export function initializeSyncClient() {
 	});
 
 	socket.on("connect", () => {
-		logger.info(
+		console.info(
 			`Connection established to synronization server @${helper.getSyncUrl()}`
 		);
 	});
 
 	socket.io.on("reconnect", () => {
-		logger.info(
+		console.info(
 			`Connection re-established to synronization server @${helper.getSyncUrl()}`
 		);
 	});

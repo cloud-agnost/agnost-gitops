@@ -1,3 +1,4 @@
+import config from "config";
 import express from "express";
 import sharp from "sharp";
 import orgCtrl from "../controllers/organization.js";
@@ -19,6 +20,7 @@ import { fileUploadMiddleware } from "../middlewares/handleFile.js";
 import { storage } from "../init/storage.js";
 import { deleteNamespaces } from "../handlers/ns.js";
 import { deleteTCPProxyPorts } from "../handlers/tcpproxy.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -51,7 +53,7 @@ router.get("/", authSession, async (req, res) => {
 
 		// Cluster owner is by default Admin member of all organizations
 		if (user.isClusterOwner) {
-			orgs = await orgCtrl.getManyByQuery({});
+			orgs = await orgCtrl.getManyByQuery({ isClusterEntity: false });
 			res.json(
 				orgs
 					.map((entry) => {
@@ -68,6 +70,7 @@ router.get("/", authSession, async (req, res) => {
 			);
 			res.json(
 				orgs
+					.filter((entry) => entry.orgId.isClusterEntity === false)
 					.map((entry) => {
 						return { ...entry.orgId, role: entry.role };
 					})
@@ -103,10 +106,9 @@ router.post(
 			if (!req.user.canCreateOrg) {
 				await orgCtrl.endSession(session);
 				return res.status(401).json({
-					error: t("Unauthorized"),
-					details: t(
-						"You do not have the authorization to create a new organization."
-					),
+					error: "Unauthorized",
+					details:
+						"You do not have the authorization to create a new organization.",
 					code: ERROR_CODES.unauthorized,
 				});
 			}
@@ -147,7 +149,7 @@ router.post(
 				req.user,
 				"org",
 				"create",
-				t("Created a new organization named '%s'", name),
+				`Created a new organization named '${name}'`,
 				orgObj,
 				{ orgId }
 			);
@@ -190,7 +192,7 @@ router.put(
 				req.user,
 				"org",
 				"update",
-				t("Updated organization name from '%s' to '%s'", req.org.name, name),
+				`Updated organization name from '${req.org.name}' to '${name}'`,
 				orgObj,
 				{ orgId: req.org._id }
 			);
@@ -223,22 +225,16 @@ router.delete(
 				!req.user.isClusterOwner
 			) {
 				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to delete organization '%s'. Only the owner of the organization or cluster owner can delete it.",
-						org.name
-					),
+					error: "Not Authorized",
+					details: `You are not authorized to delete organization '${org.name}'. Only the owner of the organization or cluster owner can delete it.`,
 					code: ERROR_CODES.unauthorized,
 				});
 			}
 
 			if (org.isClusterEntity) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are not allowed to delete organization '%s' which is the default organization of the cluster.",
-						org.name
-					),
+					error: "Not Allowed",
+					details: `You are not allowed to delete organization '${org.name}' which is the default organization of the cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -261,7 +257,6 @@ router.delete(
 
 			// Delete all organization related data
 			await orgCtrl.deleteOrganization(session, org);
-
 			// Delete namespaces
 			await deleteNamespaces(environmentiids);
 			// Remove exposed TCP proxy ports
@@ -278,7 +273,7 @@ router.delete(
 				user,
 				"org",
 				"delete",
-				t("Deleted organization '%s'", org.name),
+				`Deleted organization '${org.name}'`,
 				org,
 				{ orgId: org._id }
 			);
@@ -326,8 +321,8 @@ router.put(
 
 			if (!req.file) {
 				return res.status(422).json({
-					error: t("Missing Upload File"),
-					details: t("Missing file, no file uploaded."),
+					error: "Missing Upload File",
+					details: "Missing file, no file uploaded.",
 					code: ERROR_CODES.fileUploadError,
 				});
 			}
@@ -371,7 +366,7 @@ router.put(
 				req.user,
 				"org",
 				"update",
-				t("Updated organization picture"),
+				"Updated organization picture",
 				orgObj,
 				{ orgId: req.org._id }
 			);
@@ -413,7 +408,7 @@ router.delete(
 				req.user,
 				"org",
 				"update",
-				t("Removed organization picture"),
+				"Removed organization picture",
 				orgObj,
 				{ orgId: req.org._id }
 			);
@@ -440,7 +435,9 @@ router.post(
 	async (req, res) => {
 		try {
 			// Get transferred user information
-			let transferredUser = await userCtrl.getOneById(req.params.userId);
+			let transferredUser = await userCtrl.getOneById(req.params.userId, {
+				cacheKey: req.params.userId,
+			});
 
 			// Transfer organization ownership
 			let orgObj = await orgCtrl.updateOneById(
@@ -458,11 +455,7 @@ router.post(
 				req.user,
 				"org",
 				"update",
-				t(
-					"Transferred organization ownership to user '%s' (%s)",
-					transferredUser.name,
-					transferredUser.email
-				),
+				`Transferred organization ownership to user '${transferredUser.name}' (${transferredUser.email})`,
 				orgObj,
 				{ orgId: req.org._id }
 			);

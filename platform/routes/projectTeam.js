@@ -9,6 +9,7 @@ import { validateProject } from "../middlewares/validateProject.js";
 import { authorizeProjectAction } from "../middlewares/authorizeProjectAction.js";
 import { applyRules } from "../schemas/project.js";
 import { validate } from "../middlewares/validate.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -132,8 +133,8 @@ router.put(
 			let targetUser = await userCtrl.getOneById(userId);
 			if (!targetUser) {
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such user exists"),
+					error: "Not Found",
+					details: "No such user exists",
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -144,8 +145,8 @@ router.put(
 			);
 			if (!member) {
 				return res.status(404).json({
-					error: t("Not a Member"),
-					details: t("User is not a member of the project '%s'.", project.name),
+					error: "Not a Member",
+					details: `User is not a member of the project '${project.name}'.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -153,8 +154,8 @@ router.put(
 			// Check if the target user is the current user or not. Users cannot change their own role.
 			if (targetUser._id.toString() === user._id.toString()) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t("You cannot change your own project role."),
+					error: "Not Allowed",
+					details: "You cannot change your own project role.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -162,8 +163,8 @@ router.put(
 			// Check if the target user is the project owner. The role of project owner cannot be changed.
 			if (targetUser._id.toString() === project.ownerUserId.toString()) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t("You cannot change the role of the project owner."),
+					error: "Not Allowed",
+					details: "You cannot change the role of the project owner.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -210,13 +211,7 @@ router.put(
 				req.user,
 				"org.project.team",
 				"update",
-				t(
-					"Updated project member role of user '%s' (%s) from '%s' to '%s'",
-					targetUser.name,
-					targetUser.email,
-					member.role,
-					role
-				),
+				`Updated project member role of user '${targetUser.name}' (${targetUser.email}) from '${member.role}' to '${role}'`,
 				projectWithTeam,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -250,8 +245,8 @@ router.delete(
 			let user = await userCtrl.getOneById(userId);
 			if (!user) {
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such user exists"),
+					error: "Not Found",
+					details: "No such user exists",
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -263,8 +258,8 @@ router.delete(
 
 			if (!member) {
 				return res.status(404).json({
-					error: t("Not a Member"),
-					details: t("User is not a member of the project '%s'.", project.name),
+					error: "Not a Member",
+					details: `User is not a member of the project '${project.name}'.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -272,10 +267,9 @@ router.delete(
 			// Check if the target user is the current user or not. Users cannot delete themselves from the project team, they need to leave from project team.
 			if (req.user._id.toString() === user._id.toString()) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You cannot remove yourself from the project team. Try to leave the project team."
-					),
+					error: "Not Allowed",
+					details:
+						"You cannot remove yourself from the project team. Try to leave the project team.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -283,10 +277,9 @@ router.delete(
 			// Check if the user is the creator of the project or not
 			if (project.ownerUserId.toString() === userId) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"The project owner cannot be removed from the project team. If you would like to remove the current project owner from the project team then the project ownership needs to be transferred to another team member with 'Admin' role"
-					),
+					error: "Not Allowed",
+					details:
+						"The project owner cannot be removed from the project team. If you would like to remove the current project owner from the project team then the project ownership needs to be transferred to another team member with 'Admin' role",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -314,7 +307,7 @@ router.delete(
 				req.user,
 				"org.project.team",
 				"delete",
-				t("Removed user '%s' (%s) from project team", user.name, user.email),
+				`Removed user '${user.name}' (${user.email}) from project team`,
 				projectWithTeam,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -347,10 +340,9 @@ router.post(
 			// Users cannot remove themselves from the project team, they need to leave from org team.
 			if (userIds.includes(req.user._id.toString())) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You cannot remove yourself from the project team. Try to leave the project team."
-					),
+					error: "Not Allowed",
+					details:
+						"You cannot remove yourself from the project team. Try to leave the project team.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -358,10 +350,9 @@ router.post(
 			// Check if one of the deleted user is the owner of the project or not
 			if (userIds.includes(project.ownerUserId.toString())) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"The project owner cannot be removed from the project team. If you would like to remove the current project owner from the project team, then the project ownership needs to be transferred to another team member with 'Admin' role"
-					),
+					error: "Not Allowed",
+					details:
+						"The project owner cannot be removed from the project team. If you would like to remove the current project owner from the project team, then the project ownership needs to be transferred to another team member with 'Admin' role",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -389,7 +380,7 @@ router.post(
 				req.user,
 				"org.project.team",
 				"delete",
-				t("Removed users from project team"),
+				"Removed users from project team",
 				projectWithTeam,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -422,11 +413,8 @@ router.delete(
 
 			if (!member) {
 				return res.status(404).json({
-					error: t("Not a Member"),
-					details: t(
-						"You are not a member of the project '%s' team.",
-						project.name
-					),
+					error: "Not a Member",
+					details: `You are not a member of the project '${project.name}' team.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -434,10 +422,9 @@ router.delete(
 			// Check if the user is the creator of the project or not
 			if (project.ownerUserId.toString() === user._id) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are the owner of the project. The project owner cannot leave the project team. You first need to transfer project ownership to another team member with 'Admin' role."
-					),
+					error: "Not Allowed",
+					details:
+						"You are the owner of the project. The project owner cannot leave the project team. You first need to transfer project ownership to another team member with 'Admin' role.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -465,7 +452,7 @@ router.delete(
 				user,
 				"org.project.team",
 				"delete",
-				t("User '%s' (%s) has left the project team", user.name, user.email),
+				`User '${user.name}' (${user.email}) has left the project team`,
 				projectWithTeam,
 				{ orgId: org._id, projectId: project._id }
 			);

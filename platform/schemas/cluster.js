@@ -75,34 +75,31 @@ export const applyRules = (type) => {
 				body("release")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty")),
+					.withMessage("Required field, cannot be left empty"),
 			];
 		case "add-domain":
 			return [
 				body("domain")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.toLowerCase() // convert the value to lowercase
-					.custom((value, { req }) => {
+					.custom((value) => {
 						// The below reges allows for wildcard subdomains
 						// const dnameRegex = /^(?:\*\.)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 						// Check domain name syntax, we do not currently allow wildcard subdomains
 						const dnameRegex = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 						// Validate domain name (can be at mulitple levels)
 						if (!dnameRegex.test(value)) {
-							throw new AgnostError(t("Not a valid domain name '%s'", value));
+							throw new Error(`Not a valid domain name '${value}'`);
 						}
 
 						// Check to see if this domain is already included in the list list or not
 						const exists = domainCtrl.getOneByQuery({ domain: value });
 						if (exists) {
-							throw new AgnostError(
-								t(
-									"The specified domain '%s' already exists in used domains list",
-									value
-								)
+							throw new Error(
+								"The specified domain '${value}' already exists in used domains list"
 							);
 						}
 						return true;
@@ -113,7 +110,7 @@ export const applyRules = (type) => {
 				body("domain")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.toLowerCase() // convert the value to lowercase
 					.custom((value, { req }) => {
@@ -122,11 +119,8 @@ export const applyRules = (type) => {
 						if (domains && domains.find((entry) => entry === value)) {
 							return true;
 						} else {
-							throw new AgnostError(
-								t(
-									"The specified domain '%s' does not exist in cluster domain list",
-									value
-								)
+							throw new Error(
+								`The specified domain '${value}' does not exist in cluster domain list`
 							);
 						}
 					}),
@@ -136,10 +130,10 @@ export const applyRules = (type) => {
 				body("enforceSSLAccess")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isBoolean()
-					.withMessage(t("Not a valid boolean value"))
+					.withMessage("Not a valid boolean value")
 					.toBoolean(),
 			];
 		default:

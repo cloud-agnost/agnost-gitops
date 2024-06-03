@@ -1,5 +1,7 @@
+import config from "config";
 import mongoose from "mongoose";
 import { query } from "express-validator";
+import helper from "../util/helper.js";
 
 /**
  * Account is the top level model which will hold the list of organizations, under organization there will be users and apps etc.
@@ -96,58 +98,54 @@ export const applyRules = (type) => {
 					.trim()
 					.optional()
 					.isISO8601({ strict: true, strictSeparator: true })
-					.withMessage(t("Not a valid ISO 8061 date-time"))
+					.withMessage("Not a valid ISO 8061 date-time")
 					.toDate(),
 				query("end")
 					.trim()
 					.optional()
 					.isISO8601({ strict: true, strictSeparator: true })
-					.withMessage(t("Not a valid ISO 8061 date-time"))
+					.withMessage("Not a valid ISO 8061 date-time")
 					.toDate(),
 				query("page")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({
 						min: 0,
 					})
-					.withMessage(
-						t("Page number needs to be a positive integer or 0 (zero)")
-					)
+					.withMessage("Page number needs to be a positive integer or 0 (zero)")
 					.toInt(),
 				query("size")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({
 						min: config.get("general.minPageSize"),
 						max: config.get("general.maxPageSize"),
 					})
 					.withMessage(
-						t(
-							"Page size needs to be an integer, between %s and %s",
-							config.get("general.minPageSize"),
-							config.get("general.maxPageSize")
-						)
+						`Page size needs to be an integer, between ${config.get(
+							"general.minPageSize"
+						)} and ${config.get("general.maxPageSize")}`
 					)
 					.toInt(),
 				query("projectId")
 					.trim()
 					.optional()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid project identifier"));
+							throw new Error("Not a valid project identifier");
 
 						return true;
 					}),
 				query("envId")
 					.trim()
 					.optional()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid environment identifier"));
+							throw new Error("Not a valid environment identifier");
 
 						return true;
 					}),
@@ -157,18 +155,18 @@ export const applyRules = (type) => {
 				query("projectId")
 					.trim()
 					.optional()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid project identifier"));
+							throw new Error("Not a valid project identifier");
 
 						return true;
 					}),
 				query("envId")
 					.trim()
 					.optional()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid environment identifier"));
+							throw new Error("Not a valid environment identifier");
 
 						return true;
 					}),

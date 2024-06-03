@@ -1,4 +1,5 @@
 import prjCtrl from "../controllers/project.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -11,22 +12,16 @@ export const validateProject = async (req, res, next) => {
 
 		if (!project) {
 			return res.status(404).json({
-				error: t("Not Found"),
-				details: t(
-					"No such project with the provided id '%s' exists.",
-					projectId
-				),
+				error: "Not Found",
+				details: `No such project with the provided id '${projectId}' exists.`,
 				code: ERROR_CODES.notFound,
 			});
 		}
 
 		if (project.orgId.toString() !== req.org._id.toString()) {
 			return res.status(401).json({
-				error: t("Not Authorized"),
-				details: t(
-					"Organization does not have a project with the provided id '%s'",
-					projectId
-				),
+				error: "Not Authorized",
+				details: `Organization does not have a project with the provided id '${projectId}'`,
 				code: ERROR_CODES.unauthorized,
 			});
 		}
@@ -49,11 +44,8 @@ export const validateProject = async (req, res, next) => {
 
 				if (!projectMember) {
 					return res.status(401).json({
-						error: t("Not Authorized"),
-						details: t(
-							"You are not a member of the project '%s'",
-							project.name
-						),
+						error: "Not Authorized",
+						details: `You are not a member of the project '${project.name}'`,
 						code: ERROR_CODES.unauthorized,
 					});
 				}

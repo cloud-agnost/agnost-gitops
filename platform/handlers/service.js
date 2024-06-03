@@ -46,7 +46,7 @@ export async function createService(
 	// Create the service
 	await k8sCoreApi.createNamespacedService(namespace, resource);
 
-	console.log(
+	console.info(
 		`Service '${name}' in namespace '${namespace}' created successfully`
 	);
 }
@@ -73,7 +73,7 @@ export async function updateService(definition, name, namespace) {
 	// Update the service
 	await k8sCoreApi.replaceNamespacedService(name, namespace, payload.body);
 
-	console.log(
+	console.info(
 		`Service '${name}' in namespace '${namespace}' updated successfully`
 	);
 }
@@ -83,7 +83,7 @@ export async function deleteService(name, namespace) {
 
 	try {
 		await k8sCoreApi.deleteNamespacedService(name, namespace);
-		console.log(
+		console.info(
 			`Service '${name}' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {

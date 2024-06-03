@@ -1,6 +1,9 @@
+import config from "config";
 import mongoose from "mongoose";
 import { body, query, param } from "express-validator";
 import orgMemberCtrl from "../controllers/organizationMember.js";
+import helper from "../util/helper.js";
+
 /**
  * Each account can have multiple organizations and an organization is the top level entitiy used to hold all apps and its associated design elements.
  */
@@ -63,42 +66,19 @@ export const applyRules = (type) => {
 				body("name")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({
 						min: config.get("general.minNameLength"),
 						max: config.get("general.maxTextLength"),
 					})
 					.withMessage(
-						t(
-							"Name must be minimum %s and maximum %s characters long",
-							config.get("general.minNameLength"),
-							config.get("general.maxTextLength")
-						)
-					)
-					.bail()
-					.custom((value) => {
-						let regex = /^[A-Za-z0-9 _.-]+$/;
-						if (!regex.test(value)) {
-							throw new AgnostError(
-								t(
-									"Organization names can include only numbers, letters, spaces, dash, dot and underscore characters"
-								)
-							);
-						}
-
-						let regex2 = /^[ _-].*$/;
-						if (regex2.test(value)) {
-							throw new AgnostError(
-								t(
-									"Organization names cannot start with a dash or underscore character"
-								)
-							);
-						}
-
-						//Indicates the success of this synchronous custom validator
-						return true;
-					}),
+						`Name must be minimum ${config.get(
+							"general.minNameLength"
+						)} and maximum ${config.get(
+							"general.maxTextLength"
+						)} characters long`
+					),
 			];
 		case "upload-picture":
 			return [
@@ -106,13 +86,13 @@ export const applyRules = (type) => {
 					.trim()
 					.optional({ nullable: true })
 					.isInt({ min: 1 })
-					.withMessage(t("Width needs to be a positive integer"))
+					.withMessage("Width needs to be a positive integer")
 					.toInt(),
 				query("height")
 					.trim()
 					.optional({ nullable: true })
 					.isInt({ min: 1 })
-					.withMessage(t("Height needs to be a positive integer"))
+					.withMessage("Height needs to be a positive integer")
 					.toInt(),
 			];
 		case "transfer":
@@ -120,11 +100,11 @@ export const applyRules = (type) => {
 				param("userId")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					})
@@ -139,21 +119,14 @@ export const applyRules = (type) => {
 						);
 
 						if (!orgMember) {
-							throw new AgnostError(
-								t(
-									"The user identified with id '%s' is not a member of organization '%s'. Organization ownership can only be transferred to an existing organization member with 'Admin' role.",
-									value,
-									req.org.name
-								)
+							throw new Error(
+								"The user identified with id '${value}' is not a member of organization '${req.org.name}'. Organization ownership can only be transferred to an existing organization member with 'Admin' role."
 							);
 						}
 
 						if (orgMember.role !== "Admin") {
-							throw new AgnostError(
-								t(
-									"Organization ownership can only be transferred to an existing organization member with 'Admin' role.",
-									req.org.name
-								)
+							throw new Error(
+								"Organization ownership can only be transferred to an existing organization member with 'Admin' role."
 							);
 						}
 

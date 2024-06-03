@@ -5,6 +5,8 @@ import { customAlphabet } from "nanoid";
 import cyripto from "crypto-js";
 import ERROR_CODES from "../config/errorCodes.js";
 
+// This module contains helper functions and constant definitiosn that are used across the application.
+
 const constants = {
 	"1hour": 3600, // in seconds
 	"2hours": 7200, // in seconds
@@ -33,6 +35,7 @@ function getIP(req) {
 
 		return ip;
 	} catch (err) {
+		console.error(err);
 		return req.ip ?? null;
 	}
 }
@@ -101,6 +104,7 @@ function isValidId(id) {
 			return false;
 		}
 	} catch (err) {
+		console.error(err);
 		return false;
 	}
 }
@@ -242,7 +246,7 @@ function getSyncUrl() {
 function escapeStringRegexp(text) {
 	// Escape characters with special meaning either inside or outside character sets.
 	// Use a simple backslash escape when it’s always valid, and a `\xnn` escape when the simpler form would be disallowed by Unicode patterns’ stricter grammar.
-	return text.replace(/[|\\{}()[\]^$+*?.\/]/g, "\\$&").replace(/-/g, "\\x2d");
+	return text.replace(/[|\\{}()[\]^$+*?./]/g, "\\$&").replace(/-/g, "\\x2d");
 }
 
 /**
@@ -264,7 +268,7 @@ function handleError(req, res, error) {
 	if (!res.headersSent) {
 		if (error?.response?.data?.status === "error") {
 			return res.status(500).json({
-				error: t("Internal Server Error"),
+				error: "Internal Server Error",
 				details: error.response.data.message,
 				code: ERROR_CODES.internalServerError,
 				stack: error.response.data.stack,
@@ -272,21 +276,27 @@ function handleError(req, res, error) {
 		}
 
 		if (error.name === "CastError") {
-			entry.error = t("Not Found");
-			entry.details = t("The object identifier is not recognized.");
+			entry.error = "Not Found";
+			entry.details = "The object identifier is not recognized.";
 			res.status(400).json(entry);
 		} else {
-			entry.error = t("Internal Server Error");
-			entry.details = t(
-				"The server has encountered a situation it does not know how to handle. %s",
-				error.message
-			);
+			entry.error = "Internal Server Error";
+			entry.details = `The server has encountered a situation it does not know how to handle. ${error.message}`;
 			res.status(500).json(entry);
 		}
 	}
 
 	// Log also the error message in console
-	logger.info(JSON.stringify(entry, null, 2));
+	console.info(JSON.stringify(entry, null, 2));
+}
+
+/**
+ * Sleeps for the specified number of milliseconds.
+ * @param {number} ms - The number of milliseconds to sleep.
+ * @returns {Promise<void>} - A promise that resolves after the specified number of milliseconds.
+ */
+export function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export default {
@@ -306,4 +316,5 @@ export default {
 	getSyncUrl,
 	escapeStringRegexp,
 	handleError,
+	sleep,
 };

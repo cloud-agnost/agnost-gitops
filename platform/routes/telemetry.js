@@ -2,8 +2,8 @@ import express from "express";
 import cntrCtrl from "../controllers/container.js";
 import { authMasterToken } from "../middlewares/authMasterToken.js";
 import { checkContentType } from "../middlewares/contentType.js";
-
 import { sendMessage } from "../init/sync.js";
+import helper from "../util/helper.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -36,7 +36,7 @@ router.post(
 				actor: null,
 				action: "telemetry",
 				object: "org.project.environment.container",
-				description: t("Container status updated to '%s'", status.status),
+				description: `Container status updated to '${status.status}'`,
 				timestamp: Date.now(),
 				data: updatedContainer,
 				identifiers: {
@@ -84,10 +84,7 @@ router.post(
 				actor: null,
 				action: "telemetry",
 				object: "org.project.environment.container",
-				description: t(
-					"Container build pipeline status updated to '%s'",
-					status
-				),
+				description: `Container build pipeline status updated to '${status}'`,
 				timestamp: Date.now(),
 				data: updatedContainer,
 				identifiers: {

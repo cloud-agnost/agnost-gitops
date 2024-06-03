@@ -10,6 +10,7 @@ import { validateOrg } from "../middlewares/validateOrg.js";
 import { authorizeOrgAction } from "../middlewares/authorizeOrgAction.js";
 import { validate } from "../middlewares/validate.js";
 import { sendMessage as sendNotification } from "../init/sync.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -22,7 +23,7 @@ const router = express.Router({ mergeParams: true });
 @access     private
 */
 router.post(
-	"/:orgId/invite",
+	"/",
 	checkContentType,
 	authSession,
 	validateOrg,
@@ -36,13 +37,14 @@ router.post(
 
 			// Prepare the invitations array to store in the database
 			let invitations = [];
+			let token = helper.generateSlug("tkn", 36);
 			req.body.forEach((entry) => {
 				invitations.push({
 					orgId: org._id,
 					email: entry.email,
-					token: helper.generateSlug("tkn", 36),
+					token: token,
 					role: entry.role,
-					link: `${uiBaseURL}/studio/redirect-handle?token=${entry.token}&type=org-invite`,
+					link: `${uiBaseURL}/studio/redirect-handle?token=${token}&type=org-invite`,
 					host: user,
 				});
 			});
@@ -75,11 +77,7 @@ router.post(
 					},
 					action: "invite",
 					object: "org.invite",
-					description: t(
-						"Invited you to join organization '%s' with '%s' permissions",
-						org.name,
-						invite.role
-					),
+					description: `Invited you to join organization '${org.name}' with '${invite.role}' permissions`,
 					timestamp: Date.now(),
 					data: {
 						token: invite.token,
@@ -93,7 +91,7 @@ router.post(
 				user,
 				"org.invite",
 				"create",
-				t("Invited users to organization %'s'", org.name),
+				`Invited users to organization '${org.name}'`,
 				result,
 				{ orgId: org._id }
 			);
@@ -110,7 +108,7 @@ router.post(
 @access     private
 */
 router.put(
-	"/:orgId/invite",
+	"/",
 	checkContentType,
 	authSession,
 	validateOrg,
@@ -126,18 +124,17 @@ router.put(
 			let invite = await orgInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such invitation exists."),
+					error: "Not Found",
+					details: "No such invitation exists.",
 					code: ERROR_CODES.notFound,
 				});
 			}
 
 			if (invite.status !== "Pending") {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"Organization invitation role can only be changed for invites in 'pending' status."
-					),
+					error: "Not Allowed",
+					details:
+						"Organization invitation role can only be changed for invites in 'pending' status.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -167,11 +164,7 @@ router.put(
 					},
 					action: "invite",
 					object: "org.invite",
-					description: t(
-						"Invited you to join organization '%s' with '%s' permissions",
-						org.name,
-						role
-					),
+					description: `Invited you to join organization '${org.name}' with '${role}' permissions`,
 					timestamp: Date.now(),
 					data: {
 						token: invite.token,
@@ -185,12 +178,7 @@ router.put(
 				user,
 				"org.invite",
 				"update",
-				t(
-					"Updated invitation role of '%s' from '%s' to '%s'",
-					invite.email,
-					invite.role,
-					role
-				),
+				`Updated invitation role of '${invite.email}' from '${invite.role}' to '${role}'`,
 				updatedInvite,
 				{ orgId: org._id }
 			);
@@ -207,7 +195,7 @@ router.put(
 @access     private
 */
 router.delete(
-	"/:orgId/invite",
+	"/",
 	checkContentType,
 	authSession,
 	validateOrg,
@@ -222,8 +210,8 @@ router.delete(
 			let invite = await orgInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such invitation exists."),
+					error: "Not Found",
+					details: "No such invitation exists.",
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -238,7 +226,7 @@ router.delete(
 				user,
 				"org.invite",
 				"delete",
-				t("Deleted organization invitation to '%s'", invite.email),
+				`Deleted organization invitation to '${invite.email}'`,
 				invite,
 				{ orgId: org._id }
 			);
@@ -255,7 +243,7 @@ router.delete(
 @access     private
 */
 router.delete(
-	"/:orgId/invite/multi",
+	"/multi",
 	checkContentType,
 	authSession,
 	validateOrg,
@@ -277,7 +265,7 @@ router.delete(
 				user,
 				"org.invite",
 				"delete",
-				t("Deleted multiple organization invitations"),
+				"Deleted multiple organization invitations",
 				{ tokens },
 				{ orgId: org._id }
 			);
@@ -294,7 +282,7 @@ router.delete(
 @access     private
 */
 router.get(
-	"/:orgId/invite",
+	"/",
 	authSession,
 	validateOrg,
 	authorizeOrgAction("org.invite.view"),
@@ -351,7 +339,7 @@ router.get(
 @access     private
 */
 router.get(
-	"/:orgId/invite/list-eligible",
+	"/list-eligible",
 	authSession,
 	validateOrg,
 	authorizeOrgAction("org.invite.view"),

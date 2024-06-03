@@ -1,3 +1,4 @@
+import config from "config";
 import express from "express";
 import sharp from "sharp";
 import prjCtrl from "../controllers/project.js";
@@ -21,6 +22,7 @@ import { storage } from "../init/storage.js";
 import { createNamespace, deleteNamespaces } from "../handlers/ns.js";
 import { deleteTCPProxyPorts } from "../handlers/tcpproxy.js";
 import ERROR_CODES from "../config/errorCodes.js";
+import helper from "../util/helper.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -61,11 +63,8 @@ router.post(
 
 			if (org.isClusterEntity) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are not allowed to create a new project within organization '%s' which is the default organization of the cluster.",
-						org.name
-					),
+					error: "Not Allowed",
+					details: `You are not allowed to create a new project within organization '${org.name}' which is the default organization of the cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -98,7 +97,7 @@ router.post(
 				user,
 				"org.project",
 				"create",
-				t("Created new project '%s'", name),
+				`Created new project '${name}'`,
 				{ project, environment },
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -231,7 +230,7 @@ router.put(
 				user,
 				"org.project",
 				"update",
-				t("Updated the name of project from '%s' to '%s' ", project.name, name),
+				`Updated the name of project from '${project.name}' to '${name}'`,
 				projectWithTeam,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -265,8 +264,8 @@ router.put(
 
 			if (!req.file) {
 				return res.status(422).json({
-					error: t("Missing Upload File"),
-					details: t("Missing file, no file uploaded."),
+					error: "Missing Upload File",
+					details: "Missing file, no file uploaded.",
 					code: ERROR_CODES.fileUploadError,
 				});
 			}
@@ -316,7 +315,7 @@ router.put(
 				req.user,
 				"org.project",
 				"update",
-				t("Updated project picture"),
+				"Updated project picture",
 				projectWithTeam,
 				{ orgId: req.org._id, projectId: req.project._id }
 			);
@@ -366,7 +365,7 @@ router.delete(
 				req.user,
 				"org.project",
 				"update",
-				t("Removed project picture"),
+				"Removed project picture",
 				projectWithTeam,
 				{ orgId: req.org._id, projectId: req.project._id }
 			);
@@ -429,22 +428,16 @@ router.delete(
 				!req.user.isClusterOwner
 			) {
 				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to delete project '%s'. Only the owner of the project or cluster owner can delete it.",
-						project.name
-					),
+					error: "Not Authorized",
+					details: `You are not authorized to delete project '${project.name}'. Only the owner of the project or cluster owner can delete it.`,
 					code: ERROR_CODES.unauthorized,
 				});
 			}
 
 			if (project.isClusterEntity) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are not allowed to delete project '%s' which is the default project of the cluster.",
-						project.name
-					),
+					error: "Not Allowed",
+					details: `You are not allowed to delete project '${project.name}' which is the default project of the cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -482,7 +475,7 @@ router.delete(
 				user,
 				"org.project",
 				"delete",
-				t("Deleted project '%s'", project.name),
+				`Deleted project '${project.name}'`,
 				{},
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -536,11 +529,7 @@ router.post(
 				user,
 				"org.project.team",
 				"update",
-				t(
-					"Transferred project ownership to '%s' (%s)",
-					transferredUser.name,
-					transferredUser.email
-				),
+				`Transferred project ownership to '${transferredUser.name}' (${transferredUser.email})`,
 				projectWithTeam,
 				{ orgId: org._id, projectId: project._id }
 			);

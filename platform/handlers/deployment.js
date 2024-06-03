@@ -95,7 +95,7 @@ export async function createDeployment(definition, namespace) {
 	}
 
 	await k8sAppsApi.createNamespacedDeployment(namespace, resource);
-	console.log(
+	console.info(
 		`Deployment '${definition.iid}' in namespace '${namespace}' created successfully`
 	);
 }
@@ -181,7 +181,7 @@ export async function updateDeployment(definition, namespace) {
 		namespace,
 		payload.body
 	);
-	console.log(
+	console.info(
 		`Deployment '${definition.iid}' in namespace '${namespace}' updated successfully`
 	);
 }
@@ -191,7 +191,7 @@ export async function deleteDeployment(name, namespace) {
 
 	try {
 		await k8sAppsApi.deleteNamespacedDeployment(name, namespace);
-		console.log(
+		console.info(
 			`Deployment '${name}' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {

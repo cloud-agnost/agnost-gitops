@@ -98,12 +98,10 @@ export async function getContainerPods({ container, environment }) {
 
 		return pods;
 	} catch (err) {
-		throw new AgnostError(
-			t(
-				`Cannot get pods of the ${container.type} named '${container.name}''. ${
-					err.response?.body?.message ?? err.message
-				}`
-			)
+		throw new Error(
+			`Cannot get pods of the ${container.type} named '${container.name}''. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }
@@ -134,12 +132,10 @@ export async function getContainerEvents({ container, environment }) {
 			});
 		return events;
 	} catch (err) {
-		throw new AgnostError(
-			t(
-				`Cannot get events of the ${container.type} named '${
-					container.name
-				}''. ${err.response?.body?.message ?? err.message}`
-			)
+		throw new Error(
+			`Cannot get events of the ${container.type} named '${container.name}''. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }
@@ -174,12 +170,10 @@ export async function getContainerLogs({ container, environment }) {
 
 		return { pods: payload, logs: logsResults };
 	} catch (err) {
-		throw new AgnostError(
-			t(
-				`Cannot get logs of the ${container.type} named '${container.name}''. ${
-					err.response?.body?.message ?? err.message
-				}`
-			)
+		throw new Error(
+			`Cannot get logs of the ${container.type} named '${container.name}''. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }
@@ -256,12 +250,10 @@ export async function getContainerTaskRuns({ container }) {
 			});
 		return taskruns;
 	} catch (err) {
-		throw new AgnostError(
-			t(
-				`Cannot get build & deploy task runs of the ${container.type} named '${
-					container.name
-				}''. ${err.response?.body?.message ?? err.message}`
-			)
+		throw new Error(
+			`Cannot get build & deploy task runs of the ${container.type} named '${
+				container.name
+			}''. ${err.response?.body?.message ?? err.message}`
 		);
 	}
 }
@@ -277,6 +269,7 @@ export async function getTaskRunLogs({ container, taskRunName }) {
 				"tekton-builds"
 			);
 		} catch (err) {
+			console.error(err);
 			// This means the TektonRun object has not created a pod yet
 			return [];
 		}
@@ -326,14 +319,12 @@ export async function getTaskRunLogs({ container, taskRunName }) {
 
 		return steps;
 	} catch (err) {
-		throw new AgnostError(
-			t(
-				`Cannot get build & deploy logs of task run named '${taskRunName}' for ${
-					container.type
-				} named '${container.name}''. ${
-					err.response?.body?.message ?? err.message
-				}`
-			)
+		throw new Error(
+			`Cannot get build & deploy logs of task run named '${taskRunName}' for ${
+				container.type
+			} named '${container.name}''. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }
@@ -355,7 +346,7 @@ async function getStepInfo(podName, containerName, stepName, containerStatus) {
 			status: status,
 			logs: logs.body ? logs.body.split("\n") : ["No log available"],
 		}))
-		.catch((error) => ({
+		.catch(() => ({
 			step: stepName,
 			status: status,
 			logs: ["No log available"],

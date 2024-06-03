@@ -12,6 +12,7 @@ import { applyRules } from "../schemas/environment.js";
 import { validate } from "../middlewares/validate.js";
 import { createNamespace, deleteNamespaces } from "../handlers/ns.js";
 import { deleteTCPProxyPorts } from "../handlers/tcpproxy.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -109,11 +110,8 @@ router.post(
 
 			if (project.isClusterEntity) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are not allowed to create a new environment within project '%s' which is the default project of the cluster.",
-						project.name
-					),
+					error: "Not Allowed",
+					details: `You are not allowed to create a new environment within project '${project.name}' which is the default project of the cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -148,7 +146,7 @@ router.post(
 				user,
 				"org.project.environment",
 				"create",
-				t("Created a new blank project environment '%s'", name),
+				`Created a new blank project environment '${name}'`,
 				environment,
 				{
 					orgId: org._id,
@@ -228,7 +226,7 @@ router.put(
 				user,
 				"org.project.environment",
 				"update",
-				t("Updated project environment '%s' properties", name),
+				`Updated project environment '${name}' properties`,
 				updatedEnvironment,
 				{
 					orgId: org._id,
@@ -268,11 +266,8 @@ router.delete(
 
 			if (environments.length === 1) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"The project '%s' has only one environment left. You cannot delete the last environment of a project.",
-						project.name
-					),
+					error: "Not Allowed",
+					details: `The project '${project.name}' has only one environment left. You cannot delete the last environment of a project.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -282,22 +277,16 @@ router.delete(
 				projectMember.role !== "Admin"
 			) {
 				return res.status(401).json({
-					error: t("Not Authorized"),
-					details: t(
-						"You are not authorized to delete project environment '%s'. Only the creator of the environment or project team members with 'Admin' role can delete it.",
-						environment.name
-					),
+					error: "Not Authorized",
+					details: `You are not authorized to delete project environment '${environment.name}'. Only the creator of the environment or project team members with 'Admin' role can delete it.`,
 					code: ERROR_CODES.unauthorized,
 				});
 			}
 
 			if (environment.isClusterEntity) {
 				return res.status(401).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are not allowed to delete environment '%s' which is the default environment of the cluster.",
-						project.name
-					),
+					error: "Not Allowed",
+					details: `You are not allowed to delete environment '${project.name}' which is the default environment of the cluster.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -331,7 +320,7 @@ router.delete(
 				user,
 				"org.project.environment",
 				"delete",
-				t("Deleted project environment '%s'", environment.name),
+				`Deleted project environment '${environment.name}'`,
 				{},
 				{
 					orgId: org._id,

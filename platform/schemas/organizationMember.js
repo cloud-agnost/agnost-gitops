@@ -1,6 +1,8 @@
 import { body, param } from "express-validator";
 import mongoose from "mongoose";
 import { orgRoles } from "../config/constants.js";
+import helper from "../util/helper.js";
+
 /**
  * An organization is the top level entitiy used to hold all apps and its associated design elements.
  * Each organization will have team members with different roled. There are two types of roles in Agnost one at the organization level
@@ -51,32 +53,32 @@ export const applyRules = (type) => {
 				param("userId")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					}),
 				body("role")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(orgRoles)
-					.withMessage(t("Unsupported member role")),
+					.withMessage("Unsupported member role"),
 			];
 		case "remove-member":
 			return [
 				param("userId")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					}),
@@ -85,17 +87,17 @@ export const applyRules = (type) => {
 			return [
 				body("userIds")
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.isArray()
-					.withMessage(t("User identifiers need to be an array of strings")),
+					.withMessage("User identifiers need to be an array of strings"),
 				body("userIds.*")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value) => {
 						if (!helper.isValidId(value))
-							throw new AgnostError(t("Not a valid user identifier"));
+							throw new Error("Not a valid user identifier");
 
 						return true;
 					}),

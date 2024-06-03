@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
  * @param {string} environment.iid - The unique identifier for the environment.
  * @param {string} environment.name - The name of the environment.
  * @returns {Promise<object>} - A promise that resolves to an object with the status of the operation.
- * @throws {AgnostError} - If there is an error creating the namespace.
+ * @throws {Error} - If there is an error creating the namespace.
  */
 export async function createNamespace(environment) {
 	try {
@@ -34,15 +34,13 @@ export async function createNamespace(environment) {
 		metadata.name = environment.iid;
 		await k8sCoreApi.createNamespace(resource);
 
-		console.log(`Namespace '${environment.iid}' created successfully`);
+		console.info(`Namespace '${environment.iid}' created successfully`);
 		return { status: "success" };
 	} catch (err) {
-		throw new AgnostError(
-			t(
-				`Cannot create the namespace of environment '${environment.name}'. ${
-					err.response?.body?.message ?? err.message
-				}`
-			)
+		throw new Error(
+			`Cannot create the namespace of environment '${environment.name}'. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }
@@ -56,7 +54,7 @@ export async function deleteNamespaces(environmentiids) {
 	for (const iid of environmentiids) {
 		k8sCoreApi.deleteNamespace(iid).then(
 			() => {
-				console.log(`Namespace '${iid}' deleted successfully`);
+				console.info(`Namespace '${iid}' deleted successfully`);
 			},
 			(err) => {
 				console.error(

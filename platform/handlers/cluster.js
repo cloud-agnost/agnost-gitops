@@ -1,3 +1,4 @@
+import config from "config";
 import k8s from "@kubernetes/client-node";
 import tcpProxyPortCtrl from "../controllers/tcpProxyPort.js";
 import { getKey, setKey, incrementKey } from "../init/cache.js";
@@ -22,7 +23,7 @@ export async function getClusterIPs() {
 			(ing) => ing.ip || ing.hostname
 		);
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot fetch cluster ips. ${err.response?.body?.message ?? err.message}`
 		);
 		return [];

@@ -9,6 +9,7 @@ import { checkContentType } from "../middlewares/contentType.js";
 import { validateOrg } from "../middlewares/validateOrg.js";
 import { authorizeOrgAction } from "../middlewares/authorizeOrgAction.js";
 import { validate } from "../middlewares/validate.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -260,8 +261,8 @@ router.put(
 			let user = await userCtrl.getOneById(userId);
 			if (!user) {
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such user exists"),
+					error: "Not Found",
+					details: "No such user exists",
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -277,11 +278,8 @@ router.put(
 
 			if (!member) {
 				return res.status(404).json({
-					error: t("Not a Member"),
-					details: t(
-						"User is not a member of the organization '%s'.",
-						req.org.name
-					),
+					error: "Not a Member",
+					details: `User is not a member of the organization '${req.org.name}'.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -289,8 +287,8 @@ router.put(
 			// Check if the target user is the current user or not. Users cannot change their own role.
 			if (req.user._id.toString() === user._id.toString()) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t("You cannot change your own organization role."),
+					error: "Not Allowed",
+					details: "You cannot change your own organization role.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -298,8 +296,8 @@ router.put(
 			// Check if the target user is the organization owner. The role of organization owner cannot be changed.
 			if (user._id.toString() === req.org.ownerUserId.toString()) {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t("You cannot change the role of the organization owner."),
+					error: "Not Allowed",
+					details: "You cannot change the role of the organization owner.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -333,13 +331,7 @@ router.put(
 				req.user,
 				"org.member",
 				"update",
-				t(
-					"Updated organization member role of user '%s' (%s) from '%s' to '%s'",
-					user.name,
-					user.email,
-					member.role,
-					role
-				),
+				`Updated organization member role of user '${user.name}' (${user.email}) from '${member.role}' to '${role}'`,
 				result,
 				{ orgId: req.org._id }
 			);
@@ -373,8 +365,8 @@ router.delete(
 			if (!user) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such user exists"),
+					error: "Not Found",
+					details: "No such user exists",
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -393,11 +385,8 @@ router.delete(
 			if (!member) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(404).json({
-					error: t("Not a Member"),
-					details: t(
-						"User is not a member of the organization '%s'.",
-						req.org.name
-					),
+					error: "Not a Member",
+					details: `User is not a member of the organization '${req.org.name}'.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -406,10 +395,9 @@ router.delete(
 			if (req.user._id.toString() === user._id.toString()) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You cannot remove yourself from the organization. Try to leave the organization team."
-					),
+					error: "Not Allowed",
+					details:
+						"You cannot remove yourself from the organization. Try to leave the organization team.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -418,10 +406,9 @@ router.delete(
 			if (req.org.ownerUserId.toString() === user._id.toString()) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"The organization owner cannot be removed from the organization team. If you would like to remove the current organization owner from the organization then the organization ownership needs to be transferred to another organization 'Admin' member."
-					),
+					error: "Not Allowed",
+					details:
+						"The organization owner cannot be removed from the organization team. If you would like to remove the current organization owner from the organization then the organization ownership needs to be transferred to another organization 'Admin' member.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -438,11 +425,8 @@ router.delete(
 				if (project.ownerUserId.toString() === user._id.toString()) {
 					await orgMemberCtrl.endSession(session);
 					return res.status(422).json({
-						error: t("Not Allowed"),
-						details: t(
-							"You cannot remove a user who owns a project from the organization. The user first needs to transfer the project '%s' ownership to another project member with 'Admin' privileges.",
-							project.name
-						),
+						error: "Not Allowed",
+						details: `You cannot remove a user who owns a project from the organization. The user first needs to transfer the project '${project.name}' ownership to another project member with 'Admin' privileges.`,
 						code: ERROR_CODES.notAllowed,
 					});
 				}
@@ -476,11 +460,7 @@ router.delete(
 				req.user,
 				"org.member",
 				"delete",
-				t(
-					"Removed user '%s' (%s) from organization team",
-					user.name,
-					user.email
-				),
+				`Removed user '${user.name}' (${user.email}) from organization team`,
 				{
 					_id: user._id,
 					iid: user.iid,
@@ -521,10 +501,9 @@ router.post(
 			if (userIds.includes(req.user._id.toString())) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You cannot remove yourself from the organization. Try to leave the organization team."
-					),
+					error: "Not Allowed",
+					details:
+						"You cannot remove yourself from the organization. Try to leave the organization team.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -533,10 +512,9 @@ router.post(
 			if (userIds.includes(req.org.ownerUserId.toString())) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"The organization owner cannot be removed from the organization team. If you would like to remove the current organization owner from the organization, then the organization ownership needs to be transferred to another organization 'Admin' member."
-					),
+					error: "Not Allowed",
+					details:
+						"The organization owner cannot be removed from the organization team. If you would like to remove the current organization owner from the organization, then the organization ownership needs to be transferred to another organization 'Admin' member.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -558,10 +536,9 @@ router.post(
 				if (userIds.includes(project.ownerUserId.toString())) {
 					await orgMemberCtrl.endSession(session);
 					return res.status(422).json({
-						error: t("Not Allowed"),
-						details: t(
-							"You cannot remove a user who owns a project from the organization. The user first needs to transfer the project ownership to another project 'Admin' member."
-						),
+						error: "Not Allowed",
+						details:
+							"You cannot remove a user who owns a project from the organization. The user first needs to transfer the project ownership to another project 'Admin' member.",
 						code: ERROR_CODES.notAllowed,
 					});
 				}
@@ -599,11 +576,7 @@ router.post(
 					req.user,
 					"org.member",
 					"delete",
-					t(
-						"Removed user '%s' (%s) from organization team",
-						removedUser.name,
-						removedUser.email
-					),
+					`Removed user '${removedUser.name}' (${removedUser.email}) from organization team`,
 					{
 						_id: removedUser._id,
 						iid: removedUser.iid,
@@ -651,11 +624,8 @@ router.delete(
 			if (!member) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(404).json({
-					error: t("Not a Member"),
-					details: t(
-						"You are not a member of the organization '%s'.",
-						req.org.name
-					),
+					error: "Not a Member",
+					details: `You are not a member of the organization '${req.org.name}'.`,
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -664,10 +634,9 @@ router.delete(
 			if (req.org.ownerUserId.toString() === user._id) {
 				await orgMemberCtrl.endSession(session);
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"You are the owner of the organization. The organization owner cannot leave the organization team. You first need to transfer organization ownership to another organization 'Admin' member."
-					),
+					error: "Not Allowed",
+					details:
+						"You are the owner of the organization. The organization owner cannot leave the organization team. You first need to transfer organization ownership to another organization 'Admin' member.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -684,11 +653,8 @@ router.delete(
 				if (project.ownerUserId.toString() === user._id.toString()) {
 					await orgMemberCtrl.endSession(session);
 					return res.status(422).json({
-						error: t("Not Allowed"),
-						details: t(
-							"You cannot leave the organization team, because you are owner of at least one project of the organization. You first need to transfer project '%s' ownership to another project member with 'Admin' privileges.",
-							project.name
-						),
+						error: "Not Allowed",
+						details: `You cannot leave the organization team, because you are owner of at least one project of the organization. You first need to transfer project '${project.name}' ownership to another project member with 'Admin' privileges.`,
 						code: ERROR_CODES.notAllowed,
 					});
 				}
@@ -725,11 +691,7 @@ router.delete(
 				req.user,
 				"org.member",
 				"delete",
-				t(
-					"User '%s' (%s) has left the organization team",
-					user.name,
-					user.email
-				),
+				`User '${user.name}' (${user.email}) has left the organization team`,
 				{
 					_id: user._id,
 					iid: user.iid,

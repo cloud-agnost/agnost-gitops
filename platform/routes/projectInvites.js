@@ -10,6 +10,7 @@ import { authorizeProjectAction } from "../middlewares/authorizeProjectAction.js
 import { applyRules } from "../schemas/projectInvitation.js";
 import { validate } from "../middlewares/validate.js";
 import { sendMessage as sendNotification } from "../init/sync.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -77,12 +78,7 @@ router.post(
 					},
 					action: "invite",
 					object: "org.project.invite",
-					description: t(
-						"Invited you to join project '%s' in organization '%s' with '%s' permissions",
-						project.name,
-						org.name,
-						invite.role
-					),
+					description: `Invited you to join project '${project.name}' in organization '${org.name}' with '${invite.role}' permissions`,
 					timestamp: Date.now(),
 					data: {
 						token: invite.token,
@@ -96,11 +92,7 @@ router.post(
 				user,
 				"org.project.invite",
 				"create",
-				t(
-					"Invited users to project '%s' in organization '%s'",
-					project.name,
-					org.name
-				),
+				`Invited users to project '${project.name}' in organization '${org.name}'`,
 				result,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -134,18 +126,17 @@ router.put(
 			let invite = await prjInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such project invitation exists."),
+					error: "Not Found",
+					details: "No such project invitation exists.",
 					code: ERROR_CODES.notFound,
 				});
 			}
 
 			if (invite.status !== "Pending") {
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t(
-						"Invitation role can only be changed for invites in 'pending' status."
-					),
+					error: "Not Allowed",
+					details:
+						"Invitation role can only be changed for invites in 'pending' status.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -174,12 +165,7 @@ router.put(
 					},
 					action: "invite",
 					object: "org.project.invite",
-					description: t(
-						"Invited you to join project '%s' in organization '%s' with '%s' permissions",
-						project.name,
-						org.name,
-						role
-					),
+					description: `Invited you to join project '${project.name}' in organization '${org.name}' with '${role}' permissions`,
 					timestamp: Date.now(),
 					data: {
 						token: invite.token,
@@ -193,12 +179,7 @@ router.put(
 				user,
 				"org.project.invite",
 				"update",
-				t(
-					"Updated project invitation role of '%s' from '%s' to '%s'",
-					invite.email,
-					invite.role,
-					role
-				),
+				`Updated project invitation role of '${invite.email}' from '${invite.role}' to '${role}'`,
 				updatedInvite,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -231,8 +212,8 @@ router.delete(
 			let invite = await prjInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
 				return res.status(404).json({
-					error: t("Not Found"),
-					details: t("No such project invitation exists."),
+					error: "Not Found",
+					details: "No such project invitation exists.",
 					code: ERROR_CODES.notFound,
 				});
 			}
@@ -247,7 +228,7 @@ router.delete(
 				user,
 				"org.project.invite",
 				"delete",
-				t("Deleted project invitation to '%s'", invite.email),
+				`Deleted project invitation to '${invite.email}'`,
 				invite,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -287,7 +268,7 @@ router.delete(
 				user,
 				"org.project.invite",
 				"delete",
-				t("Deleted multiple project invitations"),
+				"Deleted multiple project invitations",
 				{ tokens },
 				{ orgId: org._id, projectId: project._id }
 			);

@@ -7,8 +7,8 @@ export const authMasterToken = async (req, res, next) => {
 	// Check if there is token
 	if (!token) {
 		return res.status(401).json({
-			error: t("Unauthorized"),
-			details: t("No access token was found in 'Authorization' header."),
+			error: "Unauthorized",
+			details: "No access token was found in 'Authorization' header.",
 			code: ERROR_CODES.missingAccessToken,
 		});
 	}
@@ -16,8 +16,8 @@ export const authMasterToken = async (req, res, next) => {
 	// Check if token is valid or not
 	if (token !== process.env.MASTER_TOKEN) {
 		return res.status(401).json({
-			error: t("Unauthorized"),
-			details: t("The access token was not authorized or has expired."),
+			error: "Unauthorized",
+			details: "The access token was not authorized or has expired.",
 			code: ERROR_CODES.invalidAccessToken,
 		});
 	}

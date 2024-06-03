@@ -571,10 +571,10 @@ export const applyRules = (actionType) => {
 					body("type")
 						.trim()
 						.notEmpty()
-						.withMessage(t("Required field, cannot be left empty"))
+						.withMessage("Required field, cannot be left empty")
 						.bail()
 						.isIn(containerTypes)
-						.withMessage(t("Unsupported resource type")),
+						.withMessage("Unsupported resource type"),
 				],
 				req,
 				res,

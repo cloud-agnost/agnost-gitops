@@ -1,3 +1,5 @@
 Dockerfile
 Dockerfile.dev
 package-lock.json
+eslint.config.js
+node_modules

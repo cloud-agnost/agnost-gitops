@@ -1,3 +1,4 @@
+import config from "config";
 import mongoose from "mongoose";
 import { body, query } from "express-validator";
 import prjCtrl from "../controllers/project.js";
@@ -111,14 +112,14 @@ export const applyRules = (type) => {
 			return [
 				query("uiBaseURL")
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty")),
+					.withMessage("Required field, cannot be left empty"),
 				body("*.email")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isEmail()
-					.withMessage(t("Not a valid email address"))
+					.withMessage("Not a valid email address")
 					.bail()
 					.normalizeEmail({ gmail_remove_dots: false })
 					.custom(async (value, { req }) => {
@@ -135,53 +136,51 @@ export const applyRules = (type) => {
 						);
 
 						if (projectMember)
-							throw new AgnostError(
-								t("User is already a member of the project")
-							);
+							throw new Error("User is already a member of the project");
 
 						return true;
 					}),
 				body("*.role")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(projectRoles)
-					.withMessage(t("Unsupported project member role")),
+					.withMessage("Unsupported project member role"),
 			];
 		case "update-invite":
 			return [
 				query("token")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty")),
+					.withMessage("Required parameter, cannot be left empty"),
 				body("role")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(projectRoles)
-					.withMessage(t("Unsupported project member role")),
+					.withMessage("Unsupported project member role"),
 			];
 		case "delete-invite":
 			return [
 				query("token")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty")),
+					.withMessage("Required parameter, cannot be left empty"),
 			];
 		case "delete-invite-multi":
 			return [
 				body("tokens")
 					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty"))
+					.withMessage("Required parameter, cannot be left empty")
 					.bail()
 					.isArray()
-					.withMessage(t("Invitation tokens needs to be an array of strings")),
+					.withMessage("Invitation tokens needs to be an array of strings"),
 				body("tokens.*")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required parameter, cannot be left empty")),
+					.withMessage("Required parameter, cannot be left empty"),
 			];
 		case "get-invites":
 			return [
@@ -189,41 +188,37 @@ export const applyRules = (type) => {
 					.trim()
 					.optional()
 					.isISO8601({ strict: true, strictSeparator: true })
-					.withMessage(t("Not a valid ISO 8061 date-time"))
+					.withMessage("Not a valid ISO 8061 date-time")
 					.toDate(),
 				query("end")
 					.trim()
 					.optional()
 					.isISO8601({ strict: true, strictSeparator: true })
-					.withMessage(t("Not a valid ISO 8061 date-time"))
+					.withMessage("Not a valid ISO 8061 date-time")
 					.toDate(),
 				query("page")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({
 						min: 0,
 					})
-					.withMessage(
-						t("Page number needs to be a positive integer or 0 (zero)")
-					)
+					.withMessage("Page number needs to be a positive integer or 0 (zero)")
 					.toInt(),
 				query("size")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({
 						min: config.get("general.minPageSize"),
 						max: config.get("general.maxPageSize"),
 					})
 					.withMessage(
-						t(
-							"Page size needs to be an integer, between %s and %s",
-							config.get("general.minPageSize"),
-							config.get("general.maxPageSize")
-						)
+						`Page size needs to be an integer, between ${config.get(
+							"general.minPageSize"
+						)} and ${config.get("general.maxPageSize")}`
 					)
 					.toInt(),
 			];
@@ -232,30 +227,26 @@ export const applyRules = (type) => {
 				query("page")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({
 						min: 0,
 					})
-					.withMessage(
-						t("Page number needs to be a positive integer or 0 (zero)")
-					)
+					.withMessage("Page number needs to be a positive integer or 0 (zero)")
 					.toInt(),
 				query("size")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({
 						min: config.get("general.minPageSize"),
 						max: config.get("general.maxPageSize"),
 					})
 					.withMessage(
-						t(
-							"Page size needs to be an integer, between %s and %s",
-							config.get("general.minPageSize"),
-							config.get("general.maxPageSize")
-						)
+						`Page size needs to be an integer, between ${config.get(
+							"general.minPageSize"
+						)} and ${config.get("general.maxPageSize")}`
 					)
 					.toInt(),
 			];

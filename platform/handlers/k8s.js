@@ -26,6 +26,7 @@ import {
 	deleteStatefulSet,
 } from "./statefulset.js";
 import { createCronJob, updateCronJob, deleteCronJob } from "./cronjob.js";
+import { sleep } from "../util/helper.js";
 
 // Payload includes container info, environment info and action
 export async function manageContainer(payload) {
@@ -38,12 +39,10 @@ export async function manageContainer(payload) {
 			await manageCronJob(payload);
 		}
 	} catch (err) {
-		throw new AgnostError(
-			t(
-				`Cannot ${payload.action} the ${payload.container.type} named '${
-					payload.container.name
-				}''. ${err.response?.body?.message ?? err.message}`
-			)
+		throw new Error(
+			`Cannot ${payload.action} the ${payload.container.type} named '${
+				payload.container.name
+			}''. ${err.response?.body?.message ?? err.message}`
 		);
 	}
 }

@@ -1,4 +1,5 @@
 import cntrCtrl from "../controllers/container.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -11,22 +12,18 @@ export const validateContainer = async (req, res, next) => {
 
 		if (!container) {
 			return res.status(404).json({
-				error: t("Not Found"),
-				details: t(
-					"No such container with the provided id '%s' exists.",
-					containerId
-				),
+				error: "Not Found",
+				details:
+					"No such container with the provided id '${containerId}' exists.",
 				code: ERROR_CODES.notFound,
 			});
 		}
 
 		if (container.environmentId.toString() !== req.environment._id.toString()) {
 			return res.status(401).json({
-				error: t("Not Authorized"),
-				details: t(
-					"Project environment does not have a container with the provided id '%s'",
-					containerId
-				),
+				error: "Not Authorized",
+				details:
+					"Project environment does not have a container with the provided id '${containerId}'",
 				code: ERROR_CODES.unauthorized,
 			});
 		}

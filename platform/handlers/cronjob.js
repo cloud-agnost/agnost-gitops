@@ -87,7 +87,7 @@ export async function createCronJob(definition, namespace) {
 	}
 
 	await k8sBatchApi.createNamespacedCronJob(namespace, resource);
-	console.log(
+	console.info(
 		`CronJob '${definition.iid}' in namespace '${namespace}' created successfully`
 	);
 }
@@ -166,7 +166,7 @@ export async function updateCronJob(definition, namespace) {
 		namespace,
 		payload.body
 	);
-	console.log(
+	console.info(
 		`CronJob '${definition.iid}' in namespace '${namespace}' updated successfully`
 	);
 }
@@ -176,7 +176,7 @@ export async function deleteCronJob(name, namespace) {
 
 	try {
 		await k8sBatchApi.deleteNamespacedCronJob(name, namespace);
-		console.log(
+		console.info(
 			`CronJob '${name}' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {

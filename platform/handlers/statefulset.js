@@ -114,7 +114,7 @@ export async function createStatefulSet(definition, namespace) {
 	}
 
 	await k8sAppsApi.createNamespacedStatefulSet(namespace, resource);
-	console.log(
+	console.info(
 		`StatefulSet '${definition.iid}' in namespace '${namespace}' created successfully`
 	);
 }
@@ -207,7 +207,7 @@ export async function updateStatefulSet(definition, namespace) {
 		namespace,
 		payload.body
 	);
-	console.log(
+	console.info(
 		`StatefulSet '${definition.iid}' in namespace '${namespace}' updated successfully`
 	);
 }
@@ -217,7 +217,7 @@ export async function deleteStatefulSet(name, namespace) {
 
 	try {
 		await k8sAppsApi.deleteNamespacedStatefulSet(name, namespace);
-		console.log(
+		console.info(
 			`StatefulSet '${name}' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {

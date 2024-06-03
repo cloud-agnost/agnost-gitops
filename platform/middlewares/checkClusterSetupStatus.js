@@ -8,10 +8,9 @@ export const checkClusterSetupStatus = async (req, res, next) => {
 	// Check if there is user
 	if (user) {
 		return res.status(401).json({
-			error: t("Not Allowed"),
-			details: t(
-				"The cluster set up has already been initialized. You cannot reinitialize the set up."
-			),
+			error: "Not Allowed",
+			details:
+				"The cluster set up has already been initialized. You cannot reinitialize the set up.",
 			code: ERROR_CODES.notAllowed,
 		});
 	}
@@ -26,8 +25,8 @@ export const hasClusterSetUpCompleted = async (req, res, next) => {
 	// Check if there is no cluster owner user
 	if (!user) {
 		return res.status(401).json({
-			error: t("Not Allowed"),
-			details: t("The cluster set up has not been completed yet."),
+			error: "Not Allowed",
+			details: "The cluster set up has not been completed yet.",
 			code: ERROR_CODES.notAllowed,
 		});
 	}

@@ -18,6 +18,7 @@ import {
 import ERROR_CODES from "../config/errorCodes.js";
 import { notificationTypes } from "../config/constants.js";
 import { createNamespace } from "../handlers/ns.js";
+import helper from "../util/helper.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -100,7 +101,7 @@ router.post(
 				userObj,
 				"user",
 				"initiate-cluster-setup",
-				t("Initiated cluster setup")
+				"Initiated cluster setup"
 			);
 		} catch (error) {
 			await userCtrl.rollback(session);
@@ -134,8 +135,8 @@ router.post(
 				await userCtrl.endSession(session);
 
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t("Only cluster owners can finalize cluster set-up."),
+					error: "Not Allowed",
+					details: "Only cluster owners can finalize cluster set-up.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -146,8 +147,8 @@ router.post(
 				await userCtrl.endSession(session);
 
 				return res.status(422).json({
-					error: t("Not Allowed"),
-					details: t("Cluster set-up has already been finalized."),
+					error: "Not Allowed",
+					details: "Cluster set-up has already been finalized.",
 					code: ERROR_CODES.notAllowed,
 				});
 			}
@@ -197,7 +198,7 @@ router.post(
 				user,
 				"user",
 				"finalize-cluster-setup",
-				t("Completed cluster setup")
+				"Completed cluster setup"
 			);
 		} catch (error) {
 			await userCtrl.rollback(session);
@@ -229,9 +230,9 @@ router.post(
 
 			if (!user) {
 				return res.status(401).json({
-					error: t("Invalid Credentials"),
+					error: "Invalid Credentials",
 					code: ERROR_CODES.invalidCredentials,
-					details: t("Invalid credentials. No such user exists."),
+					details: "Invalid credentials. No such user exists.",
 				});
 			}
 
@@ -255,7 +256,7 @@ router.post(
 				user,
 				"user",
 				"login",
-				t(`Logged in using ${gitUser.provider} credentials`)
+				`Logged in using ${gitUser.provider} credentials`
 			);
 		} catch (error) {
 			helper.handleError(req, res, error);

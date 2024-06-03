@@ -63,14 +63,14 @@ export const applyRules = (type) => {
 				body("provider")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(["github"])
-					.withMessage(t("Unsupported Git repository provider")),
+					.withMessage("Unsupported Git repository provider"),
 				body("accessToken")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.custom(async (value, { req }) => {
 						const { valid, error, user } = await isValidGitProviderAccessToken(
@@ -78,7 +78,7 @@ export const applyRules = (type) => {
 							req.body.provider
 						);
 
-						if (!valid) throw new AgnostError(error);
+						if (!valid) throw new Error(error);
 
 						// Assign git user to the request body
 						req.body.gitUser = user;
@@ -91,11 +91,11 @@ export const applyRules = (type) => {
 				query("repo")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty")),
+					.withMessage("Required field, cannot be left empty"),
 				query("owner")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty")),
+					.withMessage("Required field, cannot be left empty"),
 			];
 		default:
 			return [];

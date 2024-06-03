@@ -1,3 +1,4 @@
+import helper from "../util/helper.js";
 import ERROR_CODES from "../config/errorCodes.js";
 
 export const projectAuthorization = {
@@ -118,12 +119,8 @@ export const authorizeProjectAction = (action = null) => {
 			}
 
 			return res.status(401).json({
-				error: t("Not Authorized"),
-				details: t(
-					"You are not authorized to perform '%s' action on project '%s'",
-					action,
-					req.project.name
-				),
+				error: "Not Authorized",
+				details: `You are not authorized to perform '${action}' action on project '${req.project.name}'`,
 				code: ERROR_CODES.unauthorized,
 			});
 		} catch (err) {

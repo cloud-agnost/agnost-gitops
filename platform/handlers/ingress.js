@@ -1,5 +1,6 @@
 import k8s from "@kubernetes/client-node";
 import { getClusterRecord, getK8SResource } from "./util.js";
+import helper from "../util/helper.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
@@ -117,7 +118,7 @@ export async function createIngress(
 	try {
 		// Create the ingress with the provided spec
 		await k8sNetworkingApi.createNamespacedIngress(namespace, ingress);
-		console.log(
+		console.info(
 			`Ingress '${name}-cluster' in namespace '${namespace}' created successfully`
 		);
 	} catch (err) {
@@ -172,7 +173,7 @@ export async function updateIngress(
 				requestOptions
 			);
 
-			console.log(
+			console.info(
 				`Ingress '${name}-cluster' in namespace '${namespace}' updated successfully`
 			);
 		}
@@ -187,7 +188,7 @@ export async function deleteIngress(name, namespace) {
 
 	try {
 		await k8sNetworkingApi.deleteNamespacedIngress(name, namespace);
-		console.log(
+		console.info(
 			`Ingress '${name}' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {
@@ -278,7 +279,7 @@ export async function createCustomDomainIngress(
 
 	// Create the ingress with the provided spec
 	await k8sNetworkingApi.createNamespacedIngress(namespace, ingress);
-	console.log(
+	console.info(
 		`Ingress '${name}-domain' in namespace '${namespace}' created successfully`
 	);
 }
@@ -330,7 +331,7 @@ export async function updateCustomDomainIngress(
 				requestOptions
 			);
 
-			console.log(
+			console.info(
 				`Ingress '${name}-domain' in namespace '${namespace}' updated successfully`
 			);
 		}
@@ -345,7 +346,7 @@ export async function deleteCustomDomainIngress(name, namespace) {
 
 	try {
 		await k8sNetworkingApi.deleteNamespacedIngress(name, namespace);
-		console.log(
+		console.info(
 			`Ingress '${name}' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {
@@ -496,7 +497,7 @@ export async function addClusterCustomDomain(
 			requestOptions
 		);
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot add custom domain '${domainName}' to ingress '${containeriid}-cluster'`,
 			{ details: err }
 		);
@@ -557,7 +558,7 @@ export async function deleteClusterCustomDomains(
 			requestOptions
 		);
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot remove custom domain(s) '${domainNames.join(
 				", "
 			)}' to ingress '${containeriid}-cluster'`,
@@ -615,7 +616,7 @@ export async function updateEnforceSSLAccessSettings(
 			requestOptions
 		);
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot update ssl access settings of ingress '${ingressName}'`,
 			{ details: err }
 		);

@@ -1,7 +1,7 @@
 import gitCtrl from "../controllers/gitProvider.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
-import helper from "../util/helper.js";
 
 export const validateGitProvider = async (req, res, next) => {
 	try {
@@ -12,22 +12,16 @@ export const validateGitProvider = async (req, res, next) => {
 
 		if (!gitProvider) {
 			return res.status(404).json({
-				error: t("Not Found"),
-				details: t(
-					"No such Git provider entry with the provided id '%s' exists.",
-					gitProviderId
-				),
+				error: "Not Found",
+				details: `No such Git provider entry with the provided id '${gitProviderId}' exists.`,
 				code: ERROR_CODES.notFound,
 			});
 		}
 
 		if (gitProvider.userId.toString() !== req.user._id.toString()) {
 			return res.status(401).json({
-				error: t("Not Authorized"),
-				details: t(
-					"You do not have a Git provider entry with the provided id '%s'",
-					gitProviderId
-				),
+				error: "Not Authorized",
+				details: `You do not have a Git provider entry with the provided id '${gitProviderId}'`,
 				code: ERROR_CODES.unauthorized,
 			});
 		}

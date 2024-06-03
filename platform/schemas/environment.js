@@ -1,3 +1,4 @@
+import config from "config";
 import mongoose from "mongoose";
 import { body } from "express-validator";
 
@@ -70,18 +71,18 @@ export const applyRules = (type) => {
 				body("name")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isLength({
 						min: config.get("general.minNameLength"),
 						max: config.get("general.maxTextLength"),
 					})
 					.withMessage(
-						t(
-							"Name must be minimum %s and maximum %s characters long",
-							config.get("general.minNameLength"),
-							config.get("general.maxTextLength")
-						)
+						`Name must be minimum ${config.get(
+							"general.minNameLength"
+						)} and maximum ${config.get(
+							"general.maxTextLength"
+						)} characters long`
 					)
 					.custom(async (value, { req }) => {
 						let environments = await ProjectEnvModel.find({
@@ -92,8 +93,8 @@ export const applyRules = (type) => {
 								environment.name.toLowerCase() === value.toLowerCase() &&
 								type === "create"
 							)
-								throw new AgnostError(
-									t("Environment with the provided name already exists")
+								throw new Error(
+									"Environment with the provided name already exists"
 								);
 
 							if (
@@ -101,17 +102,14 @@ export const applyRules = (type) => {
 								type === "update" &&
 								req.environment._id.toString() !== environment._id.toString()
 							)
-								throw new AgnostError(
-									t("Environment with the provided name already exists")
+								throw new Error(
+									"Environment with the provided name already exists"
 								);
 						});
 
 						if (value.toLowerCase() === "this") {
-							throw new AgnostError(
-								t(
-									"'%s' is a reserved keyword and cannot be used as environment name",
-									value
-								)
+							throw new Error(
+								`'${value}' is a reserved keyword and cannot be used as environment name`
 							);
 						}
 
@@ -120,18 +118,18 @@ export const applyRules = (type) => {
 				body("private")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isBoolean()
-					.withMessage(t("Not a valid boolean value"))
+					.withMessage("Not a valid boolean value")
 					.toBoolean(),
 				body("readOnly")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isBoolean()
-					.withMessage(t("Not a valid boolean value"))
+					.withMessage("Not a valid boolean value")
 					.toBoolean(),
 			];
 		default:

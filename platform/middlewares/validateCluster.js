@@ -1,5 +1,6 @@
 import userCtrl from "../controllers/user.js";
 import clsCtrl from "../controllers/cluster.js";
+import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -8,8 +9,8 @@ export const validateCluster = async (req, res, next) => {
 		let user = await userCtrl.getOneByQuery({ isClusterOwner: true });
 		if (!user) {
 			return res.status(401).json({
-				error: t("Not Authorized"),
-				details: t("Cluster set up has not been completed yet."),
+				error: "Not Authorized",
+				details: "Cluster set up has not been completed yet.",
 				code: ERROR_CODES.unauthorized,
 			});
 		}

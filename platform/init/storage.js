@@ -46,7 +46,11 @@ class Storage {
 	 */
 	async deleteFile(bucketName, fileName) {
 		if (!fileName) return;
-		await this.minioClient.removeObject(bucketName, fileName);
+		try {
+			await this.minioClient.removeObject(bucketName, fileName);
+		} catch (err) {
+			console.error(err);
+		}
 	}
 
 	/**

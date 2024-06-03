@@ -1,3 +1,4 @@
+import config from "config";
 import { body } from "express-validator";
 import parser from "cron-parser";
 import cntrCtrl from "../../controllers/container.js";
@@ -5,24 +6,23 @@ import domainCtrl from "../../controllers/domain.js";
 import clsCtrl from "../../controllers/cluster.js";
 import gitCtrl from "../../controllers/gitProvider.js";
 import { timezones } from "../../config/timezones.js";
+import helper from "../../util/helper.js";
 
 export const checkName = (containerType, actionType) => {
 	return [
 		body("name")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isLength({
 				min: config.get("general.minNameLength"),
 				max: config.get("general.maxTextLength"),
 			})
 			.withMessage(
-				t(
-					"Name must be minimum %s and maximum %s characters long",
-					config.get("general.minNameLength"),
-					config.get("general.maxTextLength")
-				)
+				`Name must be minimum ${config.get(
+					"general.minNameLength"
+				)} and maximum ${config.get("general.maxTextLength")} characters long`
 			)
 			.custom(async (value, { req }) => {
 				let containers = await cntrCtrl.getManyByQuery({
@@ -33,8 +33,8 @@ export const checkName = (containerType, actionType) => {
 						container.name.toLowerCase() === value.toLowerCase() &&
 						actionType === "create"
 					)
-						throw new AgnostError(
-							t("A %s with the provided name already exists", containerType)
+						throw new Error(
+							`A ${containerType} with the provided name already exists`
 						);
 
 					if (
@@ -42,17 +42,14 @@ export const checkName = (containerType, actionType) => {
 						actionType === "update" &&
 						req.container._id.toString() !== container._id.toString()
 					)
-						throw new AgnostError(
-							t("A %s with the provided name already exists", containerType)
+						throw new Error(
+							`A ${containerType} with the provided name already exists`
 						);
 				});
 
 				if (value.toLowerCase() === "this") {
-					throw new AgnostError(
-						t(
-							"'%s' is a reserved keyword and cannot be used as version name",
-							value
-						)
+					throw new Error(
+						`'${value}' is a reserved keyword and cannot be used as version name`
 					);
 				}
 
@@ -61,19 +58,19 @@ export const checkName = (containerType, actionType) => {
 	];
 };
 
-export const checkRepoOrRegistry = (containerType, actionType) => {
+export const checkRepoOrRegistry = (containerType) => {
 	return [
 		body("repoOrRegistry")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["repo", "registry"])
-			.withMessage(t("Unsupported %s source type", containerType)),
+			.withMessage(`Unsupported ${containerType} source type`),
 	];
 };
 
-export const checkRepo = (containerType, actionType) => {
+export const checkRepo = () => {
 	return [
 		body("repo.type")
 			.if(
@@ -82,18 +79,18 @@ export const checkRepo = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["github", "gitlab", "bitbucket"])
-			.withMessage(t("Unsupported Git provider")),
+			.withMessage("Unsupported Git provider"),
 		body("repo.connected")
 			.if((value, { req }) => req.body.repoOrRegistry === "repo")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 		body("repo.name")
 			.if(
@@ -102,7 +99,7 @@ export const checkRepo = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty")),
+			.withMessage("Required field, cannot be left empty"),
 		body("repo.url")
 			.if(
 				(value, { req }) =>
@@ -110,10 +107,10 @@ export const checkRepo = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isURL({ require_tld: false, require_protocol: true })
-			.withMessage(t("Invalid URL")),
+			.withMessage("Invalid URL"),
 		body("repo.branch")
 			.if(
 				(value, { req }) =>
@@ -121,7 +118,7 @@ export const checkRepo = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty")),
+			.withMessage("Required field, cannot be left empty"),
 		body("repo.path")
 			.if(
 				(value, { req }) =>
@@ -129,12 +126,12 @@ export const checkRepo = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-\/]*)$/)
+			.matches(/^\/([\w\-/]*)$/)
 			.withMessage(
 				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
 			) // Remove trailing slashes using custom sanitizer
@@ -149,9 +146,9 @@ export const checkRepo = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
-			.matches(/^[\w\-\/]*$/)
+			.matches(/^[\w\-/]*$/)
 			.withMessage(
 				"Not a valid dockerfile path. Dockerfile path names include alphanumeric characters, underscore, hyphens, and additional slashes."
 			) // Rem
@@ -166,17 +163,17 @@ export const checkRepo = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom(async (value, { req }) => {
 				if (!helper.isValidId(value)) {
-					throw new AgnostError(t("Invalid Git provider id"));
+					throw new Error("Invalid Git provider id");
 				}
 				const gitProvider = await gitCtrl.getOneByQuery({
 					_id: value,
 				});
 				if (!gitProvider) {
-					throw new AgnostError(t("Git provider not found"));
+					throw new Error("Git provider not found");
 				}
 
 				if (gitProvider.accessToken)
@@ -192,12 +189,12 @@ export const checkRepo = (containerType, actionType) => {
 	];
 };
 
-export const checkVariables = (containerType, actionType) => {
+export const checkVariables = () => {
 	return [
 		body("variables.*.name")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty")),
+			.withMessage("Required field, cannot be left empty"),
 		body("variables.*.value").optional(),
 	];
 };
@@ -209,7 +206,7 @@ export const checkNetworking = (containerType, actionType) => {
 				body("networking.containerPort")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({ min: 1, max: 65535 })
 					.withMessage("Port must be an integer between 1 and 65535")
@@ -220,7 +217,7 @@ export const checkNetworking = (containerType, actionType) => {
 				body("networking.containerPort")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isInt({ min: 1, max: 65535 })
 					.withMessage("Port must be an integer between 1 and 65535")
@@ -228,18 +225,18 @@ export const checkNetworking = (containerType, actionType) => {
 				body("networking.ingress.enabled")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isBoolean()
-					.withMessage(t("Not a valid boolean value"))
+					.withMessage("Not a valid boolean value")
 					.toBoolean(),
 				body("networking.customDomain.enabled")
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isBoolean()
-					.withMessage(t("Not a valid boolean value"))
+					.withMessage("Not a valid boolean value")
 					.toBoolean(),
 				body("networking.customDomain.domain")
 					.if(
@@ -247,17 +244,17 @@ export const checkNetworking = (containerType, actionType) => {
 							req.body.networking.customDomain.enabled === true
 					)
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.toLowerCase() // convert the value to lowercase
-					.custom(async (value, { req }) => {
+					.custom(async (value) => {
 						// The below reges allows for wildcard subdomains
 						// const dnameRegex = /^(?:\*\.)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 						// Check domain name syntax, we do not currently allow wildcard subdomains
 						const dnameRegex = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 						// Validate domain name (can be at mulitple levels)
 						if (!dnameRegex.test(value)) {
-							throw new AgnostError(t("Not a valid domain name '%s'", value));
+							throw new Error(`Not a valid domain name '${value}'`);
 						}
 
 						// Check to see if this domain is already in the domain list
@@ -266,11 +263,8 @@ export const checkNetworking = (containerType, actionType) => {
 						});
 
 						if (domain) {
-							throw new AgnostError(
-								t(
-									"The specified domain '%s' already exists in overall domains list",
-									value
-								)
+							throw new Error(
+								`The specified domain '${value}' already exists in overall domains list`
 							);
 						}
 
@@ -280,11 +274,8 @@ export const checkNetworking = (containerType, actionType) => {
 						});
 
 						if (cluster?.domains?.find((entry) => entry === value)) {
-							throw new AgnostError(
-								t(
-									"The specified domain '%s' already exists in cluster custom domains list",
-									value
-								)
+							throw new Error(
+								`The specified domain '${value}' already exists in cluster custom domains list`
 							);
 						}
 
@@ -297,11 +288,10 @@ export const checkNetworking = (containerType, actionType) => {
 						}
 
 						// This means all cluster IPs are private
-						throw new AgnostError(
-							t(
-								"Your cluster IP addresses '%s' are private which are not routable on the internet. You cannot add a custom domain to an Agnost cluster with cluster IP addresses that are all private.",
-								clusterIPs.join(", ")
-							)
+						throw new Error(
+							`Your cluster IP addresses '${clusterIPs.join(
+								", "
+							)}' are private which are not routable on the internet. You cannot add a custom domain to an Agnost cluster with cluster IP addresses that are all private.`
 						);
 					}),
 				body("networking.tcpProxy.enabled")
@@ -310,10 +300,10 @@ export const checkNetworking = (containerType, actionType) => {
 					)
 					.trim()
 					.notEmpty()
-					.withMessage(t("Required field, cannot be left empty"))
+					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isBoolean()
-					.withMessage(t("Not a valid boolean value"))
+					.withMessage("Not a valid boolean value")
 					.toBoolean(),
 			];
 		default:
@@ -324,45 +314,41 @@ export const checkNetworking = (containerType, actionType) => {
 function checkCPU(value, unit) {
 	// First check if the value is a number
 	if (isNaN(value)) {
-		throw new AgnostError(t("CPU amount must be a number"));
+		throw new Error("CPU amount must be a number");
 	}
 
 	if (unit === "millicores" || unit === "AverageValueMillicores") {
 		const intValue = parseInt(value, 10);
 		if (intValue.toString() !== value.toString()) {
-			throw new AgnostError(
-				"CPU amount must be an integer when using millicores"
-			);
+			throw new Error("CPU amount must be an integer when using millicores");
 		}
 
 		if (
 			intValue < config.get("general.containers.minMillicores") ||
 			intValue > config.get("general.containers.maxMillicores")
 		) {
-			throw new AgnostError(
-				t(
-					"CPU amount must be between %s and %s when using millicores",
-					config.get("general.containers.minMillicores"),
-					config.get("general.containers.maxMillicores")
-				)
+			throw new Error(
+				`CPU amount must be between ${config.get(
+					"general.containers.minMillicores"
+				)} and ${config.get(
+					"general.containers.maxMillicores"
+				)} when using millicores`
 			);
 		}
 	} else if (unit === "cores" || unit === "AverageValueCores") {
 		const floatVal = parseFloat(value);
 		if (floatVal.toString() !== value.toString()) {
-			throw new AgnostError("CPU amount must be a valid number");
+			throw new Error("CPU amount must be a valid number");
 		}
 
 		if (
 			floatVal < config.get("general.containers.minCPU") ||
 			floatVal > config.get("general.containers.maxCPU")
 		) {
-			throw new AgnostError(
-				t(
-					"CPU request must be between %s and %s when using cores",
-					config.get("general.containers.minCPU"),
-					config.get("general.containers.maxCPU")
-				)
+			throw new Error(
+				`CPU request must be between ${config.get(
+					"general.containers.minCPU"
+				)} and ${config.get("general.containers.maxCPU")} when using cores`
 			);
 		}
 	}
@@ -385,45 +371,39 @@ function parseCpuValue(cpuValue, unit) {
 function checkMemory(value, unit) {
 	// First check if the value is a number
 	if (isNaN(value)) {
-		throw new AgnostError(t("Memory amount must be a number"));
+		throw new Error("Memory amount must be a number");
 	}
 
 	if (unit === "mebibyte" || unit === "AverageValueMebibyte") {
 		const intValue = parseInt(value, 10);
 		if (intValue.toString() !== value.toString()) {
-			throw new AgnostError(
-				"Memory amount must be an integer when using mebibytes"
-			);
+			throw new Error("Memory amount must be an integer when using mebibytes");
 		}
 
 		if (
 			intValue < config.get("general.containers.minMiB") ||
 			intValue > config.get("general.containers.maxMiB")
 		) {
-			throw new AgnostError(
-				t(
-					"Memory amount must be between %s and %s when using mebibytes",
-					config.get("general.containers.minMiB"),
-					config.get("general.containers.maxMiB")
-				)
+			throw new Error(
+				`Memory amount must be between ${config.get(
+					"general.containers.minMiB"
+				)} and ${config.get("general.containers.maxMiB")} when using mebibytes`
 			);
 		}
 	} else if (unit === "gibibyte" || unit === "AverageValueGibibyte") {
 		const floatVal = parseFloat(value);
 		if (floatVal.toString() !== value.toString()) {
-			throw new AgnostError("Memory amount must be a valid number");
+			throw new Error("Memory amount must be a valid number");
 		}
 
 		if (
 			floatVal < config.get("general.containers.minGiB") ||
 			floatVal > config.get("general.containers.maxGiB")
 		) {
-			throw new AgnostError(
-				t(
-					"Memory request must be between %s and %s when using gibibytes",
-					config.get("general.containers.minGiB"),
-					config.get("general.containers.maxGiB")
-				)
+			throw new Error(
+				`Memory request must be between ${config.get(
+					"general.containers.minGiB"
+				)} and ${config.get("general.containers.maxGiB")} when using gibibytes`
 			);
 		}
 	}
@@ -446,45 +426,43 @@ function parseMemoryValue(memoryValue, unit) {
 function checkStorage(value, unit) {
 	// First check if the value is a number
 	if (isNaN(value)) {
-		throw new AgnostError(t("Storage amount must be a number"));
+		throw new Error("Storage amount must be a number");
 	}
 
 	if (unit === "mebibyte") {
 		const intValue = parseInt(value, 10);
 		if (intValue.toString() !== value.toString()) {
-			throw new AgnostError(
-				"Storage amount must be an integer when using mebibytes"
-			);
+			throw new Error("Storage amount must be an integer when using mebibytes");
 		}
 
 		if (
 			intValue < config.get("general.containers.minStorageMiB") ||
 			intValue > config.get("general.containers.maxStorageMiB")
 		) {
-			throw new AgnostError(
-				t(
-					"Storage amount must be between %s and %s when using mebibytes",
-					config.get("general.containers.minStorageMiB"),
-					config.get("general.containers.maxStorageMiB")
-				)
+			throw new Error(
+				`Storage amount must be between ${config.get(
+					"general.containers.minStorageMiB"
+				)} and ${config.get(
+					"general.containers.maxStorageMiB"
+				)} when using mebibytes`
 			);
 		}
 	} else if (unit === "gibibyte") {
 		const floatVal = parseFloat(value);
 		if (floatVal.toString() !== value.toString()) {
-			throw new AgnostError("Storage amount must be a valid number");
+			throw new Error("Storage amount must be a valid number");
 		}
 
 		if (
 			floatVal < config.get("general.containers.minStorageGiB") ||
 			floatVal > config.get("general.containers.maxStorageGiB")
 		) {
-			throw new AgnostError(
-				t(
-					"Storage request must be between %s and %s when using gibibytes",
-					config.get("general.containers.minStorageGiB"),
-					config.get("general.containers.maxStorageGiB")
-				)
+			throw new Error(
+				`Storage request must be between ${config.get(
+					"general.containers.minStorageGiB"
+				)} and ${config.get(
+					"general.containers.maxStorageGiB"
+				)} when using gibibytes`
 			);
 		}
 	}
@@ -492,29 +470,29 @@ function checkStorage(value, unit) {
 	return true;
 }
 
-export const checkPodConfig = (containerType, actionType) => {
+export const checkPodConfig = (containerType) => {
 	return [
 		body("podConfig.restartPolicy")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(
 				containerType === "cron job"
 					? ["OnFailure", "Never"]
 					: ["Always", "OnFailure", "Never"]
 			)
-			.withMessage(t("Unsupported restart policy")),
+			.withMessage("Unsupported restart policy"),
 		body("podConfig.cpuRequestType")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["millicores", "cores"])
-			.withMessage(t("Unsupported CPU unit")),
+			.withMessage("Unsupported CPU unit"),
 		body("podConfig.cpuRequest")
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.if((value, { req }) =>
 				["millicores", "cores"].includes(req.body.podConfig.cpuRequestType)
@@ -531,7 +509,7 @@ export const checkPodConfig = (containerType, actionType) => {
 				);
 
 				if (request > limit) {
-					throw new AgnostError("CPU request cannot be larger than CPU limit");
+					throw new Error("CPU request cannot be larger than CPU limit");
 				}
 
 				return true;
@@ -544,14 +522,14 @@ export const checkPodConfig = (containerType, actionType) => {
 		body("podConfig.cpuLimitType")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["millicores", "cores"])
-			.withMessage(t("Unsupported CPU unit")),
+			.withMessage("Unsupported CPU unit"),
 		body("podConfig.cpuLimit")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.if((value, { req }) =>
 				["millicores", "cores"].includes(req.body.podConfig.cpuLimitType)
@@ -566,7 +544,7 @@ export const checkPodConfig = (containerType, actionType) => {
 				const limit = parseCpuValue(value, req.body.podConfig.cpuLimitType);
 
 				if (request > limit) {
-					throw new AgnostError("CPU limit cannot be smaller than CPU request");
+					throw new Error("CPU limit cannot be smaller than CPU request");
 				}
 
 				return true;
@@ -579,13 +557,13 @@ export const checkPodConfig = (containerType, actionType) => {
 		body("podConfig.memoryRequestType")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["mebibyte", "gibibyte"])
-			.withMessage(t("Unsupported memory unit")),
+			.withMessage("Unsupported memory unit"),
 		body("podConfig.memoryRequest")
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.if((value, { req }) =>
 				["mebibyte", "gibibyte"].includes(req.body.podConfig.memoryRequestType)
@@ -603,9 +581,7 @@ export const checkPodConfig = (containerType, actionType) => {
 				);
 
 				if (request > limit) {
-					throw new AgnostError(
-						"Memory request cannot be larger than memory limit"
-					);
+					throw new Error("Memory request cannot be larger than memory limit");
 				}
 
 				return true;
@@ -618,14 +594,14 @@ export const checkPodConfig = (containerType, actionType) => {
 		body("podConfig.memoryLimitType")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["mebibyte", "gibibyte"])
-			.withMessage(t("Unsupported memory unit")),
+			.withMessage("Unsupported memory unit"),
 		body("podConfig.memoryLimit")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.if((value, { req }) =>
 				["mebibyte", "gibibyte"].includes(req.body.podConfig.memoryLimitType)
@@ -643,9 +619,7 @@ export const checkPodConfig = (containerType, actionType) => {
 				);
 
 				if (request > limit) {
-					throw new AgnostError(
-						"Memory limit cannot be smaller than memory request"
-					);
+					throw new Error("Memory limit cannot be smaller than memory request");
 				}
 
 				return true;
@@ -663,21 +637,21 @@ export const checkStorageConfig = (containerType, actionType) => {
 		body("storageConfig.enabled")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 		body("storageConfig.mountPath")
 			.if((value, { req }) => req.body.storageConfig.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-\/]*)$/)
+			.matches(/^\/([\w\-/]*)$/)
 			.withMessage(
 				"Not a valid mount path. Mount paths include alphanumeric characters, underscore, hyphens, and additional slashes."
 			) // Remove trailing slashes using custom sanitizer
@@ -689,12 +663,10 @@ export const checkStorageConfig = (containerType, actionType) => {
 					req.container.storageConfig.enabled === false
 			)
 			.isArray()
-			.withMessage(t("Access modes need to be an array of strings"))
+			.withMessage("Access modes need to be an array of strings")
 			.custom((value) => {
 				if (value.length === 0) {
-					throw new AgnostError(
-						t("At least one access mode needs to be specified.")
-					);
+					throw new Error("At least one access mode needs to be specified.");
 				}
 
 				return true;
@@ -707,18 +679,18 @@ export const checkStorageConfig = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"])
-			.withMessage(t("Unsupported storage access mode")),
+			.withMessage("Unsupported storage access mode"),
 		body("storageConfig.sizeType")
 			.if((value, { req }) => req.body.storageConfig.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["mebibyte", "gibibyte"])
-			.withMessage(t("Unsupported storage size unit"))
+			.withMessage("Unsupported storage size unit")
 			.bail()
 			.if(
 				(value, { req }) =>
@@ -742,12 +714,8 @@ export const checkStorageConfig = (containerType, actionType) => {
 					newSizeInMiB < existingSizeInMiB &&
 					req.container.storageConfig.enabled === true
 				) {
-					throw new AgnostError(
-						t(
-							"Storage size cannot be decreased. Current size is %s %s",
-							existingSize,
-							existingSizeType
-						)
+					throw new Error(
+						`Storage size cannot be decreased. Current size is ${existingSize} ${existingSizeType}"`
 					);
 				}
 
@@ -756,7 +724,7 @@ export const checkStorageConfig = (containerType, actionType) => {
 		body("storageConfig.size")
 			.if((value, { req }) => req.body.storageConfig.enabled === true)
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.if((value, { req }) =>
 				["mebibyte", "gibibyte"].includes(req.body.storageConfig.sizeType)
@@ -774,12 +742,12 @@ export const checkStorageConfig = (containerType, actionType) => {
 	];
 };
 
-export const checkDeploymentConfig = (containerType, actionType) => {
+export const checkDeploymentConfig = () => {
 	return [
 		body("deploymentConfig.desiredReplicas")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 100 })
 			.withMessage("Desired replicas must be an integer between 1 and 100")
@@ -792,7 +760,7 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 100 })
 			.withMessage("Min replicas must be an integer between 1 and 100")
@@ -802,9 +770,7 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 				const maxReplicas = parseInt(req.body.deploymentConfig.maxReplicas, 10);
 
 				if (maxReplicas < minReplicas) {
-					throw new AgnostError(
-						"Min replicas cannot be larger than max replicas"
-					);
+					throw new Error("Min replicas cannot be larger than max replicas");
 				}
 
 				return true;
@@ -817,7 +783,7 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 100 })
 			.withMessage("Max replicas must be an integer between 1 and 100")
@@ -827,9 +793,7 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 				const maxReplicas = parseInt(value, 10);
 
 				if (maxReplicas < minReplicas) {
-					throw new AgnostError(
-						"Max replicas cannot be smaller than min replicas"
-					);
+					throw new Error("Max replicas cannot be smaller than min replicas");
 				}
 
 				return true;
@@ -837,10 +801,10 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 		body("deploymentConfig.cpuMetric.enabled")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 		body("deploymentConfig.cpuMetric.metricType")
 			.if(
@@ -848,21 +812,21 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn([
 				"AverageUtilization",
 				"AverageValueMillicores",
 				"AverageValueCores",
 			])
-			.withMessage(t("Unsupported CPU metric type")),
+			.withMessage("Unsupported CPU metric type"),
 		body("deploymentConfig.cpuMetric.metricValue")
 			.if(
 				(value, { req }) => req.body.deploymentConfig.cpuMetric.enabled === true
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value, { req }) => {
 				if (
@@ -876,13 +840,11 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 					"AverageUtilization"
 				) {
 					if (isNaN(value)) {
-						throw new AgnostError(t("CPU metric value must be a number"));
+						throw new Error("CPU metric value must be a number");
 					}
 
 					if (parseInt(value, 10) < 1 || parseInt(value, 10) > 100) {
-						throw new AgnostError(
-							t("CPU metric value must be between %s and %s", 1, 100)
-						);
+						throw new Error(`CPU metric value must be between ${1} and ${100}`);
 					}
 				}
 
@@ -896,10 +858,10 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 		body("deploymentConfig.memoryMetric.enabled")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 		body("deploymentConfig.memoryMetric.metricType")
 			.if(
@@ -908,10 +870,10 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["AverageValueMebibyte", "AverageValueGibibyte"])
-			.withMessage(t("Unsupported memory metric type")),
+			.withMessage("Unsupported memory metric type"),
 		body("deploymentConfig.memoryMetric.metricValue")
 			.if(
 				(value, { req }) =>
@@ -919,7 +881,7 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value, { req }) => {
 				if (
@@ -940,7 +902,7 @@ export const checkDeploymentConfig = (containerType, actionType) => {
 	];
 };
 
-export const checkProbes = (containerType, actionType) => {
+export const checkProbes = () => {
 	return [
 		body("probes.startup.enabled")
 			.if((value, { req }) =>
@@ -948,10 +910,10 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 		body("probes.startup.checkMechanism")
 			.if(
@@ -961,10 +923,10 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["exec", "httpGet", "tcpSocket"])
-			.withMessage(t("Unsupported startup probe check mechanism type")),
+			.withMessage("Unsupported startup probe check mechanism type"),
 		body("probes.startup.initialDelaySeconds")
 			.if(
 				(value, { req }) =>
@@ -973,7 +935,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage(
@@ -988,7 +950,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage("Period seconds need to be an integer between 1 and 600")
@@ -1001,7 +963,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage("Timeout seconds need to be an integer between 1 and 600")
@@ -1014,7 +976,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 20 })
 			.withMessage("Failure threshold need to be an integer between 1 and 20")
@@ -1028,7 +990,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty")),
+			.withMessage("Required field, cannot be left empty"),
 		body("probes.startup.tcpPort")
 			.if(
 				(value, { req }) =>
@@ -1038,7 +1000,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 65535 })
 			.withMessage("Port must be an integer between 1 and 65535")
@@ -1052,12 +1014,12 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-\/]*)$/)
+			.matches(/^\/([\w\-/]*)$/)
 			.withMessage(
 				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
 			) // Remove trailing slashes using custom sanitizer
@@ -1071,7 +1033,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 65535 })
 			.withMessage("Port must be an integer between 1 and 65535")
@@ -1079,24 +1041,24 @@ export const checkProbes = (containerType, actionType) => {
 		body("probes.readiness.enabled")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 		body("probes.readiness.checkMechanism")
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["exec", "httpGet", "tcpSocket"])
-			.withMessage(t("Unsupported readiness probe check mechanism type")),
+			.withMessage("Unsupported readiness probe check mechanism type"),
 		body("probes.readiness.initialDelaySeconds")
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage(
@@ -1107,7 +1069,7 @@ export const checkProbes = (containerType, actionType) => {
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage("Period seconds need to be an integer between 1 and 600")
@@ -1116,7 +1078,7 @@ export const checkProbes = (containerType, actionType) => {
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage("Timeout seconds need to be an integer between 1 and 600")
@@ -1125,7 +1087,7 @@ export const checkProbes = (containerType, actionType) => {
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 20 })
 			.withMessage("Failure threshold need to be an integer between 1 and 20")
@@ -1138,7 +1100,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty")),
+			.withMessage("Required field, cannot be left empty"),
 		body("probes.readiness.tcpPort")
 			.if(
 				(value, { req }) =>
@@ -1147,7 +1109,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 65535 })
 			.withMessage("Port must be an integer between 1 and 65535")
@@ -1160,12 +1122,12 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-\/]*)$/)
+			.matches(/^\/([\w\-/]*)$/)
 			.withMessage(
 				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
 			) // Remove trailing slashes using custom sanitizer
@@ -1178,7 +1140,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 65535 })
 			.withMessage("Port must be an integer between 1 and 65535")
@@ -1186,24 +1148,24 @@ export const checkProbes = (containerType, actionType) => {
 		body("probes.liveness.enabled")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 		body("probes.liveness.checkMechanism")
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["exec", "httpGet", "tcpSocket"])
-			.withMessage(t("Unsupported liveness probe check mechanism type")),
+			.withMessage("Unsupported liveness probe check mechanism type"),
 		body("probes.liveness.initialDelaySeconds")
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage(
@@ -1214,7 +1176,7 @@ export const checkProbes = (containerType, actionType) => {
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage("Period seconds need to be an integer between 1 and 600")
@@ -1223,7 +1185,7 @@ export const checkProbes = (containerType, actionType) => {
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 3600 })
 			.withMessage("Timeout seconds need to be an integer between 1 and 600")
@@ -1232,7 +1194,7 @@ export const checkProbes = (containerType, actionType) => {
 			.if((value, { req }) => req.body.probes.startup.enabled === true)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 20 })
 			.withMessage("Failure threshold need to be an integer between 1 and 20")
@@ -1245,7 +1207,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty")),
+			.withMessage("Required field, cannot be left empty"),
 		body("probes.liveness.tcpPort")
 			.if(
 				(value, { req }) =>
@@ -1254,7 +1216,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 65535 })
 			.withMessage("Port must be an integer between 1 and 65535")
@@ -1267,12 +1229,12 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-\/]*)$/)
+			.matches(/^\/([\w\-/]*)$/)
 			.withMessage(
 				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
 			) // Remove trailing slashes using custom sanitizer
@@ -1285,7 +1247,7 @@ export const checkProbes = (containerType, actionType) => {
 			)
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 65535 })
 			.withMessage("Port must be an integer between 1 and 65535")
@@ -1293,12 +1255,12 @@ export const checkProbes = (containerType, actionType) => {
 	];
 };
 
-export const checkStatefulSetConfig = (containerType, actionType) => {
+export const checkStatefulSetConfig = () => {
 	return [
 		body("statefulSetConfig.desiredReplicas")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isInt({ min: 1, max: 100 })
 			.withMessage("Desired replicas must be an integer between 1 and 10")
@@ -1306,58 +1268,56 @@ export const checkStatefulSetConfig = (containerType, actionType) => {
 		body("statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["Retain", "Delete"])
-			.withMessage(t("Unsupported storage retention policy")),
+			.withMessage("Unsupported storage retention policy"),
 		body("statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["Retain", "Delete"])
-			.withMessage(t("Unsupported storage retention policy")),
+			.withMessage("Unsupported storage retention policy"),
 	];
 };
 
-export const checkCronJobConfig = (containerType, actionType) => {
+export const checkCronJobConfig = () => {
 	return [
 		body("cronJobConfig.schedule")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.custom((value) => {
 				try {
 					parser.parseExpression(value);
 					return true;
 				} catch (err) {
-					throw new AgnostError(
-						t("Not a valid cron expression. %s", err.message)
-					);
+					throw new Error(`Not a valid cron expression. ${err.message}`);
 				}
 			}),
 		body("cronJobConfig.timeZone")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(timezones.map((entry) => entry.value))
-			.withMessage(t("Unsupported timezone")),
+			.withMessage("Unsupported timezone"),
 		body("cronJobConfig.concurrencyPolicy")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["Allow", "Forbid", "Replace"])
-			.withMessage(t("Unsupported coucurrency policy")),
+			.withMessage("Unsupported coucurrency policy"),
 		body("cronJobConfig.suspend")
 			.trim()
 			.notEmpty()
-			.withMessage(t("Required field, cannot be left empty"))
+			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isBoolean()
-			.withMessage(t("Not a valid boolean value"))
+			.withMessage("Not a valid boolean value")
 			.toBoolean(),
 	];
 };
