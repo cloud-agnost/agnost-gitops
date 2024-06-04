@@ -32,7 +32,7 @@ export const fileUploadMiddleware = (req, res, next) => {
 			return res.status(500).json({
 				error: "File Upload Error",
 				code: ERROR_CODES.fileUploadError,
-				details: "An error has occured when uploading the file. ${err.message}",
+				details: `An error has occured when uploading the file. ${err.message}`,
 			});
 		}
 		// If everything went fine, move to the next middleware

@@ -172,7 +172,9 @@ export async function deleteHPA(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting HPA '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting HPA '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }

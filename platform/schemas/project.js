@@ -101,23 +101,26 @@ export const applyRules = (type) => {
 							"general.maxTextLength"
 						)} characters long`
 					)
-					.bail()
-					.custom((value) => {
-						let regex = /^[A-Za-z0-9 _.-]+$/;
-						if (!regex.test(value)) {
-							throw new Error(
-								"Project names can include only numbers, letters, spaces, dash, dot and underscore characters"
-							);
-						}
+					.custom(async (value, { req }) => {
+						let projects = await ProjectModel.find({});
+						projects.forEach((project) => {
+							if (
+								project.name.toLowerCase() === value.toLowerCase() &&
+								type === "create"
+							)
+								throw new Error(
+									"Project with the provided name already exists"
+								);
 
-						let regex2 = /^[ _-].*$/;
-						if (regex2.test(value)) {
-							throw new Error(
-								"Project names cannot start with a dash or underscore character"
-							);
-						}
-
-						//Indicates the success of this synchronous custom validator
+							if (
+								project.name.toLowerCase() === value.toLowerCase() &&
+								type === "update" &&
+								req.project._id.toString() !== project._id.toString()
+							)
+								throw new Error(
+									"Project with the provided name already exists"
+								);
+						});
 						return true;
 					}),
 				body("envName")
@@ -136,26 +139,7 @@ export const applyRules = (type) => {
 						)} and maximum ${config.get(
 							"general.maxTextLength"
 						)} characters long`
-					)
-					.bail()
-					.custom((value) => {
-						let regex = /^[A-Za-z0-9 _.-]+$/;
-						if (!regex.test(value)) {
-							throw new Error(
-								"Project environment names can include only numbers, letters, spaces, dash, dot and underscore characters"
-							);
-						}
-
-						let regex2 = /^[ _-].*$/;
-						if (regex2.test(value)) {
-							throw new Error(
-								"Project environment names cannot start with a dash or underscore character"
-							);
-						}
-
-						//Indicates the success of this synchronous custom validator
-						return true;
-					}),
+					),
 			];
 		case "update-member-role":
 			return [

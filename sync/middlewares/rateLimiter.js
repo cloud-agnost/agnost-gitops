@@ -1,5 +1,6 @@
 import { RateLimiterRedis } from "rate-limiter-flexible";
 import { getRedisClient } from "../init/cache.js";
+import helper from "../util/helper.js";
 import ERROR_CODES from "../config/errorCodes.js";
 
 // Apply rate limits to engine internal endpoints
@@ -18,8 +19,8 @@ export const createRateLimiter = (rateLimitConfig) => {
 			})
 			.catch(() => {
 				return res.status(429).json({
-					error: t("Rate Limit Exceeded"),
-					details: t("Too many requests, please try again later."),
+					error: "Rate Limit Exceeded",
+					details: "Too many requests, please try again later.",
 					code: ERROR_CODES.rateLimitExceeded,
 				});
 			});

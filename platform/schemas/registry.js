@@ -27,6 +27,10 @@ export const RegistryModel = mongoose.model(
 				required: true,
 				index: true,
 			},
+			isClusterEntity: {
+				type: Boolean,
+				default: false,
+			},
 			ecr: {
 				username: {
 					type: String,
@@ -70,6 +74,9 @@ export const RegistryModel = mongoose.model(
 				},
 			},
 			generic: {
+				registryUrl: {
+					type: String,
+				},
 				username: {
 					type: String,
 				},
@@ -84,10 +91,6 @@ export const RegistryModel = mongoose.model(
 			updatedBy: {
 				type: mongoose.Schema.Types.ObjectId,
 				ref: "user",
-			},
-			isClusterEntity: {
-				type: Boolean,
-				default: false,
 			},
 			__v: {
 				type: Number,

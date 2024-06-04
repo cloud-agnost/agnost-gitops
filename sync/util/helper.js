@@ -14,7 +14,7 @@ function getIP(req) {
 		}
 
 		return ip;
-	} catch (err) {
+	} catch {
 		return req.ip ?? null;
 	}
 }

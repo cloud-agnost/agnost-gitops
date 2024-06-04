@@ -8,6 +8,11 @@ kc.loadFromDefault();
 const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
 
+/**
+ * Checks if TCP proxy is already enabled for the specified public port.
+ * @param {number} publicPort - The public port to check.
+ * @returns {Promise<boolean>} - A promise that resolves to a boolean indicating whether the TCP proxy is already enabled.
+ */
 export async function isTCPProxyAlreadyEnabled(publicPort) {
 	if (!publicPort) return false;
 
@@ -40,6 +45,7 @@ export async function isTCPProxyAlreadyEnabled(publicPort) {
  * Enables the TCP proxy for the service, mainly exposes the service to outside world through ingress at a specific port number
  *
  * @param {string} serviceName - The name of the service to enable TCP proxy.
+ * @param {string} namespace - The namespace of the service.
  * @param {number} portNumber - The port number to open.
  * @param {number} resourcePort - The resource object port number (internal resource port number).
  * @returns {Promise<void>} - A promise that resolves when the TCP proxy is enabled.
@@ -155,8 +161,7 @@ export async function createTCPProxy(
 						resourceNamespace
 					);
 
-					const configmapArg =
-						"--tcp-services-configmap=ingress-nginx/tcp-services";
+					const configmapArg = `--tcp-services-configmap=${resourceNamespace}/tcp-services`;
 					const configmapArg2 =
 						"--tcp-services-configmap=$(POD_NAMESPACE)/tcp-services";
 					if (
@@ -204,7 +209,14 @@ export async function createTCPProxy(
 	console.info(`TCP proxy port '${portNumber}' exposed successfully`);
 }
 
-// Definition is networking
+/**
+ * Updates the TCP proxy based on the provided definition.
+ * @param {Object} definition - The definition object containing the TCP proxy configuration which is a container json object.
+ * @param {boolean} isContainerPortChanged - Indicates whether the container port has changed.
+ * @param {string} name - The name of the TCP proxy service.
+ * @param {string} namespace - The namespace of the TCP proxy service.
+ * @returns {Promise<void>} - A promise that resolves when the TCP proxy is updated.
+ */
 export async function updateTCPProxy(
 	definition,
 	isContainerPortChanged,
@@ -236,11 +248,21 @@ export async function updateTCPProxy(
 	}
 }
 
+/**
+ * Deletes a TCP proxy for the specified port number.
+ * @param {number} portNumber - The port number of the TCP proxy to delete.
+ * @returns {Promise<void>} - A promise that resolves when the TCP proxy is deleted.
+ */
 export async function deleteTCPProxy(portNumber) {
 	if (!portNumber) return;
 	await deleteTCPProxyPorts([portNumber]);
 }
 
+/**
+ * Deletes TCP proxy ports from the configuration.
+ * @param {number[]} portNumbers - An array of port numbers to be deleted.
+ * @returns {Promise<void>} - A promise that resolves when the ports are successfully deleted.
+ */
 export async function deleteTCPProxyPorts(portNumbers) {
 	if (!portNumbers || portNumbers.length === 0) return;
 	const configMapName = "tcp-services";

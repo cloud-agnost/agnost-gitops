@@ -4,10 +4,7 @@ import helmet from "helmet";
 import nocache from "nocache";
 import process from "process";
 import config from "config";
-import path from "path";
 import responseTime from "response-time";
-import { I18n } from "i18n";
-import { fileURLToPath } from "url";
 import logger from "./init/logger.js";
 import helper from "./util/helper.js";
 import { connectToRedisCache, disconnectFromRedisCache } from "./init/cache.js";
@@ -16,19 +13,14 @@ import { createRateLimiter } from "./middlewares/rateLimiter.js";
 import { handleUndefinedPaths } from "./middlewares/undefinedPaths.js";
 import { logRequest } from "./middlewares/logRequest.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 (function () {
-	logger.info(`Process ${process.pid} is running`);
+	console.info(`Process ${process.pid} is running`);
 	// Init globally accessible variables
 	initGlobals();
-	// Set up locatlization
-	const i18n = initLocalization();
 	// Connect to cache server(s)
 	connectToRedisCache();
 	// Spin up http server
-	const { expressServer, syncServer } = initExpress(i18n);
+	const { expressServer, syncServer } = initExpress();
 	// Gracefull handle process exist
 	handleProcessExit(expressServer, syncServer);
 })();
@@ -49,30 +41,7 @@ function initGlobals() {
 	global.helper = helper;
 }
 
-function initLocalization() {
-	// Multi-language support configuration
-	const i18n = new I18n({
-		locales: ["en"],
-		directory: path.join(__dirname, "locales"),
-		defaultLocale: "en",
-		// watch for changes in JSON files to reload locale on updates
-		autoReload: false,
-		// whether to write new locale information to disk
-		updateFiles: false,
-		// sync locale information across all files
-		syncFiles: false,
-		register: global,
-		api: {
-			__: "t", //now req.__ becomes req.t
-			__n: "tn", //and req.__n can be called as req.tn
-		},
-		preserveLegacyCase: false,
-	});
-
-	return i18n;
-}
-
-async function initExpress(i18n) {
+async function initExpress() {
 	// Create express application
 	var app = express();
 	// Add rate limiter middlewares
@@ -85,8 +54,6 @@ async function initExpress(i18n) {
 	//Disable client side caching
 	app.use(nocache());
 	app.set("etag", false);
-	// Add middleware to identify user locale using 'accept-language' header to guess language settings
-	app.use(i18n.init);
 	app.use(responseTime(logRequest));
 
 	app.use("/", (await import("./routes/system.js")).default);
@@ -98,7 +65,7 @@ async function initExpress(i18n) {
 	const HOST = config.get("server.host");
 	const PORT = config.get("server.port");
 	var server = app.listen(PORT, () => {
-		logger.info(`Http server started @ ${HOST}:${PORT}`);
+		console.info(`Http server started @ ${HOST}:${PORT}`);
 	});
 
 	/* 	Particularly needed in case of bulk insert/update/delete operations, we should not generate 502 Bad Gateway errors at nginex ingress controller, the value specified in default config file is in milliseconds */
@@ -129,11 +96,11 @@ function handleProcessExit(expressServer, syncServer) {
 		disconnectFromRedisCache();
 		//Close Http server
 		expressServer.close(() => {
-			logger.info("Http server closed");
+			console.info("Http server closed");
 		});
 		//Close synchronization server
 		syncServer.close(() => {
-			logger.info("Synchronization server closed");
+			console.info("Synchronization server closed");
 		});
 	});
 }

@@ -379,7 +379,8 @@ router.put(
 router.delete("/picture", authSession, async (req, res) => {
 	try {
 		// Delete existing file if it exists
-		storage.deleteFile(req.user.pictureUrl);
+		const uploadBucket = config.get("general.storageBucket");
+		storage.deleteFile(uploadBucket, req.user.pictureUrl);
 
 		// Update user with the new profile image url
 		let userObj = await userCtrl.updateOneById(
@@ -812,8 +813,7 @@ router.post(
 					await userCtrl.endSession(session);
 					return res.status(422).json({
 						error: "Already Member",
-						details:
-							"You are already a member of the project '${invite.projectId.name}' team.",
+						details: `You are already a member of the project '${invite.projectId.name}' team.`,
 						code: ERROR_CODES.notAllowed,
 					});
 				}
@@ -991,8 +991,7 @@ router.post(
 				await userCtrl.endSession(session);
 				return res.status(422).json({
 					error: "Already Member",
-					details:
-						"You are already a member of the project '${invite.projectId.name}' team.",
+					details: `You are already a member of the project '${invite.projectId.name}' team.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}

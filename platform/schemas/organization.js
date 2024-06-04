@@ -78,7 +78,29 @@ export const applyRules = (type) => {
 						)} and maximum ${config.get(
 							"general.maxTextLength"
 						)} characters long`
-					),
+					)
+					.custom(async (value, { req }) => {
+						let organizations = await OrganizationModel.find({});
+						organizations.forEach((org) => {
+							if (
+								org.name.toLowerCase() === value.toLowerCase() &&
+								type === "create"
+							)
+								throw new Error(
+									"Organization with the provided name already exists"
+								);
+
+							if (
+								org.name.toLowerCase() === value.toLowerCase() &&
+								type === "update" &&
+								req.org._id.toString() !== org._id.toString()
+							)
+								throw new Error(
+									"Organization with the provided name already exists"
+								);
+						});
+						return true;
+					}),
 			];
 		case "upload-picture":
 			return [
@@ -120,7 +142,7 @@ export const applyRules = (type) => {
 
 						if (!orgMember) {
 							throw new Error(
-								"The user identified with id '${value}' is not a member of organization '${req.org.name}'. Organization ownership can only be transferred to an existing organization member with 'Admin' role."
+								`The user identified with id '${value}' is not a member of organization '${req.org.name}'. Organization ownership can only be transferred to an existing organization member with 'Admin' role.`
 							);
 						}
 

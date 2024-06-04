@@ -6,7 +6,7 @@ import cronJobRules from "./rules/cronJob.js";
 import { containerTypes } from "../config/constants.js";
 
 /**
- * A container is an entitiy created in the Kubernetes cluster this can be a deployment, stateful set, cron job or a knative service
+ * A container is an entitiy created in the Kubernetes cluster this can be a deployment, stateful set or cron job
  */
 export const ContainerModel = mongoose.model(
 	"container",
@@ -118,6 +118,11 @@ export const ContainerModel = mongoose.model(
 					type: String,
 				},
 				imageTag: {
+					type: String,
+				},
+				imageUrl: {
+					// This is the full path to the image in the registry
+					// e.g. quay.io/minio/minio:RELEASE.2024-05-10T01-41-38Z
 					type: String,
 				},
 			},
@@ -362,49 +367,6 @@ export const ContainerModel = mongoose.model(
 					default: 3,
 				},
 			},
-			knativeConfig: {
-				concurrency: {
-					type: Number,
-					default: 100,
-				},
-				scalingMetric: {
-					type: String,
-					enum: ["concurrency", "rps", "cpu", "memory"],
-					default: "concurrency",
-				},
-				scalingMetricTarget: {
-					// "Concurrency" specifies a percentage value, e.g. "70"
-					// "Requests per second" specifies an integer value,  e.g. "150"
-					// "CPU" specifies the integer value in millicore, e.g. "100m"
-					// "Memory" specifies the integer value in Mi, e.g. "75"
-					type: Number,
-					default: 70,
-				},
-				initialScale: {
-					type: Number,
-					default: 1,
-				},
-				maxScale: {
-					type: Number,
-					default: 1,
-				},
-				minScale: {
-					type: Number,
-					default: 0,
-				},
-				scaleDownDelay: {
-					type: Number,
-					default: 300,
-				},
-				scaleToZeroPodRetentionPeriod: {
-					type: Number,
-					default: 600,
-				},
-				revisionHistoryLimit: {
-					type: Number,
-					default: 10,
-				},
-			},
 			probes: {
 				startup: {
 					enabled: {
@@ -561,9 +523,9 @@ export const applyRules = (actionType) => {
 	return function (req, res, next) {
 		if (req.body.type === "deployment")
 			executeMiddlewareArray(deploymentRules(actionType), req, res, next);
-		else if (req.body.type === "stateful set")
+		else if (req.body.type === "statefulset")
 			executeMiddlewareArray(statefulSetRules(actionType), req, res, next);
-		else if (req.body.type === "cron job")
+		else if (req.body.type === "cronjob")
 			executeMiddlewareArray(cronJobRules(actionType), req, res, next);
 		else
 			executeMiddlewareArray(

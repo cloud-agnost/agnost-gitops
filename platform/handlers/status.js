@@ -13,12 +13,8 @@ export async function getContainerPods({ container, environment }) {
 		const { body } = await k8sCoreApi.listNamespacedPod(environment.iid);
 		const pods = body.items
 			.filter((pod) => {
-				if (container.type === "cron job")
+				if (container.type === "cronjob")
 					return pod.metadata.labels["job-name"]?.includes(container.iid);
-				else if (container.type === "knative service")
-					return (
-						pod.metadata.labels["serving.knative.dev/service"] === container.iid
-					);
 				else return pod.metadata.labels.app === container.iid;
 			})
 			.map((entry) => {

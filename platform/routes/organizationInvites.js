@@ -37,8 +37,8 @@ router.post(
 
 			// Prepare the invitations array to store in the database
 			let invitations = [];
-			let token = helper.generateSlug("tkn", 36);
 			req.body.forEach((entry) => {
+				let token = helper.generateSlug("tkn", 36);
 				invitations.push({
 					orgId: org._id,
 					email: entry.email,

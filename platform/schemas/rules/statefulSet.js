@@ -1,6 +1,7 @@
 import {
 	checkName,
 	checkRepoOrRegistry,
+	checkRegistry,
 	checkRepo,
 	checkVariables,
 	checkStorageConfig,
@@ -17,6 +18,7 @@ export default (actionType) => {
 			return [
 				...checkName("statefulset", actionType),
 				...checkRepoOrRegistry("statefulset", actionType),
+				...checkRegistry("statefulset", actionType),
 				...checkRepo("statefulset", actionType),
 				...checkVariables("statefulset", actionType),
 				...checkStorageConfig("statefulset", actionType),

@@ -88,7 +88,9 @@ export async function deleteService(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting service '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting service '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }

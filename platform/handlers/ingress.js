@@ -10,12 +10,7 @@ const k8sCustomObjectApi = kc.makeApiClient(k8s.CustomObjectsApi);
 const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
 
 // Definition is networking
-export async function createIngress(
-	definition,
-	name,
-	namespace,
-	isKnative = false
-) {
+export async function createIngress(definition, name, namespace) {
 	// Get cluster info from the database
 	const cluster = await getClusterRecord();
 
@@ -56,12 +51,6 @@ export async function createIngress(
 			],
 		},
 	};
-
-	if (isKnative) {
-		ingress.metadata.annotations[
-			"nginx.ingress.kubernetes.io/upstream-vhost"
-		] = `${name}.${namespace}.svc.cluster.local`;
-	}
 
 	// If cluster has SSL settings and custom domains then also add these to the API server ingress
 	if (cluster) {
@@ -123,7 +112,9 @@ export async function createIngress(
 		);
 	} catch (err) {
 		console.error(
-			`Ingress '${name}-cluster' in namespace '${namespace}' cannot be created. ${err.response?.body?.message}`
+			`Ingress '${name}-cluster' in namespace '${namespace}' cannot be created. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 		throw err;
 	}
@@ -134,8 +125,7 @@ export async function updateIngress(
 	definition,
 	isContainerPortChanged,
 	name,
-	namespace,
-	isKnative = false
+	namespace
 ) {
 	if (definition.ingress.enabled) {
 		const payload = await getK8SResource(
@@ -144,7 +134,7 @@ export async function updateIngress(
 			namespace
 		);
 		if (!payload) {
-			await createIngress(definition, name, namespace, isKnative);
+			await createIngress(definition, name, namespace);
 			return;
 		} else if (isContainerPortChanged) {
 			// Update the ingress
@@ -193,18 +183,15 @@ export async function deleteIngress(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting ingress '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting ingress '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }
 
 // Definition is networking
-export async function createCustomDomainIngress(
-	definition,
-	name,
-	namespace,
-	isKnative = false
-) {
+export async function createCustomDomainIngress(definition, name, namespace) {
 	// Get cluster info from the database
 	const cluster = await getClusterRecord();
 
@@ -252,12 +239,6 @@ export async function createCustomDomainIngress(
 		},
 	};
 
-	if (isKnative) {
-		ingress.metadata.annotations[
-			"nginx.ingress.kubernetes.io/upstream-vhost"
-		] = `${name}.${namespace}.svc.cluster.local`;
-	}
-
 	if (cluster.enforceSSLAccess) {
 		ingress.metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"] =
 			"true";
@@ -290,8 +271,7 @@ export async function updateCustomDomainIngress(
 	isContainerPortChanged,
 	isCustomDomainChanged,
 	name,
-	namespace,
-	isKnative = false
+	namespace
 ) {
 	if (definition.customDomain.enabled) {
 		const payload = await getK8SResource(
@@ -300,7 +280,7 @@ export async function updateCustomDomainIngress(
 			namespace
 		);
 		if (!payload) {
-			await createCustomDomainIngress(definition, name, namespace, isKnative);
+			await createCustomDomainIngress(definition, name, namespace);
 			return;
 		} else if (isContainerPortChanged || isCustomDomainChanged) {
 			// Update the ingress
@@ -351,7 +331,9 @@ export async function deleteCustomDomainIngress(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting ingress '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting ingress '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }

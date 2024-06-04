@@ -521,7 +521,7 @@ export const clusterContainers = [
 	{
 		iid: "redis",
 		name: "redis",
-		type: "stateful set",
+		type: "statefulset",
 		pipelineStatus: "Disconnected",
 		variables: [
 			{ name: "BITNAMI_DEBUG", value: "false" },
@@ -617,7 +617,7 @@ export const clusterContainers = [
 	{
 		iid: "mongodb",
 		name: "mongodb",
-		type: "stateful set",
+		type: "statefulset",
 		pipelineStatus: "Disconnected",
 		variables: [],
 		repoOrRegistry: "registry",

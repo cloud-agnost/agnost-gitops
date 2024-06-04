@@ -1,3 +1,5 @@
+import config from "config";
+import helper from "../util/helper.js";
 import axios from "axios";
 import k8s from "@kubernetes/client-node";
 
@@ -68,7 +70,7 @@ export async function monitorContainers() {
 				}
 
 				if (result && needsUpdate) {
-					logger.info(
+					console.info(
 						`Updating the status of container ${container.iid} in namespace ${
 							environment.iid
 						}. ${JSON.stringify(result)}`
@@ -87,7 +89,7 @@ export async function monitorContainers() {
 							}
 						)
 						.catch((err) => {
-							logger.error(
+							console.error(
 								`Cannot send container telemetry data to platform. ${
 									err.response?.body?.message ?? err.message
 								}`
@@ -101,7 +103,7 @@ export async function monitorContainers() {
 			containers = await getContainers(pageNumber, pageSize);
 		}
 	} catch (err) {
-		logger.error(`Cannot fetch cluster containers. ${err}`);
+		console.error(`Cannot fetch cluster containers. ${err}`);
 	}
 }
 
@@ -194,7 +196,7 @@ async function getDeploymentStatus(name, namespace) {
 			creationTimestamp: deployment.metadata.creationTimestamp,
 		};
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot get Deployment ${name} status in namespace ${namespace}. ${
 				err.response?.body?.message ?? err.message
 			}`
@@ -260,7 +262,7 @@ async function getStatefulSetStatus(name, namespace) {
 			creationTimestamp: statefulSet.metadata.creationTimestamp,
 		};
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot get StatefulSet ${name} status in namespace ${namespace}. ${
 				err.response?.body?.message ?? err.message
 			}`
@@ -320,7 +322,7 @@ async function getCronJobStatus(name, namespace) {
 			creationTimestamp: cronJob.metadata.creationTimestamp,
 		};
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot get CronJob ${name} status in namespace ${namespace}. ${
 				err.response?.body?.message ?? err.message
 			}`

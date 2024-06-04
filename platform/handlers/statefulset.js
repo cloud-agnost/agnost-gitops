@@ -222,7 +222,9 @@ export async function deleteStatefulSet(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting StatefulSet '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting StatefulSet '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }

@@ -5,6 +5,7 @@ import cntrCtrl from "../../controllers/container.js";
 import domainCtrl from "../../controllers/domain.js";
 import clsCtrl from "../../controllers/cluster.js";
 import gitCtrl from "../../controllers/gitProvider.js";
+import regCtrl from "../../controllers/registry.js";
 import { timezones } from "../../config/timezones.js";
 import helper from "../../util/helper.js";
 
@@ -67,6 +68,54 @@ export const checkRepoOrRegistry = (containerType) => {
 			.bail()
 			.isIn(["repo", "registry"])
 			.withMessage(`Unsupported ${containerType} source type`),
+	];
+};
+
+export const checkRegistry = () => {
+	return [
+		body("registry.registryId")
+			.if((value, { req }) => req.body.repoOrRegistry === "registry")
+			.trim()
+			.notEmpty()
+			.withMessage("Required field, cannot be left empty")
+			.bail()
+			.custom(async (value) => {
+				if (!helper.isValidId(value)) {
+					throw new Error("Invalid registry id");
+				}
+
+				const registry = await regCtrl.getOneById(value);
+				if (!registry) {
+					throw new Error("Registry record not found");
+				}
+				return true;
+			}),
+		body("registry.imageName")
+			.if(
+				(value, { req }) =>
+					req.body.repoOrRegistry === "registry" && !req.body.registry.imageUrl
+			)
+			.trim()
+			.notEmpty()
+			.withMessage("Required field, cannot be left empty"),
+		body("registry.imageTag")
+			.if(
+				(value, { req }) =>
+					req.body.repoOrRegistry === "registry" && !req.body.registry.imageUrl
+			)
+			.trim()
+			.notEmpty()
+			.withMessage("Required field, cannot be left empty"),
+		body("registry.imageUrl")
+			.if(
+				(value, { req }) =>
+					req.body.repoOrRegistry === "registry" &&
+					!req.body.registry.imageName &&
+					!req.body.registry.imageTag
+			)
+			.trim()
+			.notEmpty()
+			.withMessage("Required field, cannot be left empty"),
 	];
 };
 
@@ -296,7 +345,7 @@ export const checkNetworking = (containerType, actionType) => {
 					}),
 				body("networking.tcpProxy.enabled")
 					.if((value, { req }) =>
-						["deployment", "stateful set"].includes(req.container.type)
+						["deployment", "statefulset"].includes(req.container.type)
 					)
 					.trim()
 					.notEmpty()
@@ -478,7 +527,7 @@ export const checkPodConfig = (containerType) => {
 			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(
-				containerType === "cron job"
+				containerType === "cronjob"
 					? ["OnFailure", "Never"]
 					: ["Always", "OnFailure", "Never"]
 			)
@@ -906,7 +955,7 @@ export const checkProbes = () => {
 	return [
 		body("probes.startup.enabled")
 			.if((value, { req }) =>
-				["deployment", "stateful set"].includes(req.container.type)
+				["deployment", "statefulset"].includes(req.container.type)
 			)
 			.trim()
 			.notEmpty()
@@ -919,7 +968,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type)
+					["deployment", "statefulset"].includes(req.container.type)
 			)
 			.trim()
 			.notEmpty()
@@ -931,7 +980,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type)
+					["deployment", "statefulset"].includes(req.container.type)
 			)
 			.trim()
 			.notEmpty()
@@ -946,7 +995,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type)
+					["deployment", "statefulset"].includes(req.container.type)
 			)
 			.trim()
 			.notEmpty()
@@ -959,7 +1008,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type)
+					["deployment", "statefulset"].includes(req.container.type)
 			)
 			.trim()
 			.notEmpty()
@@ -972,7 +1021,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type)
+					["deployment", "statefulset"].includes(req.container.type)
 			)
 			.trim()
 			.notEmpty()
@@ -985,7 +1034,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type) &&
+					["deployment", "statefulset"].includes(req.container.type) &&
 					req.body.probes.startup.checkMechanism === "exec"
 			)
 			.trim()
@@ -995,7 +1044,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type) &&
+					["deployment", "statefulset"].includes(req.container.type) &&
 					req.body.probes.startup.checkMechanism === "tcpSocket"
 			)
 			.trim()
@@ -1009,7 +1058,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type) &&
+					["deployment", "statefulset"].includes(req.container.type) &&
 					req.body.probes.startup.checkMechanism === "httpGet"
 			)
 			.trim()
@@ -1028,7 +1077,7 @@ export const checkProbes = () => {
 			.if(
 				(value, { req }) =>
 					req.body.probes.startup.enabled === true &&
-					["deployment", "stateful set"].includes(req.container.type) &&
+					["deployment", "statefulset"].includes(req.container.type) &&
 					req.body.probes.startup.checkMechanism === "httpGet"
 			)
 			.trim()

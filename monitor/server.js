@@ -1,12 +1,8 @@
 import express from "express";
 import process from "process";
 import config from "config";
-import path from "path";
 import responseTime from "response-time";
-import { I18n } from "i18n";
-import { fileURLToPath } from "url";
 import logger from "./init/logger.js";
-import helper from "./util/helper.js";
 import { monitorContainers } from "./handler/monitorContainers.js";
 import { connectToDatabase, disconnectFromDatabase } from "./init/db.js";
 import { handleUndefinedPaths } from "./middlewares/undefinedPaths.js";
@@ -16,25 +12,21 @@ import {
 	stopWatchingBuildEvents,
 } from "./handler/watchTaskRuns.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 var processing = false;
 
 (async function () {
-	logger.info(`Process ${process.pid} is running`);
+	console.info(`Process ${process.pid} is running`);
 	// Init globally accessible variables
 	initGlobals();
-	// Set up locatlization
-	const i18n = initLocalization();
 	// Connect to the database
 	await connectToDatabase();
 	// Spin up http server
-	const server = initExpress(i18n);
+	const server = initExpress();
 	// Launch scheduler
 	initMonitoringScheduler();
 
 	watchBuildEvents().catch((err) => {
-		logger.error(`Watch build events error. ${err}`);
+		console.error(`Watch build events error. ${err}`);
 	});
 
 	// Gracefull handle process exist
@@ -44,47 +36,11 @@ var processing = false;
 function initGlobals() {
 	// Add logger to the global object
 	global.logger = logger;
-
-	// To correctly identify errors thrown by the engine vs. system thrown errors
-	global.AgnostError = class extends Error {
-		constructor(message) {
-			super(message);
-		}
-	};
-	// Add config to the global object
-	global.config = config;
-	// Add utility methods to the global object
-	global.helper = helper;
 }
 
-function initLocalization() {
-	// Multi-language support configuration
-	const i18n = new I18n({
-		locales: ["en"],
-		directory: path.join(__dirname, "locales"),
-		defaultLocale: "en",
-		// watch for changes in JSON files to reload locale on updates
-		autoReload: false,
-		// whether to write new locale information to disk
-		updateFiles: false,
-		// sync locale information across all files
-		syncFiles: false,
-		register: global,
-		api: {
-			__: "t", //now req.__ becomes req.t
-			__n: "tn", //and req.__n can be called as req.tn
-		},
-		preserveLegacyCase: false,
-	});
-
-	return i18n;
-}
-
-async function initExpress(i18n) {
+async function initExpress() {
 	// Create express application
 	var app = express();
-	// Add middleware to identify user locale using 'accept-language' header to guess language settings
-	app.use(i18n.init);
 	app.use(responseTime(logRequest));
 
 	app.use("/", (await import("./routes/system.js")).default);
@@ -96,7 +52,7 @@ async function initExpress(i18n) {
 	const HOST = config.get("server.host");
 	const PORT = config.get("server.port");
 	var server = app.listen(PORT, () => {
-		logger.info(`Http server started @ ${HOST}:${PORT}`);
+		console.info(`Http server started @ ${HOST}:${PORT}`);
 	});
 
 	/* 	Particularly needed in case of bulk insert/update/delete operations, we should not generate 502 Bad Gateway errors at nginex ingress controller, the value specified in default config file is in milliseconds */
@@ -136,7 +92,7 @@ function handleProcessExit(server) {
 		disconnectFromDatabase();
 		//Close Http server
 		server.close(() => {
-			logger.info("Http server closed");
+			console.info("Http server closed");
 		});
 		// Stop watching build events
 		stopWatchingBuildEvents();

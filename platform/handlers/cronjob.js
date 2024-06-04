@@ -181,7 +181,9 @@ export async function deleteCronJob(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting CronJob '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting CronJob '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }

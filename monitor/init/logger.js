@@ -1,47 +1,8 @@
 import winston from "winston";
-import axios from "axios";
-import Transport from "winston-transport";
-import ERROR_CODES from "../config/errorCodes.js";
-
 const { combine, timestamp, printf } = winston.format;
 
-// Custom transport to save error logs in MongoDB
-class EngineErrorTransport extends Transport {
-	constructor(opts) {
-		super(opts);
-	}
-
-	log(log, callback) {
-		let entry = {
-			source: "engine-monitor",
-			orgId: log.details?.orgId,
-			appId: log.details?.appId,
-			versionId: log.details?.versionId,
-			envId: log.details?.envId,
-			type: "monitor",
-			name: log.details?.name,
-			message: log.details?.message,
-			details: log.message,
-			stack: log.details?.stack,
-			payload: log.details?.payload,
-			code: ERROR_CODES.internalServerError,
-		};
-
-		//Make api call to the platform to log the error message
-		axios
-			.post(helper.getPlatformUrl() + "/v1/engine/error", entry, {
-				headers: {
-					Authorization: process.env.MASTER_TOKEN,
-					"Content-Type": "application/json",
-				},
-			})
-			.catch((error) => {});
-
-		callback();
-	}
-}
-
-const logFormat = printf(({ level, message, label, timestamp }) => {
+const logFormat = printf((log) => {
+	let { level, message, timestamp } = log;
 	return `${timestamp} ${level}: ${message}`;
 });
 
@@ -52,12 +13,50 @@ const logger = winston.createLogger({
 			handleExceptions: true,
 			level: "info",
 			silent: false,
-			/* process.env.NODE_ENV == 'production' || process.env.NODE_ENV === 'demo'
-					? true
-					: false, */
 		}),
-		new EngineErrorTransport({ level: "error" }),
 	],
 });
+
+/**
+ * Formats the arguments array by converting any objects to JSON strings.
+ *
+ * @param {Array} args - The arguments array to be formatted.
+ * @returns {Array} - The formatted arguments array.
+ */
+function formatArguments(args) {
+	for (let i = 0; i < args.length; i++) {
+		let param = args[i];
+		if (param && typeof param === "object") {
+			try {
+				args[i] = JSON.stringify(param, null, 2);
+			} catch {
+				args[i] = param.toString();
+			}
+		}
+	}
+
+	return args;
+}
+
+// Override the console methods to use Winston
+console.log = (...args) => {
+	args = formatArguments(args);
+	logger.info(args.join(" "));
+};
+
+console.info = (...args) => {
+	args = formatArguments(args);
+	logger.info(args.join(" "));
+};
+
+console.error = (...args) => {
+	args = formatArguments(args);
+	logger.error(args.join(" "));
+};
+
+console.warn = (...args) => {
+	args = formatArguments(args);
+	logger.warn(args.join(" "));
+};
 
 export default logger;

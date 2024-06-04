@@ -38,6 +38,7 @@ export const registryTypes = [
 	"GHCR", // GitHub Container Registry
 	"Docker", // Docker Hub Private
 	"Custom", // Generic registry
+	"Public", // Any public image registry
 ];
 
 // Types of containers that can be created in an environment

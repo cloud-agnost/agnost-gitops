@@ -1,3 +1,4 @@
+import config from "config";
 import { Server } from "socket.io";
 import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
@@ -33,30 +34,30 @@ export function setUpSyncServer(expressServer) {
 		const subClient = pubClient.duplicate();
 
 		pubClient.on("connect", function () {
-			logger.info(
+			console.info(
 				`Connected to the cache server @${process.env.CACHE_HOSTNAME}:${cacheConfig.port}`
 			);
 
 			// Crate socket.io redis adapter
 			syncServer.adapter(createAdapter(pubClient, subClient));
-			logger.info("Synchronization server attached to Http server");
+			console.info("Synchronization server attached to Http server");
 
 			syncServer.on("connect", (socket) => {
-				logger.info(`Client ${socket.id} connected`);
+				console.info(`Client ${socket.id} connected`);
 
 				socket.on("disconnect", () => {
-					logger.info(`Client ${socket.id} disconnected`);
+					console.info(`Client ${socket.id} disconnected`);
 				});
 
 				// Joining the specificied channel
 				socket.on("channel:join", (channel) => {
-					logger.info(`Client ${socket.id} joined channel ${channel}`);
+					console.info(`Client ${socket.id} joined channel ${channel}`);
 					socket.join(channel);
 				});
 
 				// Leaving the specificied channel
 				socket.on("channel:leave", (channel) => {
-					logger.info(`Client ${socket.id} left channel ${channel}`);
+					console.info(`Client ${socket.id} left channel ${channel}`);
 					socket.leave(channel);
 				});
 
@@ -71,12 +72,15 @@ export function setUpSyncServer(expressServer) {
 				// message.timestamp - The datetime of the message
 				// message.data - The body of the message (json object)
 				socket.on("channel:message", (payload) => {
+					console.info(
+						`Client ${socket.id} sent message to channel ${payload.channel}: ${payload.message.action} - ${payload.message.object} - ${payload.message.description}`
+					);
 					socket.to(payload.channel).emit("notification", payload.message);
 				});
 			});
 		});
 	} catch (err) {
-		logger.error(`Cannot connect to the sync cache server. ${err}`);
+		console.error(`Cannot connect to the sync cache server. ${err}`);
 		process.exit(1);
 	}
 

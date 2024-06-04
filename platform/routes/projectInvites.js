@@ -39,14 +39,15 @@ router.post(
 			// Prepare the invitations array to store in the database
 			let invitations = [];
 			req.body.forEach((entry) => {
+				let token = helper.generateSlug("tkn", 36);
 				invitations.push({
 					orgId: org._id,
 					projectId: project._id,
 					email: entry.email,
-					token: helper.generateSlug("tkn", 36),
+					token: token,
 					role: entry.role,
 					orgRole: "Member",
-					link: `${uiBaseURL}/studio/redirect-handle?token=${entry.token}&type=project-invite`,
+					link: `${uiBaseURL}/studio/redirect-handle?token=${token}&type=project-invite`,
 					host: user,
 				});
 			});

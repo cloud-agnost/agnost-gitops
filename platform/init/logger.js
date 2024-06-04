@@ -29,7 +29,7 @@ function formatArguments(args) {
 		if (param && typeof param === "object") {
 			try {
 				args[i] = JSON.stringify(param, null, 2);
-			} catch (err) {
+			} catch {
 				args[i] = param.toString();
 			}
 		}
@@ -39,7 +39,7 @@ function formatArguments(args) {
 }
 
 // Override the console methods to use Winston
-console.info = (...args) => {
+console.log = (...args) => {
 	args = formatArguments(args);
 	logger.info(args.join(" "));
 };

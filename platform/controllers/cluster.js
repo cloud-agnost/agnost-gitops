@@ -4,6 +4,7 @@ import orgCtrl from "./organization.js";
 import orgMemberCtrl from "./organizationMember.js";
 import prjCtrl from "./project.js";
 import prjEnvCtrl from "./environment.js";
+import regCtrl from "./registry.js";
 import helper from "../util/helper.js";
 
 import { getClusterIPs } from "../handlers/cluster.js";
@@ -35,6 +36,20 @@ class ClusterController extends BaseController {
 				createdBy: user._id,
 			},
 			{ session }
+		);
+
+		// Create the public image registry
+		let regId = helper.generateId();
+		await regCtrl.create(
+			{
+				_id: regId,
+				iid: helper.generateSlug("reg"),
+				type: "Public",
+				name: "Public Registry",
+				isClusterEntity: true,
+				createdBy: user._id,
+			},
+			{ session, cacheKey: regId }
 		);
 
 		// Create the new organization object

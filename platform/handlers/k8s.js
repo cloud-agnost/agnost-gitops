@@ -33,9 +33,9 @@ export async function manageContainer(payload) {
 	try {
 		if (payload.container.type === "deployment") {
 			await manageDeployment(payload);
-		} else if (payload.container.type === "stateful set") {
+		} else if (payload.container.type === "statefulset") {
 			await manageStatefulSet(payload);
-		} else if (payload.container.type === "cron job") {
+		} else if (payload.container.type === "cronjob") {
 			await manageCronJob(payload);
 		}
 	} catch (err) {
@@ -60,6 +60,11 @@ async function manageDeployment({
 		try {
 			await createTektonPipeline(container, environment, gitProvider);
 		} catch (err) {
+			console.error(
+				`Cannot create the build pipeline for deployment '${name}' in namespace ${namespace}. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
 			await deleteTektonPipeline(container, environment, gitProvider);
 			throw err;
 		}
@@ -129,6 +134,11 @@ async function manageStatefulSet({
 		try {
 			await createTektonPipeline(container, environment, gitProvider);
 		} catch (err) {
+			console.error(
+				`Cannot create the build pipeline for statefulset '${name}' in namespace ${namespace}. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
 			await deleteTektonPipeline(container, environment, gitProvider);
 			throw err;
 		}
@@ -206,6 +216,11 @@ async function manageCronJob({
 		try {
 			await createTektonPipeline(container, environment, gitProvider);
 		} catch (err) {
+			console.error(
+				`Cannot create the build pipeline for cronjob '${name}' in namespace ${namespace}. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
 			await deleteTektonPipeline(container, environment, gitProvider);
 			throw err;
 		}

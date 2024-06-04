@@ -22,7 +22,7 @@ const router = express.Router({ mergeParams: true });
 @access     private
 */
 router.get(
-	"/:orgId/member",
+	"/",
 	authSession,
 	validateOrg,
 	authorizeOrgAction("org.member.view"),
@@ -133,7 +133,7 @@ router.get(
 @access     private
 */
 router.get(
-	"/:orgId/member/exclude-current",
+	"/exclude-current",
 	authSession,
 	validateOrg,
 	authorizeOrgAction("org.member.view"),
@@ -245,7 +245,7 @@ router.get(
 @access     private
 */
 router.put(
-	"/:orgId/member/:userId",
+	"/:userId",
 	checkContentType,
 	authSession,
 	validateOrg,
@@ -348,7 +348,7 @@ router.put(
 @access     private
 */
 router.delete(
-	"/:orgId/member/:userId",
+	"/:userId",
 	checkContentType,
 	authSession,
 	validateOrg,
@@ -485,7 +485,7 @@ router.delete(
 @access     private
 */
 router.post(
-	"/:orgId/member/delete-multi",
+	"/delete-multi",
 	checkContentType,
 	authSession,
 	validateOrg,
@@ -602,7 +602,7 @@ router.post(
 @access     private
 */
 router.delete(
-	"/:orgId/member",
+	"/",
 	checkContentType,
 	authSession,
 	validateOrg,

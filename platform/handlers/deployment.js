@@ -196,7 +196,9 @@ export async function deleteDeployment(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting deployment '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting deployment '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }

@@ -341,7 +341,8 @@ router.delete(
 	async (req, res) => {
 		try {
 			// Delete existing file if it exists
-			storage.deleteFile(req.project.pictureUrl);
+			const uploadBucket = config.get("general.storageBucket");
+			storage.deleteFile(uploadBucket, req.project.pictureUrl);
 
 			// Remove the profile picture of the project
 			await prjCtrl.updateOneById(

@@ -1,6 +1,7 @@
 import {
 	checkName,
 	checkRepoOrRegistry,
+	checkRegistry,
 	checkRepo,
 	checkVariables,
 	checkNetworking,
@@ -17,6 +18,7 @@ export default (actionType) => {
 			return [
 				...checkName("deployment", actionType),
 				...checkRepoOrRegistry("deployment", actionType),
+				...checkRegistry("deployment", actionType),
 				...checkRepo("deployment", actionType),
 				...checkVariables("deployment", actionType),
 				...checkStorageConfig("deployment", actionType),

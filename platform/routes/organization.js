@@ -390,7 +390,8 @@ router.delete(
 	async (req, res) => {
 		try {
 			// Delete existing file if it exists
-			storage.deleteFile(req.org.pictureUrl);
+			const uploadBucket = config.get("general.storageBucket");
+			storage.deleteFile(uploadBucket, req.org.pictureUrl);
 
 			// Update user with the new profile image url
 			let orgObj = await orgCtrl.updateOneById(

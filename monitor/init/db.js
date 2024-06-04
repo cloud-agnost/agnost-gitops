@@ -1,3 +1,4 @@
+import config from "config";
 import mongo from "mongodb";
 
 //MongoDB client
@@ -14,17 +15,17 @@ export const connectToDatabase = async () => {
 		});
 		//Connect to the database of the application
 		await client.connect();
-		logger.info(`Connected to the database ${process.env.CLUSTER_DB_URI}`);
+		console.info(`Connected to the database ${process.env.CLUSTER_DB_URI}`);
 	} catch (err) {
 		console.log(err);
-		logger.error(`Cannot connect to the database. ${err}`);
+		console.error(`Cannot connect to the database. ${err}`);
 		process.exit(1);
 	}
 };
 
 export const disconnectFromDatabase = async () => {
 	await client.close();
-	logger.info("Disconnected from the database");
+	console.info("Disconnected from the database");
 };
 
 export const getDBClient = () => {

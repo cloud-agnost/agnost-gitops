@@ -1,6 +1,7 @@
 import {
 	checkName,
 	checkRepoOrRegistry,
+	checkRegistry,
 	checkRepo,
 	checkVariables,
 	checkStorageConfig,
@@ -13,13 +14,14 @@ export default (actionType) => {
 		case "create":
 		case "update":
 			return [
-				...checkName("cron job", actionType),
-				...checkRepoOrRegistry("cron job", actionType),
-				...checkRepo("cron job", actionType),
-				...checkVariables("cron job", actionType),
-				...checkStorageConfig("cron job", actionType),
-				...checkPodConfig("cron job", actionType),
-				...checkCronJobConfig("cron job", actionType),
+				...checkName("cronjob", actionType),
+				...checkRepoOrRegistry("cronjob", actionType),
+				...checkRegistry("cronjob", actionType),
+				...checkRepo("cronjob", actionType),
+				...checkVariables("cronjob", actionType),
+				...checkStorageConfig("cronjob", actionType),
+				...checkPodConfig("cronjob", actionType),
+				...checkCronJobConfig("cronjob", actionType),
 			];
 		default:
 			return [];

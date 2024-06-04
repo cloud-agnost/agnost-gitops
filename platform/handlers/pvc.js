@@ -89,7 +89,9 @@ export async function deletePVC(name, namespace) {
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting PVC '${name}' in namespace ${namespace}. ${err.response?.body?.message}`
+			`Error deleting PVC '${name}' in namespace ${namespace}. ${
+				err.response?.body?.message ?? err.message
+			}`
 		);
 	}
 }
@@ -147,7 +149,11 @@ export async function updateStatefulSetPVC(
 				);
 			} catch (err) {
 				console.error(
-					`PVC '${metadata.name}' in namespace '${namespace}' cannot be updated. ${err.response?.body?.message}`
+					`PVC '${
+						metadata.name
+					}' in namespace '${namespace}' cannot be updated. ${
+						err.response?.body?.message ?? err.message
+					}`
 				);
 			}
 		}

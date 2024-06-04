@@ -44,7 +44,7 @@ export const connectToRedisCache = async () => {
 	let readReplicaConfig = null;
 	try {
 		readReplicaConfig = config.get("cache.readReplica");
-	} catch (err) {
+	} catch {
 		console.info("No read replica cache server found");
 	}
 

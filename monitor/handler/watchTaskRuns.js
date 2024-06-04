@@ -1,5 +1,6 @@
 import axios from "axios";
 import k8s from "@kubernetes/client-node";
+import helper from "../util/helper.js";
 
 // Create a Kubernetes core API client
 const kubeconfig = new k8s.KubeConfig();
@@ -22,14 +23,14 @@ export async function watchBuildEvents() {
 	 */
 	async function startWatching() {
 		try {
-			logger.info("Started watching build events...");
+			console.info("Started watching build events...");
 			let now = new Date().getTime();
 			watchRequest = watch.watch(
 				`/api/v1/namespaces/${namespace}/events`,
 				{
 					fieldSelector: "involvedObject.kind=TaskRun", // Filter events for a specific resource type
 				},
-				(type, event, watchObj) => {
+				(type, event) => {
 					let eventTime = null;
 					if (event.lastTimestamp)
 						eventTime = new Date(event.lastTimestamp).getTime();
@@ -62,9 +63,10 @@ export async function watchBuildEvents() {
 							let containeriid = match ? match[0] : null;
 
 							if (containeriid) {
-								logger.info(
-									`Updating the build status of container ${containeriid}. ${JSON.stringify(
-										result
+								console.info(
+									`Updating the build status of container ${containeriid}. ${event.reason?.replace(
+										"TaskRun",
+										""
 									)}`
 								);
 								//Make api call to the platform to update the build status of the container
@@ -83,7 +85,7 @@ export async function watchBuildEvents() {
 										}
 									)
 									.catch((err) => {
-										logger.error(
+										console.error(
 											`Cannot send build pipeline run status data of container ${containeriid} to platform. ${
 												err.response?.body?.message ?? err.message
 											}`
@@ -96,7 +98,7 @@ export async function watchBuildEvents() {
 				(err) => {
 					console.error(
 						`Error while watching for build events. ${
-							err?.response?.body?.message ?? err.message
+							err?.response?.body?.message ?? err?.message
 						}`
 					);
 					// Retry the watch after a delay
@@ -128,6 +130,11 @@ export function stopWatchingBuildEvents() {
 			console.log("Stopped watching build events.");
 		}
 	} catch (err) {
+		console.error(
+			`Error while stopping the watch for build events. ${
+				err.response?.body?.message ?? err.message
+			}`
+		);
 		watchRequest = null;
 	}
 }
@@ -149,7 +156,7 @@ async function getTaskRun(taskRunName) {
 
 		return response.body;
 	} catch (err) {
-		logger.error(
+		console.error(
 			`Cannot get TaskRun ${taskRunName} in namespace tekton-builds. ${
 				err.response?.body?.message ?? err.message
 			}`

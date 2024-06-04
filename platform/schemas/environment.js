@@ -106,13 +106,6 @@ export const applyRules = (type) => {
 									"Environment with the provided name already exists"
 								);
 						});
-
-						if (value.toLowerCase() === "this") {
-							throw new Error(
-								`'${value}' is a reserved keyword and cannot be used as environment name`
-							);
-						}
-
 						return true;
 					}),
 				body("private")

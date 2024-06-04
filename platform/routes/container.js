@@ -107,10 +107,10 @@ router.post(
 				case "deployment":
 					prefix = "dpl";
 					break;
-				case "stateful set":
+				case "statefulset":
 					prefix = "sts";
 					break;
-				case "cron job":
+				case "cronjob":
 					prefix = "crj";
 					break;
 				default:

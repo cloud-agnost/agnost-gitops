@@ -7,7 +7,6 @@ kc.loadFromDefault();
 
 const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
-const k8sCustomObjectApi = kc.makeApiClient(k8s.CustomObjectsApi);
 const k8sAutoscalingApi = kc.makeApiClient(k8s.AutoscalingV2Api);
 const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
 const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
@@ -62,14 +61,6 @@ export async function getK8SResource(kind, name, namespace) {
 				return await k8sBatchApi.readNamespacedCronJob(name, namespace);
 			case "Job":
 				return await k8sBatchApi.readNamespacedJob(name, namespace);
-			case "KnativeService":
-				return await k8sCustomObjectApi.getNamespacedCustomObject(
-					"serving.knative.dev",
-					"v1",
-					namespace,
-					"services",
-					name
-				);
 			case "HPA":
 				return await k8sAutoscalingApi.readNamespacedHorizontalPodAutoscaler(
 					name,
