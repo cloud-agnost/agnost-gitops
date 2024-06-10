@@ -127,7 +127,7 @@ export function stopWatchingBuildEvents() {
 		if (watchRequest) {
 			watchRequest.abort();
 			watchRequest = null;
-			console.log("Stopped watching build events.");
+			console.info("Stopped watching build events.");
 		}
 	} catch (err) {
 		console.error(

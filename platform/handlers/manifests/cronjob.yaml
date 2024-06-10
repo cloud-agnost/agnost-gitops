@@ -17,7 +17,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: dummy
-            image: alpine
+            image: docker.io/alpine
             resources:
               requests:
                 memory: "64Mi"

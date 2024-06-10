@@ -8,6 +8,7 @@ build:
            infer:
               - '**/*.js'
               - '**/*.json'
+              - '**/*.yaml'
         docker:
            dockerfile: Dockerfile.dev
       - image: agnost-gitops/sync
@@ -16,7 +17,6 @@ build:
            infer:
               - '**/*.js'
               - '**/*.json'
-              - '**/*.pug'
         docker:
            dockerfile: Dockerfile.dev
       - image: agnost-gitops/monitor

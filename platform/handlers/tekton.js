@@ -3,11 +3,10 @@ import crypto from "crypto";
 import k8s from "@kubernetes/client-node";
 import path from "path";
 import { Octokit } from "@octokit/core";
-import axios from "axios";
 import { fileURLToPath } from "url";
 import { getClusterRecord } from "./util.js";
-import { initializeClusterCertificateIssuer } from "./ingress.js";
 import helper from "../util/helper.js";
+import cntrCtrl from "../controllers/container.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
@@ -22,14 +21,20 @@ const agnostNamespace = process.env.NAMESPACE;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Container is container object and environment is environment object
+/**
+ * Creates a Tekton pipeline for the given container, environment, and git provider.
+ * @param {object} container - The container object.
+ * @param {object} environment - The environment object.
+ * @param {object} gitProvider - The git provider object.
+ * @returns {Promise<void>} - A promise that resolves when the Tekton pipeline is created.
+ */
 export async function createTektonPipeline(
 	container,
 	environment,
 	gitProvider
 ) {
 	// If the repo is not connected then return
-	if (!container.repo.connected || !gitProvider) return;
+	if (!container.repo?.connected || !gitProvider) return;
 
 	const { repo } = container;
 	const namespace = environment.iid;
@@ -43,10 +48,17 @@ export async function createTektonPipeline(
 	const appName = container.iid;
 	const dockerfile = repo.dockerfile;
 	const containerImageName = container.iid;
-	const manifest = fs.readFileSync(
+	const originalManifest = fs.readFileSync(
 		`${__dirname}/manifests/${gitRepoType}-pipeline.yaml`,
 		"utf8"
 	);
+
+	// Update the local-registry service information
+	const manifest = originalManifest.replaceAll(
+		"local-registry.default",
+		`zot.${agnostNamespace}`
+	);
+
 	const resources = k8s.loadAllYaml(manifest);
 
 	const group = "triggers.tekton.dev";
@@ -58,7 +70,6 @@ export async function createTektonPipeline(
 	for (const resource of resources) {
 		try {
 			const { kind, metadata } = resource;
-
 			if (metadata.namespace) {
 				var resource_namespace = metadata.namespace;
 			}
@@ -113,7 +124,6 @@ export async function createTektonPipeline(
 						}
 
 						if (cluster.domains.length > 0) {
-							await initializeClusterCertificateIssuer();
 							resource.metadata.annotations["cert-manager.io/cluster-issuer"] =
 								"letsencrypt-clusterissuer";
 							resource.metadata.annotations["kubernetes.io/ingress.class"] =
@@ -181,8 +191,7 @@ export async function createTektonPipeline(
 					resource.spec.params[0].value = appKind;
 					resource.spec.params[1].value = appName;
 					resource.spec.params[2].value = namespace;
-					resource.spec.params[3].value =
-						"local-registry." + agnostNamespace + ":5000";
+					resource.spec.params[3].value = "zot." + agnostNamespace + ":5000";
 					resource.spec.params[4].value = gitPat;
 					resource.spec.params[5].value = gitBranch;
 					resource.spec.params[6].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
@@ -198,9 +207,6 @@ export async function createTektonPipeline(
 					break;
 				case "TriggerTemplate":
 					{
-						let secretName = "regcred-local-registry";
-						resource.spec.resourcetemplates[0].spec.taskSpec.volumes[0].secret.secretName =
-							secretName;
 						resource.spec.resourcetemplates[0].spec.serviceAccountName +=
 							resourceNameSuffix;
 						await k8sCustomObjectApi.createNamespacedCustomObject(
@@ -218,8 +224,9 @@ export async function createTektonPipeline(
 			console.info(`${kind} ${resource.metadata.name} created...`);
 		} catch (err) {
 			console.error(
-				`Error applying tekton pipeline resource ${resource.kind} ${resource.metadata.name}...`,
-				err.body?.message ?? err
+				`Error applying tekton pipeline resource ${resource.kind} ${
+					resource.metadata.name
+				}. ${err.response?.body?.message ?? err.message}`
 			);
 			throw err;
 		}
@@ -233,7 +240,6 @@ export async function createTektonPipeline(
 			sslVerification = true;
 		}
 	} else {
-		const cluster = await getClusterRecord();
 		webhookUrl = "http://" + cluster.ips[0] + "/tekton-" + pipelineId;
 		sslVerification = false;
 	}
@@ -265,28 +271,30 @@ export async function createTektonPipeline(
 
 	if (webHookId) {
 		// At this stage we have successfully created the webhook, update the container database with the webhook id
-		axios
-			.post(
-				helper.getPlatformUrl() + "/v1/telemetry/set-webhook",
-				{ container, webHookId },
-				{
-					headers: {
-						Authorization: process.env.MASTER_TOKEN,
-						"Content-Type": "application/json",
-					},
-				}
-			)
-			.catch((err) => {
-				console.error(err);
-			});
+		await cntrCtrl.updateOneById(
+			container._id,
+			{ "repo.webHookId": webHookId },
+			{},
+			{ cacheKey: container._id }
+		);
 	}
 }
 
+/**
+ * Deletes a Tekton pipeline.
+ * @param {object} container - The container object.
+ * @param {object} gitProvider - The git provider object.
+ * @param {boolean} [updateDb=true] - Whether to update the database after deleting the pipeline.
+ * @returns {Promise<void>} - A promise that resolves when the pipeline is deleted.
+ */
 export async function deleteTektonPipeline(
 	container,
-	environment,
-	gitProvider
+	gitProvider,
+	updateDb = true
 ) {
+	// If the repo is not connected then return
+	if (!container.repo?.connected || !gitProvider) return;
+
 	const { repo } = container;
 	const gitRepoType = repo.type;
 	const pipelineId = container.iid;
@@ -374,8 +382,9 @@ export async function deleteTektonPipeline(
 			console.info(`${kind} ${resource.metadata.name} deleted...`);
 		} catch (err) {
 			console.error(
-				`Error deleting tekton pipeline resource ${resource.kind} ${resource.metadata.name}...`,
-				err.body?.message ?? err
+				`Error deleting tekton pipeline resource ${resource.kind} ${
+					resource.metadata.name
+				}. ${err.response?.body?.message ?? err.message}`
 			);
 		}
 	}
@@ -391,36 +400,62 @@ export async function deleteTektonPipeline(
 			throw new Error("Unknown repo type: " + gitRepoType);
 	}
 
-	// At this stage we have successfully deleted the webhook, update the container database to remove the webhook id
-	axios
-		.post(
-			helper.getPlatformUrl() + "/v1/telemetry/remove-webhook",
-			{ container },
-			{
-				headers: {
-					Authorization: process.env.MASTER_TOKEN,
-					"Content-Type": "application/json",
-				},
-			}
-		)
-		.catch((error) => {
-			console.info("Error updating github webhook in platform-core", error);
-		});
+	if (updateDb === true) {
+		// At this stage we have successfully deleted the webhook, update the container database to remove the webhook id
+		await cntrCtrl.updateOneById(
+			container._id,
+			{},
+			{ "repo.webHookId": "" },
+			{ cacheKey: container._id }
+		);
+	}
 }
 
+/**
+ * Deletes a list of Tekton pipelines.
+ * @param {object} containers - The list of container objects whose build pipelines will be deleted.
+ * @returns {Promise<void>} - A promise that resolves when the pipelines are deleted.
+ */
+export async function deleteTektonPipelines(containers) {
+	if (!containers || containers.length === 0) return;
+
+	for (const container of containers) {
+		if (!(container.repo?.connected && container.repo?.gitProviderId?._id))
+			continue;
+
+		const gitProvider = container.repo.gitProviderId;
+		if (gitProvider.accessToken)
+			gitProvider.accessToken = helper.decryptText(gitProvider.accessToken);
+		if (gitProvider.refreshToken)
+			gitProvider.refreshToken = helper.decryptText(gitProvider.refreshToken);
+
+		await deleteTektonPipeline(container, gitProvider, false);
+	}
+}
+
+/**
+ * Formats the given Kubernetes name.
+ *
+ * @param {string} name - The name to be formatted.
+ * @returns {string} The formatted Kubernetes name.
+ */
 function formatKubernetesName(name) {
-	return name
-		.split(" ")
-		.map((word, index) => {
-			if (index === 0) {
-				return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-			} else {
-				return word.charAt(0).toUpperCase() + word.slice(1);
-			}
-		})
-		.join("");
+	if (name === "deployment") return "Deployment";
+	else if (name === "statefulset") return "StatefulSet";
+	else return "CronJob";
 }
 
+/**
+ * Creates a GitHub webhook for a given repository.
+ *
+ * @param {string} gitPat - The personal access token (PAT) for authenticating with GitHub.
+ * @param {string} gitRepoUrl - The URL of the GitHub repository.
+ * @param {string} webhookUrl - The URL where the webhook events will be sent.
+ * @param {string} secretToken - The secret token used to sign the webhook events.
+ * @param {boolean} [sslVerification=false] - Whether to enable SSL verification for the webhook.
+ * @returns {number} - The ID of the created GitHub webhook.
+ * @throws {Error} - If the GitHub repo webhook creation fails.
+ */
 async function createGithubWebhook(
 	gitPat,
 	gitRepoUrl,
@@ -431,27 +466,45 @@ async function createGithubWebhook(
 	const octokit = new Octokit({ auth: gitPat });
 	const path = new URL(gitRepoUrl).pathname;
 
-	var githubHook = await octokit.request("POST /repos" + path + "/hooks", {
-		owner: path.split("/")[1],
-		repo: path.split("/")[2],
-		name: "web",
-		active: true,
-		events: ["push"],
-		config: {
-			url: webhookUrl,
-			content_type: "json",
-			secret: secretToken,
-			insecure_ssl: sslVerification ? "0" : "1", // "1" disables SSL verification; "0" enables it.
-		},
-		headers: {
-			"X-GitHub-Api-Version": "2022-11-28",
-		},
-	});
+	try {
+		var githubHook = await octokit.request("POST /repos" + path + "/hooks", {
+			owner: path.split("/")[1],
+			repo: path.split("/")[2],
+			name: "web",
+			active: true,
+			events: ["push"],
+			config: {
+				url: webhookUrl,
+				content_type: "json",
+				secret: secretToken,
+				insecure_ssl: sslVerification ? "0" : "1", // "1" disables SSL verification; "0" enables it.
+			},
+			headers: {
+				"X-GitHub-Api-Version": "2022-11-28",
+			},
+		});
+	} catch (err) {
+		console.error(
+			`Cannot create the GitHub repo webhook. ${
+				err.response?.body?.message ?? err.message
+			}`
+		);
+
+		throw err;
+	}
 
 	console.info("GitHub repo webhook created");
 	return githubHook.data.id;
 }
 
+/**
+ * Deletes a GitHub webhook from a repository.
+ *
+ * @param {string} gitPat - The personal access token for authenticating with GitHub.
+ * @param {string} gitRepoUrl - The URL of the GitHub repository.
+ * @param {number} hookId - The ID of the webhook to delete.
+ * @returns {Promise<void>} - A promise that resolves when the webhook is deleted successfully.
+ */
 async function deleteGithubWebhook(gitPat, gitRepoUrl, hookId) {
 	if (!gitPat || !gitRepoUrl || !hookId) return;
 	try {
@@ -472,6 +525,18 @@ async function deleteGithubWebhook(gitPat, gitRepoUrl, hookId) {
 	}
 }
 
+/**
+ * Creates a GitLab webhook for a specific repository.
+ *
+ * @param {string} gitPat - The GitLab personal access token.
+ * @param {string} gitRepoUrl - The URL of the GitLab repository.
+ * @param {string} webhookUrl - The URL of the webhook to be created.
+ * @param {string} secretToken - The secret token for the webhook.
+ * @param {string} gitBranch - The branch to filter push events for the webhook.
+ * @param {boolean} [sslVerification=false] - Whether to enable SSL verification for the webhook.
+ * @returns {Promise<number>} The ID of the created webhook.
+ * @throws {Error} If there is an error during the webhook creation process.
+ */
 async function createGitlabWebhook(
 	gitPat,
 	gitRepoUrl,
@@ -548,6 +613,14 @@ async function createGitlabWebhook(
 	return webhook.id;
 }
 
+/**
+ * Deletes a GitLab webhook.
+ *
+ * @param {string} gitPat - The GitLab personal access token.
+ * @param {string} gitRepoUrl - The URL of the GitLab repository.
+ * @param {number} hookId - The ID of the webhook to delete.
+ * @returns {Promise<void>} - A promise that resolves when the webhook is deleted successfully, or rejects with an error.
+ */
 async function deleteGitlabWebhook(gitPat, gitRepoUrl, hookId) {
 	if (!gitPat || !gitRepoUrl || !hookId) return;
 	try {

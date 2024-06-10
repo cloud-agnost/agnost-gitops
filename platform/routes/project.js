@@ -21,8 +21,10 @@ import { fileUploadMiddleware } from "../middlewares/handleFile.js";
 import { storage } from "../init/storage.js";
 import { createNamespace, deleteNamespaces } from "../handlers/ns.js";
 import { deleteTCPProxyPorts } from "../handlers/tcpproxy.js";
-import ERROR_CODES from "../config/errorCodes.js";
+import { deleteTektonPipelines } from "../handlers/tekton.js";
 import helper from "../util/helper.js";
+
+import ERROR_CODES from "../config/errorCodes.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -457,6 +459,17 @@ router.delete(
 				(c) => c.networking.tcpProxy.publicPort
 			);
 
+			// Get all organization containers which have tekton pipelines and also get the repo provider information in the results
+			const containersWithPipelines = await cntrCtrl.getManyByQuery(
+				{
+					projectId: project._id,
+					repoOrRegistry: "repo",
+					"repo.connected": true,
+					"repo.gitProviderId": { $exists: true },
+				},
+				{ lookup: "repo.gitProviderId" }
+			);
+
 			// Delete all project related data, associted environments and containers
 			await prjCtrl.deleteProject(session, org, project);
 
@@ -464,6 +477,8 @@ router.delete(
 			await deleteNamespaces(environmentiids);
 			// Remove exposed TCP proxy ports
 			await deleteTCPProxyPorts(tcpProxyPorts);
+			// Delete tekton pipelines
+			await deleteTektonPipelines(containersWithPipelines);
 
 			// Commit transaction
 			await prjCtrl.commit(session);

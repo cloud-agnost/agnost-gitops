@@ -3,7 +3,7 @@ import k8s from "@kubernetes/client-node";
 import path from "path";
 import yaml from "js-yaml";
 import { fileURLToPath } from "url";
-import { getK8SResource, getProbeConfig } from "./util.js";
+import { getK8SResource, getProbeConfig, getImage } from "./util.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Definition is container
-export async function createDeployment(definition, namespace) {
+export async function createDeployment(definition, namespace, registry) {
 	const manifest = fs.readFileSync(
 		`${__dirname}/manifests/deployment.yaml`,
 		"utf8"
@@ -35,6 +35,7 @@ export async function createDeployment(definition, namespace) {
 	// Configure container
 	const container = spec.template.spec.containers[0];
 	container.name = definition.iid;
+	container.image = getImage(container.image, definition, registry);
 	container.ports[0].containerPort = definition.networking.containerPort;
 	container.resources.requests.cpu =
 		definition.podConfig.cpuRequestType === "millicores"
@@ -101,7 +102,7 @@ export async function createDeployment(definition, namespace) {
 }
 
 // Definition is container
-export async function updateDeployment(definition, namespace) {
+export async function updateDeployment(definition, namespace, registry) {
 	const payload = await getK8SResource("Deployment", definition.iid, namespace);
 	const { metadata, spec } = payload.body;
 
@@ -117,6 +118,7 @@ export async function updateDeployment(definition, namespace) {
 	// Configure container
 	const container = spec.template.spec.containers[0];
 	container.name = definition.iid;
+	container.image = getImage(container.image, definition, registry);
 	container.ports[0].containerPort = definition.networking.containerPort;
 	container.resources.requests.cpu =
 		definition.podConfig.cpuRequestType === "millicores"

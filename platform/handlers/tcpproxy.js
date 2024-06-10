@@ -161,18 +161,16 @@ export async function createTCPProxy(
 						resourceNamespace
 					);
 
-					const configmapArg = `--tcp-services-configmap=${resourceNamespace}/tcp-services`;
-					const configmapArg2 =
-						"--tcp-services-configmap=$(POD_NAMESPACE)/tcp-services";
-					if (
-						!dply.body.spec.template.spec.containers[0].args.includes(
-							configmapArg
-						) &&
-						!dply.body.spec.template.spec.containers[0].args.includes(
-							configmapArg2
-						)
-					) {
-						dply.body.spec.template.spec.containers[0].args.push(configmapArg);
+					// Add the required arguments to the ingress-nginx-controller deployment
+					const tcpServciesConfigMap =
+						dply.body.spec.template.spec.containers[0].args.find((entry) =>
+							entry.startsWith("--tcp-services-configmap=")
+						);
+
+					if (!tcpServciesConfigMap) {
+						dply.body.spec.template.spec.containers[0].args.push(
+							"--tcp-services-configmap=$(POD_NAMESPACE)/tcp-services"
+						);
 					}
 
 					const newContainerPort = {

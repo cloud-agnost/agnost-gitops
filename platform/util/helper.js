@@ -48,6 +48,18 @@ function generateColor(luminosity = "dark") {
 }
 
 /**
+ * Generates a hihg probability unique secret vallue
+ * @param  {string} length The length of the secret
+ */
+function generateSecret(length) {
+	// Kubernetes resource names need to be alphanumeric and in lowercase letters
+	const alphabet =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	const nanoid = customAlphabet(alphabet, length);
+	return nanoid();
+}
+
+/**
  * Generates a hihg probability unique slugs
  * @param  {string} prefix The prefix prepended to the slug
  * @param  {string} length The length of the slug excluding the prefix
@@ -222,6 +234,11 @@ function isPrivateIP(ip) {
 		return true;
 	}
 
+	// 127.x.x.x (loopback address)
+	if (parts[0] === 127) {
+		return true;
+	}
+
 	// If IPv6, check for unique local addresses (fc00::/7)
 	if (net.isIPv6(ip)) {
 		const firstHex = parseInt(ip.substring(0, 4), 16);
@@ -266,6 +283,15 @@ function handleError(req, res, error) {
 	};
 
 	if (!res.headersSent) {
+		if (error.response?.body?.message) {
+			return res.status(400).json({
+				error: "Bad Request",
+				details: error.response?.body?.message,
+				code: ERROR_CODES.badRequest,
+				stack: error.stack,
+			});
+		}
+
 		if (error?.response?.data?.status === "error") {
 			return res.status(500).json({
 				error: "Internal Server Error",
@@ -304,6 +330,7 @@ export default {
 	getIP,
 	generateColor,
 	generateSlug,
+	generateSecret,
 	getCertSecretName,
 	generateId,
 	objectId,

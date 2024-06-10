@@ -5,8 +5,6 @@ import helper from "../util/helper.js";
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
-
-const k8sCustomObjectApi = kc.makeApiClient(k8s.CustomObjectsApi);
 const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
 
 // Definition is networking
@@ -36,7 +34,7 @@ export async function createIngress(definition, name, namespace) {
 					http: {
 						paths: [
 							{
-								path: `/${name}(/|$)(.*)`,
+								path: `/${name}-${namespace}(/|$)(.*)`,
 								pathType: "Prefix",
 								backend: {
 									service: {
@@ -69,7 +67,6 @@ export async function createIngress(definition, name, namespace) {
 		}
 
 		if (cluster.domains.length > 0) {
-			await initializeClusterCertificateIssuer();
 			ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
 				"letsencrypt-clusterissuer";
 			ingress.metadata.annotations["kubernetes.io/ingress.class"] = "nginx";
@@ -88,7 +85,7 @@ export async function createIngress(definition, name, namespace) {
 					http: {
 						paths: [
 							{
-								path: `/${name}(/|$)(.*)`,
+								path: `/${name}-${namespace}(/|$)(.*)`,
 								pathType: "Prefix",
 								backend: {
 									service: {
@@ -253,7 +250,6 @@ export async function createCustomDomainIngress(definition, name, namespace) {
 		] = "false";
 	}
 
-	await initializeClusterCertificateIssuer();
 	ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
 		"letsencrypt-clusterissuer";
 	ingress.metadata.annotations["kubernetes.io/ingress.class"] = "nginx";
@@ -339,60 +335,6 @@ export async function deleteCustomDomainIngress(name, namespace) {
 }
 
 /**
- * Initializes the certificate issuer available across all namespaces.
- * This function checks if the certificate issuer already exists, and if not, creates it.
- * @returns {Promise<void>} A promise that resolves when the initialization is complete.
- */
-export async function initializeClusterCertificateIssuer() {
-	try {
-		// Check to see if we have the certificate issuer already
-		await k8sCustomObjectApi.getClusterCustomObject(
-			"cert-manager.io",
-			"v1",
-			"clusterissuers",
-			"letsencrypt-clusterissuer"
-		);
-
-		return;
-	} catch (err) {
-		// If we get a 404, we need to create the issuer
-		if (err.statusCode === 404) {
-			const clusterIssuer = {
-				apiVersion: "cert-manager.io/v1",
-				kind: "ClusterIssuer",
-				metadata: {
-					name: "letsencrypt-clusterissuer",
-				},
-				spec: {
-					acme: {
-						privateKeySecretRef: {
-							name: "letsencrypt-clusterissuer-key",
-						},
-						server: "https://acme-v02.api.letsencrypt.org/directory",
-						solvers: [
-							{
-								http01: {
-									ingress: {
-										ingressClassName: "nginx",
-									},
-								},
-							},
-						],
-					},
-				},
-			};
-
-			await k8sCustomObjectApi.createClusterCustomObject(
-				"cert-manager.io",
-				"v1",
-				"clusterissuers",
-				clusterIssuer
-			);
-		}
-	}
-}
-
-/**
  * Adds a custom domain to a container ingress.
  */
 export async function addClusterCustomDomain(
@@ -403,7 +345,6 @@ export async function addClusterCustomDomain(
 	enforceSSLAccess
 ) {
 	try {
-		await initializeClusterCertificateIssuer();
 		const ingress = await getK8SResource(
 			"Ingress",
 			`${containeriid}-cluster`,
@@ -451,7 +392,7 @@ export async function addClusterCustomDomain(
 			http: {
 				paths: [
 					{
-						path: `/${containeriid}(/|$)(.*)`,
+						path: `/${containeriid}-${namespace}(/|$)(.*)`,
 						pathType: "Prefix",
 						backend: {
 							service: {

@@ -32,11 +32,11 @@ export const connectToRedisCache = async () => {
 		});
 
 		client.on("error", function (err) {
-			console.error(`Cannot connect to the cache server`, { details: err });
+			console.error(`Cannot connect to the cache server. ${err.message}`);
 			process.exit(1);
 		});
 	} catch (err) {
-		console.error(`Cannot connect to the cache server`, { details: err });
+		console.error(`Cannot connect to the cache server. ${err.message}`);
 		process.exit(1);
 	}
 

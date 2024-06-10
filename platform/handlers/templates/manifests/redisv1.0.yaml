@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+type: Opaque
+stringData:
+  password: {{secrets.password}}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+data:
+  redis.conf: |
+    bind 0.0.0.0
+    protected-mode yes
+    port 6379
+    requirepass __REDIS_PASSWORD__
+    dir /data
+    appendonly yes
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  serviceName: {{iid}}
+  replicas: 1
+  updateStrategy:
+    type: {{statefulSetConfig.strategy}}
+    rollingUpdate:
+      maxUnavailable: {{statefulSetConfig.rollingUpdate.maxUnavailable}}
+      partition: {{statefulSetConfig.rollingUpdate.partition}}
+  revisionHistoryLimit: {{statefulSetConfig.revisionHistoryLimit}}
+  podManagementPolicy: {{statefulSetConfig.podManagementPolicy}}
+  persistentVolumeClaimRetentionPolicy: 
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      app: {{iid}}
+  template:
+    metadata:
+      labels:
+        app: {{iid}}
+    spec:
+      initContainers:
+      - name: init
+        image: alpine:latest
+        command: ["/bin/sh", "-c", "apk add --no-cache sed && sed 's/__REDIS_PASSWORD__/'$REDIS_PASSWORD'/g' /redis-master/redis.conf > /tmp/redis-subst.conf"]
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: password
+        volumeMounts:
+        - name: config
+          mountPath: /redis-master
+        - name: tmp
+          mountPath: /tmp
+      containers:
+      - name: redis
+        image:  {{registry.imageUrl}}
+        command: ["redis-server", "/tmp/redis-subst.conf"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            memory: {{podConfig.memoryRequest}}{{podConfig.memoryRequestType}}
+            cpu: {{podConfig.cpuRequest}}{{podConfig.cpuRequestType}}
+          limits:
+            memory: {{podConfig.memoryLimit}}{{podConfig.memoryLimitType}}
+            cpu: {{podConfig.cpuLimit}}{{podConfig.cpuLimitType}}
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: password
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          failureThreshold: 5
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 6
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          failureThreshold: 5
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 2
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: config
+        configMap:
+          name: {{iid}}
+      - name: tmp
+        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: {{storageConfig.size}}{{storageConfig.sizeType}}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{iid}}-headless
+  namespace: {{namespace}}
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  clusterIP: None
+  selector:
+    app: {{iid}}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: minio
+  selector:
+    app: {{iid}}

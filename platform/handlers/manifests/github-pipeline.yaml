@@ -77,13 +77,6 @@ spec:
         taskSpec:
           workspaces:
           - name: ws
-          volumes:
-          - name: regcred
-            secret:
-              secretName: ghcr-regcred
-              items:
-              - key: .dockerconfigjson
-                path: config.json
           steps:
           - name: setup
             image: alpine
@@ -134,9 +127,6 @@ spec:
                   --dockerfile=$(tt.params.dockerfile) \
                   --git branch=$(tt.params.gitbranch)
               fi
-            volumeMounts:
-            - name: regcred
-              mountPath: /kaniko/.docker/
           - image: quay.io/skopeo/stable:latest
             name: local-push
             script: |
@@ -150,9 +140,6 @@ spec:
               else
                 echo "Not using local registry, skipping ..."
               fi
-            volumeMounts:
-            - mountPath: /root/.docker/
-              name: regcred
           - name: deploy
             image: bitnami/kubectl:1.29.2
             script: |

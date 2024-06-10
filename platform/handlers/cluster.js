@@ -7,6 +7,7 @@ import { getKey, setKey, incrementKey } from "../init/cache.js";
 const kubeconfig = new k8s.KubeConfig();
 kubeconfig.loadFromDefault();
 const k8sApi = kubeconfig.makeApiClient(k8s.NetworkingV1Api);
+const k8sCustomObjectApi = kubeconfig.makeApiClient(k8s.CustomObjectsApi);
 
 /**
  * Retrieves the IP addresses of the cluster's load balancer ingress.
@@ -65,4 +66,64 @@ export async function getNewTCPPortNumber() {
 	// Save new port number to database
 	await tcpProxyPortCtrl.create({ port: newPortNumber });
 	return newPortNumber;
+}
+
+/**
+ * Initializes the certificate issuer available across all namespaces.
+ * This function checks if the certificate issuer already exists, and if not, creates it.
+ * @returns {Promise<void>} A promise that resolves when the initialization is complete.
+ */
+export async function initializeClusterCertificateIssuer() {
+	try {
+		// Check to see if we have the certificate issuer already
+		await k8sCustomObjectApi.getClusterCustomObject(
+			"cert-manager.io",
+			"v1",
+			"clusterissuers",
+			"letsencrypt-clusterissuer"
+		);
+
+		return;
+	} catch (err) {
+		// If we get a 404, we need to create the issuer
+		if (err.statusCode === 404) {
+			const clusterIssuer = {
+				apiVersion: "cert-manager.io/v1",
+				kind: "ClusterIssuer",
+				metadata: {
+					name: "letsencrypt-clusterissuer",
+				},
+				spec: {
+					acme: {
+						privateKeySecretRef: {
+							name: "letsencrypt-clusterissuer-key",
+						},
+						server: "https://acme-v02.api.letsencrypt.org/directory",
+						solvers: [
+							{
+								http01: {
+									ingress: {
+										class: "nginx",
+									},
+								},
+							},
+						],
+					},
+				},
+			};
+
+			try {
+				await k8sCustomObjectApi.createClusterCustomObject(
+					"cert-manager.io",
+					"v1",
+					"clusterissuers",
+					clusterIssuer
+				);
+			} catch (err) {
+				console.log(err.response?.body?.message ?? err.message);
+			}
+
+			console.info(`Initialized cluster level certificate issuer.`);
+		}
+	}
 }

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { body } from "express-validator";
+import { body, query } from "express-validator";
 import domainCtrl from "../controllers/domain.js";
 
 /**
@@ -70,6 +70,17 @@ export const ClusterModel = mongoose.model(
 
 export const applyRules = (type) => {
 	switch (type) {
+		case "get-template":
+			return [
+				query("name")
+					.trim()
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty"),
+				query("version")
+					.trim()
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty"),
+			];
 		case "update-version":
 			return [
 				body("release")

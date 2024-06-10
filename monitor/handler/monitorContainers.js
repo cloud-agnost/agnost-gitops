@@ -25,6 +25,7 @@ export async function monitorContainers() {
 		while (containers && containers.length) {
 			for (let i = 0; i < containers.length; i++) {
 				const container = containers[i];
+
 				const environment = container.environment[0];
 				if (!environment) continue;
 
@@ -42,7 +43,7 @@ export async function monitorContainers() {
 						)
 							needsUpdate = true;
 					}
-				} else if (container.type === "stateful set") {
+				} else if (container.type === "statefulset") {
 					result = await getStatefulSetStatus(container.iid, environment.iid);
 					if (result && container.status) {
 						if (
@@ -55,7 +56,7 @@ export async function monitorContainers() {
 						)
 							needsUpdate = true;
 					}
-				} else if (container.type === "cron job") {
+				} else if (container.type === "cronjob") {
 					result = await getCronJobStatus(container.iid, environment.iid);
 					if (result && container.status) {
 						if (
@@ -179,7 +180,8 @@ async function getDeploymentStatus(name, namespace) {
 
 		let status = "Unknown";
 		if (desiredReplicas > readyReplicas && readyReplicas === 0) {
-			status = "Creating";
+			if (totalPods === 0) status = "Error";
+			else status = "Creating";
 		} else if (desiredReplicas !== updatedReplicas) {
 			status = "Updating";
 		} else if (errorPods > 0 && errorPods < totalPods) {
@@ -245,7 +247,8 @@ async function getStatefulSetStatus(name, namespace) {
 
 		let status = "Unknown";
 		if (desiredReplicas > readyReplicas && readyReplicas === 0) {
-			status = "Creating";
+			if (totalPods === 0) status = "Error";
+			else status = "Creating";
 		} else if (desiredReplicas !== updatedReplicas) {
 			status = "Updating";
 		} else if (errorPods > 0 && errorPods < totalPods) {

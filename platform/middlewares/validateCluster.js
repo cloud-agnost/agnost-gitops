@@ -16,9 +16,14 @@ export const validateCluster = async (req, res, next) => {
 		}
 
 		// Get the cluster object
-		const cluster = await clsCtrl.getOneByQuery({
-			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-		});
+		const cluster = await clsCtrl.getOneByQuery(
+			{
+				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+			},
+			{
+				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+			}
+		);
 
 		// Assign cluster data
 		req.cluster = cluster;

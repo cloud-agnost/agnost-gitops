@@ -9,9 +9,14 @@ import { validateProject } from "../middlewares/validateProject.js";
 import { validateEnvironment } from "../middlewares/validateEnvironment.js";
 import { validateContainer } from "../middlewares/validateContainer.js";
 import { authorizeProjectAction } from "../middlewares/authorizeProjectAction.js";
-import { applyRules } from "../schemas/container.js";
+import {
+	applyRules,
+	checkTemplate,
+	getValueChanges,
+} from "../schemas/container.js";
 import { validate } from "../middlewares/validate.js";
 import { manageContainer } from "../handlers/k8s.js";
+import { getNewTCPPortNumber } from "../handlers/cluster.js";
 import {
 	getContainerPods,
 	getContainerEvents,
@@ -19,6 +24,10 @@ import {
 	getContainerTaskRuns,
 	getTaskRunLogs,
 } from "../handlers/status.js";
+import {
+	constructCreateRequestBodyForTemplate,
+	constructUpdateRequestBodyForTemplate,
+} from "../handlers/templates/middlewares.js";
 import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
@@ -81,14 +90,19 @@ router.post(
 	validateProject,
 	validateEnvironment,
 	authorizeProjectAction("project.container.create"),
+	checkTemplate,
+	validate,
+	constructCreateRequestBodyForTemplate,
 	applyRules("create"),
 	validate,
 	async (req, res) => {
-		// We do not create a session here because the engine-worker send back the webhookid for the build pipeline
+		let container = null;
+		// We do not create a session here because the engine-worker send back the webhookid for the build pipeline if a repo is connected
 		const containerId = helper.generateId();
-		try {
-			const { org, project, environment, gitProvider, body, user } = req;
+		const { org, project, environment, gitProvider, registry, body, user } =
+			req;
 
+		try {
 			if (environment.isClusterEntity) {
 				return res.status(401).json({
 					error: "Not Allowed",
@@ -102,42 +116,58 @@ router.post(
 			delete body.pipelineStatus;
 			delete body.updatedBy;
 
-			let prefix = "cnt";
-			switch (body.type) {
-				case "deployment":
-					prefix = "dpl";
-					break;
-				case "statefulset":
-					prefix = "sts";
-					break;
-				case "cronjob":
-					prefix = "crj";
-					break;
-				default:
-					break;
-			}
-
 			// Set initial pipeline status
-			if (body.repo.connected) body.pipelineStatus = "Connected";
+			if (body.repoOrRegistry === "repo")
+				body.pipelineStatus = body.repo.connected
+					? "Connected"
+					: "Not Connected";
+			else body.pipelineStatus = "N/A";
 
-			const container = await cntrCtrl.create(
+			container = await cntrCtrl.create(
 				{
 					...body,
 					_id: containerId,
 					orgId: org._id,
 					projectId: project._id,
 					environmentId: environment._id,
-					iid: helper.generateSlug(prefix),
+					iid: body.name, //helper.generateSlug("cnt")
 					createdBy: user._id,
 				},
 				{ cacheKey: containerId }
 			);
 
-			// Create the container in the Kubernetes cluster
+			// Clear unnecessary config values since mongoose assigns default values for them
+			const unset = {};
+			if (body.type === "statefulset") {
+				unset.deploymentConfig = ""; // delete deploymentConfig
+				unset.cronJobConfig = ""; // delete cronJobConfig
+			} else if (body.type === "deployment") {
+				unset.statefulSetConfig = ""; // delete statefulSetConfig
+				unset.cronJobConfig = ""; // delete cronJobConfig
+			} else if ("type" === "cronjob") {
+				unset.statefulSetConfig = ""; // delete statefulSetConfig
+				unset.deploymentConfig = ""; // delete deploymentConfig
+				unset.networking = ""; // delete networking
+				unset.probes = ""; // delete probes
+			}
+
+			if (body.repoOrRegistry === "repo") {
+				unset.registry = ""; // delete registry
+			} else {
+				unset.repo = ""; // delete repo
+			}
+
+			container = await cntrCtrl.updateOneById(container._id, {}, unset, {
+				cacheKey: containerId,
+			});
+
+			// Create the container in the Kubernetes cluster, before creating the container assign the secrets if there are any
+			container.secrets = req.secrets;
 			await manageContainer({
 				container,
 				environment,
 				gitProvider,
+				registry,
 				action: "create",
 			});
 
@@ -161,6 +191,14 @@ router.post(
 		} catch (err) {
 			// Clean up
 			await cntrCtrl.deleteOneById(containerId, { cacheKey: containerId });
+			await manageContainer({
+				container,
+				environment,
+				gitProvider,
+				registry,
+				action: "delete",
+			});
+
 			helper.handleError(req, res, err);
 		}
 	}
@@ -175,7 +213,6 @@ router.post(
 router.get(
 	"/:containerId",
 	authSession,
-
 	validateOrg,
 	validateProject,
 	validateEnvironment,
@@ -206,31 +243,26 @@ router.put(
 	validateProject,
 	validateEnvironment,
 	validateContainer,
+	constructUpdateRequestBodyForTemplate,
 	authorizeProjectAction("project.container.update"),
 	applyRules("update"),
 	validate,
 	async (req, res) => {
 		try {
-			const { org, project, environment, container, gitProvider, body, user } =
-				req;
+			const {
+				org,
+				project,
+				environment,
+				container,
+				gitProvider,
+				registry,
+				body,
+				user,
+			} = req;
 
-			// Remove the data that cannot be updated
-			delete body._id;
-			delete body.iid;
-			delete body.orgId;
-			delete body.projectId;
-			delete body.environmentId;
-			delete body.type;
-			delete body.repoOrRegistry;
-			delete body.status;
-			delete body.pipelineStatus;
-			delete body.createdBy;
-			delete body.createdAt;
-			delete body.updatedAt;
-			delete body.updatedBy;
-
-			// We need to set this value to the existing value because it cannot be updated
-			body.repo.webHookId = container.repo.webHookId;
+			// We need to set this value to the existing value because it cannot be updated if source is repo
+			if (container.repoOrRegistry === "repo")
+				body.repo.webHookId = container.repo.webHookId;
 
 			// We do not support update for following values yet, make sure they are not updated
 			if (container.cronJobConfig && body.cronJobConfig) {
@@ -250,6 +282,7 @@ router.put(
 					container.statefulSetConfig.podManagementPolicy;
 			}
 
+			// We do not support update for following values yet, make sure they are not updated
 			if (container.deploymentConfig && body.deploymentConfig) {
 				body.deploymentConfig.strategy = container.deploymentConfig.strategy;
 				body.deploymentConfig.rollingUpdate =
@@ -262,7 +295,7 @@ router.put(
 				// If there already a port number assignment then use it otherwise generate a new one
 				body.networking.tcpProxy.publicPort =
 					container.networking.tcpProxy.publicPort ??
-					(await helper.getNewTCPPortNumber());
+					(await getNewTCPPortNumber());
 			}
 
 			// Once a stateful set is created, some storage properties cannot be changed
@@ -279,7 +312,16 @@ router.put(
 				}
 			}
 
-			if (!body.repo.connected) body.pipelineStatus = "Disconnected";
+			if (container.repoOrRegistry === "repo" && !body.repo.connected)
+				body.pipelineStatus = "Not Connected";
+
+			// Remove the unnecessary data
+			const unset = {};
+			if (body.repoOrRegistry === "repo") {
+				unset.registry = ""; // delete registry
+			} else {
+				unset.repo = ""; // delete repo
+			}
 
 			const updatedContainer = await cntrCtrl.updateOneById(
 				container._id,
@@ -287,7 +329,7 @@ router.put(
 					...body,
 					updatedBy: user._id,
 				},
-				{},
+				unset,
 				{
 					cacheKey: container._id,
 				}
@@ -298,24 +340,8 @@ router.put(
 				container: updatedContainer,
 				environment,
 				gitProvider,
-				changes: {
-					containerPort:
-						container.networking.containerPort !==
-						updatedContainer.networking.containerPort,
-					customDomain:
-						container.networking.customDomain.domain !==
-						updatedContainer.networking.customDomain.domain,
-					gitRepo:
-						container.repo.type !== updatedContainer.repo.type ||
-						container.repo.connected !== updatedContainer.repo.connected ||
-						container.repo.name !== updatedContainer.repo.name ||
-						container.repo.url !== updatedContainer.repo.url ||
-						container.repo.branch !== updatedContainer.repo.branch ||
-						container.repo.path !== updatedContainer.repo.path ||
-						container.repo.dockerfile !== updatedContainer.repo.dockerfile ||
-						container.repo.gitProviderId?.toString() !==
-							updatedContainer.repo.gitProviderId?.toString(),
-				},
+				registry,
+				changes: getValueChanges(container, updatedContainer), // Get the list of the fields that have changed
 				action: "update",
 			});
 
@@ -327,7 +353,7 @@ router.put(
 				user,
 				"org.project.environment.container",
 				"update",
-				`Updated '${body.type}' named '${body.name}'`,
+				`Updated '${container.type}' named '${body.name}'`,
 				updatedContainer,
 				{
 					orgId: org._id,
@@ -377,7 +403,7 @@ router.delete(
 			});
 
 			let gitProvider = null;
-			if (container.repo.gitProviderId) {
+			if (container.repoOrRegistry === "repo" && container.repo.gitProviderId) {
 				gitProvider = await gitCtrl.getOneById(container.repo.gitProviderId);
 
 				if (gitProvider?.accessToken)
@@ -432,7 +458,6 @@ router.delete(
 router.get(
 	"/:containerId/pods",
 	authSession,
-
 	validateOrg,
 	validateProject,
 	validateEnvironment,
@@ -484,7 +509,6 @@ router.get(
 router.get(
 	"/:containerId/logs",
 	authSession,
-
 	validateOrg,
 	validateProject,
 	validateEnvironment,
@@ -510,7 +534,6 @@ router.get(
 router.get(
 	"/:containerId/pipelines",
 	authSession,
-
 	validateOrg,
 	validateProject,
 	validateEnvironment,
@@ -536,7 +559,6 @@ router.get(
 router.get(
 	"/:containerId/pipelines/:pipelineName",
 	authSession,
-
 	validateOrg,
 	validateProject,
 	validateEnvironment,

@@ -7,7 +7,17 @@ kc.loadFromDefault();
 const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
 const k8sCustomObjectApi = kc.makeApiClient(k8s.CustomObjectsApi);
 
-// Payload includes container info and environment info
+/**
+ * Retrieves the pods associated with a container in a specific environment.
+ * @param {Object} options - The options for retrieving the pods.
+ * @param {Object} options.container - The container object.
+ * @param {string} options.container.type - The type of the container.
+ * @param {string} options.container.iid - The identifier of the container.
+ * @param {Object} options.environment - The environment object.
+ * @param {string} options.environment.iid - The identifier of the environment.
+ * @returns {Promise<Array<Object>>} - A promise that resolves to an array of pod objects.
+ * @throws {Error} - If there is an error retrieving the pods.
+ */
 export async function getContainerPods({ container, environment }) {
 	try {
 		const { body } = await k8sCoreApi.listNamespacedPod(environment.iid);
@@ -102,7 +112,19 @@ export async function getContainerPods({ container, environment }) {
 	}
 }
 
-// Payload includes container info and environment info
+/**
+ * Retrieves container events based on the provided container and environment.
+ *
+ * @param {Object} options - The options for retrieving container events.
+ * @param {Object} options.container - The container object.
+ * @param {string} options.container.iid - The ID of the container.
+ * @param {string} options.container.name - The name of the container.
+ * @param {string} options.container.type - The type of the container.
+ * @param {Object} options.environment - The environment object.
+ * @param {string} options.environment.iid - The ID of the environment.
+ * @returns {Array} - An array of container events.
+ * @throws {Error} - If there is an error retrieving the events.
+ */
 export async function getContainerEvents({ container, environment }) {
 	try {
 		const { body } = await k8sCoreApi.listNamespacedEvent(environment.iid);
@@ -136,14 +158,20 @@ export async function getContainerEvents({ container, environment }) {
 	}
 }
 
-// Payload includes container info and environment info
+/**
+ * Retrieves the container logs for a given container and environment.
+ * @param {Object} options - The options for retrieving container logs.
+ * @param {Object} options.container - The container object.
+ * @param {Object} options.environment - The environment object.
+ * @returns {Promise<Object>} - A promise that resolves to an object containing the pods and their logs.
+ * @throws {Error} - If there is an error retrieving the logs.
+ */
 export async function getContainerLogs({ container, environment }) {
 	try {
-		const { status, payload } = await getContainerPods({
+		const payload = await getContainerPods({
 			container,
 			environment,
 		});
-		if (status === "error") return { pods: [], logs: [] };
 
 		// For each pod we need to get the logs
 		const logPromises = payload.map((pod) => {
@@ -174,7 +202,15 @@ export async function getContainerLogs({ container, environment }) {
 	}
 }
 
-// Payload includes container info
+/**
+ * Retrieves the container task runs based on the provided container information.
+ * @param {Object} container - The container object containing the container information.
+ * @param {string} container.iid - The identifier of the container.
+ * @param {string} container.type - The type of the container.
+ * @param {string} container.name - The name of the container.
+ * @returns {Array} An array of task runs associated with the container.
+ * @throws {Error} If there is an error retrieving the task runs.
+ */
 export async function getContainerTaskRuns({ container }) {
 	try {
 		const { body } = await k8sCustomObjectApi.listNamespacedCustomObject(
@@ -254,7 +290,16 @@ export async function getContainerTaskRuns({ container }) {
 	}
 }
 
-// Payload includes container info and environment info
+/**
+ * Retrieves the logs of a task run.
+ * @param {Object} options - The options for retrieving the logs.
+ * @param {Object} options.container - The container information.
+ * @param {string} options.container.type - The type of the container.
+ * @param {string} options.container.name - The name of the container.
+ * @param {string} options.taskRunName - The name of the task run.
+ * @returns {Promise<Array<Object>>} - A promise that resolves to an array of step information objects.
+ * @throws {Error} - If there is an error retrieving the logs.
+ */
 export async function getTaskRunLogs({ container, taskRunName }) {
 	try {
 		// Get the pod information
@@ -325,6 +370,15 @@ export async function getTaskRunLogs({ container, taskRunName }) {
 	}
 }
 
+/**
+ * Retrieves step information for a given pod, container, and step name.
+ *
+ * @param {string} podName - The name of the pod.
+ * @param {string} containerName - The name of the container.
+ * @param {string} stepName - The name of the step.
+ * @param {object} containerStatus - The status of the container.
+ * @returns {Promise<object>} - A promise that resolves to an object containing the step information.
+ */
 async function getStepInfo(podName, containerName, stepName, containerStatus) {
 	let status = "pending";
 	if (containerStatus) {

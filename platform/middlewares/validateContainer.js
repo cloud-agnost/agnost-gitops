@@ -8,7 +8,9 @@ export const validateContainer = async (req, res, next) => {
 		const { containerId } = req.params;
 
 		// Get the container object
-		let container = await cntrCtrl.getOneById(containerId);
+		let container = await cntrCtrl.getOneById(containerId, {
+			cacheKey: containerId,
+		});
 
 		if (!container) {
 			return res.status(404).json({

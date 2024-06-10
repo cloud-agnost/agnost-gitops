@@ -16,5 +16,6 @@ const ERROR_CODES = {
 	unauthorized: "unauthorized",
 	notFound: "not_found",
 	fileSizeTooLarge: "file_size_too_large",
+	badRequest: "bad_request",
 };
 export default ERROR_CODES;

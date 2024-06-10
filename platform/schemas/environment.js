@@ -1,6 +1,7 @@
 import config from "config";
 import mongoose from "mongoose";
 import { body } from "express-validator";
+import { getK8SResource } from "../handlers/util.js";
 
 /**
  * An project environment is where containers are deployed and run. It can be a development, staging, or production environment.
@@ -84,28 +85,46 @@ export const applyRules = (type) => {
 							"general.maxTextLength"
 						)} characters long`
 					)
+					.bail()
+					.matches(
+						/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
+					)
+					.withMessage(
+						"Environment name can only contain lowercase alphanumeric characters, hyphens and dots, and cannot start or end with a hyphen or dot"
+					)
+					.bail()
 					.custom(async (value, { req }) => {
 						let environments = await ProjectEnvModel.find({
-							projectId: req.project._id,
+							$or: [{ name: value }, { iid: value }],
 						});
 						environments.forEach((environment) => {
 							if (
-								environment.name.toLowerCase() === value.toLowerCase() &&
+								(environment.name.toLowerCase() === value.toLowerCase() ||
+									environment.iid === value.toLowerCase()) &&
 								type === "create"
 							)
 								throw new Error(
-									"Environment with the provided name already exists"
+									"Environment with the provided name or internal identifier already exists"
 								);
 
 							if (
-								environment.name.toLowerCase() === value.toLowerCase() &&
+								(environment.name.toLowerCase() === value.toLowerCase() ||
+									environment.iid === value.toLowerCase()) &&
 								type === "update" &&
 								req.environment._id.toString() !== environment._id.toString()
 							)
 								throw new Error(
-									"Environment with the provided name already exists"
+									"Environment with the provided name or internal identifier already exists"
 								);
 						});
+
+						const namespace = await getK8SResource("Namespace", value);
+						if (namespace) {
+							throw new Error(
+								"A Kubernetes namespace with the provided environment name already exists within the cluster"
+							);
+						}
+
 						return true;
 					}),
 				body("private")

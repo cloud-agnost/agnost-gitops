@@ -8,6 +8,7 @@ import {
 } from "../config/constants.js";
 import userCtrl from "../controllers/user.js";
 import { isValidGitProviderAccessToken } from "../handlers/git.js";
+import { getK8SResource } from "../handlers/util.js";
 import helper from "../util/helper.js";
 
 /**
@@ -150,7 +151,25 @@ export const applyRules = (type) => {
 						`Name must be at most ${config.get(
 							"general.maxTextLength"
 						)} characters long`
-					),
+					)
+					.bail()
+					.matches(
+						/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
+					)
+					.withMessage(
+						"Environment name can only contain lowercase alphanumeric characters, hyphens and dots, and cannot start or end with a hyphen or dot"
+					)
+					.bail()
+					.custom(async (value, { req }) => {
+						const namespace = await getK8SResource("Namespace", value);
+						if (namespace) {
+							throw new Error(
+								"A Kubernetes namespace with the provided environment name already exists within the cluster"
+							);
+						}
+
+						return true;
+					}),
 			];
 		case "update-name":
 			return [

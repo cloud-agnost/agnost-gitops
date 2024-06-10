@@ -180,7 +180,7 @@ export async function deleteStatefulSetPVC(
 	);
 	// Filter the PVCs that belong to the stateful set
 	const pvcList = body.items.filter((pvc) => pvc.metadata.name.includes(name));
-	// For each PVC update the storage capacity
+	// Delete the PVCs
 	for (const pvc of pvcList) {
 		const { metadata } = pvc;
 		await deletePVC(metadata.name, namespace);

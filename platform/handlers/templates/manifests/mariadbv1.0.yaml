@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+type: Opaque
+stringData:
+  username: {{secrets.username}}
+  password: {{secrets.password}}
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  serviceName: {{iid}}
+  replicas: 1
+  updateStrategy:
+    type: {{statefulSetConfig.strategy}}
+    rollingUpdate:
+      maxUnavailable: {{statefulSetConfig.rollingUpdate.maxUnavailable}}
+      partition: {{statefulSetConfig.rollingUpdate.partition}}
+  revisionHistoryLimit: {{statefulSetConfig.revisionHistoryLimit}}
+  podManagementPolicy: {{statefulSetConfig.podManagementPolicy}}
+  persistentVolumeClaimRetentionPolicy: 
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      app: {{iid}}
+  template:
+    metadata:
+      labels:
+        app: {{iid}}
+    spec:
+      containers:
+      - name: mariadb
+        image: {{registry.imageUrl}}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3306
+          name: mariadb
+        resources:
+          requests:
+            memory: {{podConfig.memoryRequest}}{{podConfig.memoryRequestType}}
+            cpu: {{podConfig.cpuRequest}}{{podConfig.cpuRequestType}}
+          limits:
+            memory: {{podConfig.memoryLimit}}{{podConfig.memoryLimitType}}
+            cpu: {{podConfig.cpuLimit}}{{podConfig.cpuLimitType}}
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: password
+        livenessProbe:
+          tcpSocket:
+            port: 3306
+          failureThreshold: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 6
+        readinessProbe:
+          tcpSocket:
+            port: 3306
+          failureThreshold: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 6
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: {{storageConfig.size}}{{storageConfig.sizeType}}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{iid}}-headless
+  namespace: {{namespace}}
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+    name: mariadb
+  clusterIP: None
+  selector:
+    app: {{iid}}
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3306
+    targetPort: 3306
+    name: minio
+  selector:
+    app: {{iid}}

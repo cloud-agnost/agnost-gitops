@@ -8,6 +8,7 @@ import gitCtrl from "../../controllers/gitProvider.js";
 import regCtrl from "../../controllers/registry.js";
 import { timezones } from "../../config/timezones.js";
 import helper from "../../util/helper.js";
+import { isClusterPubliclyAccessible } from "../../handlers/util.js";
 
 export const checkName = (containerType, actionType) => {
 	return [
@@ -25,34 +26,38 @@ export const checkName = (containerType, actionType) => {
 					"general.minNameLength"
 				)} and maximum ${config.get("general.maxTextLength")} characters long`
 			)
+			.bail()
+			.matches(
+				/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
+			)
+			.withMessage(
+				"Container name can only contain lowercase alphanumeric characters, hyphens and dots, and cannot start or end with a hyphen or dot"
+			)
+			.bail()
 			.custom(async (value, { req }) => {
 				let containers = await cntrCtrl.getManyByQuery({
 					environmentId: req.environment._id,
 				});
 				containers.forEach((container) => {
 					if (
-						container.name.toLowerCase() === value.toLowerCase() &&
+						(container.name.toLowerCase() === value.toLowerCase() ||
+							container.iid === value.toLowerCase()) &&
 						actionType === "create"
 					)
 						throw new Error(
-							`A ${containerType} with the provided name already exists`
+							`A container with the provided name or internal identifier already exists`
 						);
 
 					if (
-						container.name.toLowerCase() === value.toLowerCase() &&
+						(container.name.toLowerCase() === value.toLowerCase() ||
+							container.iid === value.toLowerCase()) &&
 						actionType === "update" &&
 						req.container._id.toString() !== container._id.toString()
 					)
 						throw new Error(
-							`A ${containerType} with the provided name already exists`
+							`A container with the provided name or internal identifier already exists`
 						);
 				});
-
-				if (value.toLowerCase() === "this") {
-					throw new Error(
-						`'${value}' is a reserved keyword and cannot be used as version name`
-					);
-				}
 
 				return true;
 			}),
@@ -79,7 +84,7 @@ export const checkRegistry = () => {
 			.notEmpty()
 			.withMessage("Required field, cannot be left empty")
 			.bail()
-			.custom(async (value) => {
+			.custom(async (value, { req }) => {
 				if (!helper.isValidId(value)) {
 					throw new Error("Invalid registry id");
 				}
@@ -88,6 +93,8 @@ export const checkRegistry = () => {
 				if (!registry) {
 					throw new Error("Registry record not found");
 				}
+
+				req.registry = registry;
 				return true;
 			}),
 		body("registry.imageName")
@@ -208,7 +215,10 @@ export const checkRepo = () => {
 		body("repo.gitProviderId")
 			.if(
 				(value, { req }) =>
-					req.body.repoOrRegistry === "repo" && req.body.repo.connected
+					(req.body.repoOrRegistry === "repo" && req.body.repo.connected) ||
+					(req.body.repoOrRegistry === "repo" &&
+						!req.body.repo.connected &&
+						req.container.repo.connected)
 			)
 			.trim()
 			.notEmpty()
@@ -218,6 +228,7 @@ export const checkRepo = () => {
 				if (!helper.isValidId(value)) {
 					throw new Error("Invalid Git provider id");
 				}
+
 				const gitProvider = await gitCtrl.getOneByQuery({
 					_id: value,
 				});
@@ -278,7 +289,29 @@ export const checkNetworking = (containerType, actionType) => {
 					.bail()
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
+					.bail()
 					.toBoolean(),
+				body("networking.ingress.type")
+					.if((value, { req }) => req.body.networking.ingress.enabled === true)
+					.trim()
+					.toLowerCase() // convert the value to lowercase
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty")
+					.bail()
+					.isIn(["path", "subdomain"])
+					.withMessage("Unsupported ingress type")
+					.bail()
+					.custom(async (value) => {
+						if (
+							!(await isClusterPubliclyAccessible()) &&
+							value === "subdomain"
+						) {
+							throw new Error(
+								`Your cluster IP addresses are private which are not routable on the internet. You cannot create a subdomain based ingress for a cluster which is not accessible outside of the cluster. Try creating a 'path' based ingress instead.`
+							);
+						}
+						return true;
+					}),
 				body("networking.customDomain.enabled")
 					.trim()
 					.notEmpty()
@@ -286,6 +319,15 @@ export const checkNetworking = (containerType, actionType) => {
 					.bail()
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
+					.bail()
+					.custom(async (value) => {
+						if (!(await isClusterPubliclyAccessible()) && value === true) {
+							throw new Error(
+								`Your cluster IP addresses are private which are not routable on the internet. You cannot create a custom domain based ingress for a cluster which is not accessible outside of the cluster.`
+							);
+						}
+						return true;
+					})
 					.toBoolean(),
 				body("networking.customDomain.domain")
 					.if(
@@ -318,9 +360,14 @@ export const checkNetworking = (containerType, actionType) => {
 						}
 
 						// Get the cluster object
-						const cluster = await clsCtrl.getOneByQuery({
-							clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-						});
+						const cluster = await clsCtrl.getOneByQuery(
+							{
+								clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+							},
+							{
+								cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+							}
+						);
 
 						if (cluster?.domains?.find((entry) => entry === value)) {
 							throw new Error(
@@ -1068,11 +1115,7 @@ export const checkProbes = () => {
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-/]*)$/)
-			.withMessage(
-				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
-			) // Remove trailing slashes using custom sanitizer
-			.customSanitizer((value) => value.replace(/\/+$/, "")),
+			.customSanitizer((value) => value.replace(/\/+$/, "")), // Remove trailing slashes using custom sanitizer
 		body("probes.startup.httpPort")
 			.if(
 				(value, { req }) =>
@@ -1176,11 +1219,7 @@ export const checkProbes = () => {
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-/]*)$/)
-			.withMessage(
-				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
-			) // Remove trailing slashes using custom sanitizer
-			.customSanitizer((value) => value.replace(/\/+$/, "")),
+			.customSanitizer((value) => value.replace(/\/+$/, "")), // Remove trailing slashes using custom sanitizer
 		body("probes.readiness.httpPort")
 			.if(
 				(value, { req }) =>
@@ -1283,11 +1322,7 @@ export const checkProbes = () => {
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-/]*)$/)
-			.withMessage(
-				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
-			) // Remove trailing slashes using custom sanitizer
-			.customSanitizer((value) => value.replace(/\/+$/, "")),
+			.customSanitizer((value) => value.replace(/\/+$/, "")), // Remove trailing slashes using custom sanitizer
 		body("probes.liveness.httpPort")
 			.if(
 				(value, { req }) =>

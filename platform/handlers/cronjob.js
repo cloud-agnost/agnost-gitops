@@ -3,7 +3,7 @@ import k8s from "@kubernetes/client-node";
 import path from "path";
 import yaml from "js-yaml";
 import { fileURLToPath } from "url";
-import { getK8SResource } from "./util.js";
+import { getK8SResource, getImage } from "./util.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Definition is container
-export async function createCronJob(definition, namespace) {
+export async function createCronJob(definition, namespace, registry) {
 	const manifest = fs.readFileSync(
 		`${__dirname}/manifests/cronjob.yaml`,
 		"utf8"
@@ -39,6 +39,7 @@ export async function createCronJob(definition, namespace) {
 	// Configure container
 	const container = spec.jobTemplate.spec.template.spec.containers[0];
 	container.name = definition.iid;
+	container.image = getImage(container.image, definition, registry);
 	container.resources.requests.cpu =
 		definition.podConfig.cpuRequestType === "millicores"
 			? `${definition.podConfig.cpuRequest}m`
@@ -93,7 +94,7 @@ export async function createCronJob(definition, namespace) {
 }
 
 // Definition is container
-export async function updateCronJob(definition, namespace) {
+export async function updateCronJob(definition, namespace, registry) {
 	const payload = await getK8SResource("CronJob", definition.iid, namespace);
 	const { metadata, spec } = payload.body;
 
@@ -114,6 +115,7 @@ export async function updateCronJob(definition, namespace) {
 	// Configure container
 	const container = spec.jobTemplate.spec.template.spec.containers[0];
 	container.name = definition.iid;
+	container.image = getImage(container.image, definition, registry);
 	container.resources.requests.cpu =
 		definition.podConfig.cpuRequestType === "millicores"
 			? `${definition.podConfig.cpuRequest}m`

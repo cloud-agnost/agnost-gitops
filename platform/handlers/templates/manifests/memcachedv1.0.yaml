@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 30%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {{iid}}
+  template:
+    metadata:
+      labels:
+        app: {{iid}}
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: memcached
+        image:  {{registry.imageUrl}}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 11211
+          name: memcached
+        resources:
+          requests:
+            memory: {{podConfig.memoryRequest}}{{podConfig.memoryRequestType}}
+            cpu: {{podConfig.cpuRequest}}{{podConfig.cpuRequestType}}
+          limits:
+            memory: {{podConfig.memoryLimit}}{{podConfig.memoryLimitType}}
+            cpu: {{podConfig.cpuLimit}}{{podConfig.cpuLimitType}}
+        livenessProbe:
+          tcpSocket:
+            port: 11211
+          failureThreshold: 5
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 6
+        readinessProbe:
+          tcpSocket:
+            port: 11211
+          failureThreshold: 5
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 2
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 11211
+    targetPort: 11211
+    name: minio
+  selector:
+    app: {{iid}}

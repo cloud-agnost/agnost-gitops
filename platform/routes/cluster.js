@@ -17,8 +17,10 @@ import {
 	updateEnforceSSLAccessSettings,
 } from "../handlers/ingress.js";
 import helper from "../util/helper.js";
+import { templates } from "../handlers/templates/index.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
+import e from "express";
 
 const router = express.Router({ mergeParams: true });
 
@@ -57,15 +59,74 @@ router.get("/info", authSession, async (req, res) => {
 		}
 
 		// Get cluster configuration
-		let cluster = await clsCtrl.getOneByQuery({
-			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-		});
+		let cluster = await clsCtrl.getOneByQuery(
+			{
+				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+			},
+			{
+				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+			}
+		);
 
 		res.json(cluster);
 	} catch (error) {
 		helper.handleError(req, res, error);
 	}
 });
+
+/*
+@route      /v1/cluster/templates
+@method     GET
+@desc       Returns the list of available container templates for the cluster
+@access     public
+*/
+router.get("/templates", authSession, async (req, res) => {
+	try {
+		// Only return the templates that have the latest version
+		let latestTemplates = templates.map((entry) => {
+			entry.templates = entry.templates.filter((template) => template.isLatest);
+			return entry;
+		});
+		res.json(latestTemplates);
+	} catch (error) {
+		helper.handleError(req, res, error);
+	}
+});
+
+/*
+@route      /v1/cluster/template?name=templateName&version=templateVersion
+@method     GET
+@desc       Returns info about a specific template
+@access     public
+*/
+router.get(
+	"/template",
+	authSession,
+	applyRules("get-template"),
+	validate,
+	async (req, res) => {
+		try {
+			const { name, version } = req.query;
+			for (const category of templates) {
+				console.log(category);
+				for (const template of category.templates) {
+					if (template.name === name && template.version === version) {
+						return res.json(template);
+					}
+				}
+			}
+
+			res.status(404).json({
+				error: "Not Found",
+				details:
+					"The container template with the provided name and version cannot be found.",
+				code: ERROR_CODES.notFound,
+			});
+		} catch (error) {
+			helper.handleError(req, res, error);
+		}
+	}
+);
 
 /*
 @route      /v1/cluster/status
@@ -76,9 +137,14 @@ router.get("/info", authSession, async (req, res) => {
 router.get("/status", authSession, async (req, res) => {
 	try {
 		// Get cluster configuration
-		let cluster = await clsCtrl.getOneByQuery({
-			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-		});
+		let cluster = await clsCtrl.getOneByQuery(
+			{
+				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+			},
+			{
+				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+			}
+		);
 
 		res.json(cluster.clusterResourceStatus);
 	} catch (error) {
@@ -95,9 +161,14 @@ router.get("/status", authSession, async (req, res) => {
 router.get("/release-info", authSession, async (req, res) => {
 	try {
 		// Get cluster configuration
-		const cluster = await clsCtrl.getOneByQuery({
-			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-		});
+		const cluster = await clsCtrl.getOneByQuery(
+			{
+				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+			},
+			{
+				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+			}
+		);
 
 		if (!cluster.release) {
 			return res.status(404).json({
@@ -187,9 +258,14 @@ router.put(
 			}
 
 			// Get cluster configuration
-			const cluster = await clsCtrl.getOneByQuery({
-				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-			});
+			const cluster = await clsCtrl.getOneByQuery(
+				{
+					clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+				},
+				{
+					cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+				}
+			);
 
 			const { release } = req.body;
 
@@ -269,6 +345,10 @@ router.put(
 				{
 					release: release,
 					releaseHistory: [...cluster.releaseHistory, { release: release }],
+				},
+				{},
+				{
+					cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
 				}
 			);
 
@@ -367,9 +447,16 @@ router.post(
 			}
 
 			// Update cluster domains information
-			let updatedCluster = await clsCtrl.updateOneById(cluster._id, {
-				domains: [...domains, domain],
-			});
+			let updatedCluster = await clsCtrl.updateOneById(
+				cluster._id,
+				{
+					domains: [...domains, domain],
+				},
+				{},
+				{
+					cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+				}
+			);
 
 			// Add the domain to the domain list
 			await domainCtrl.create({ domain });
@@ -445,6 +532,10 @@ router.delete(
 					// If there are no domains then we need to make sure the cluster is accessible via non-ssl
 					enforceSSLAccess:
 						updatedList.length === 0 ? false : cluster.enforceSSLAccess,
+				},
+				{},
+				{
+					cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
 				}
 			);
 
@@ -533,9 +624,16 @@ router.put(
 			}
 
 			// Update cluster SSL access information
-			let updatedCluster = await clsCtrl.updateOneById(cluster._id, {
-				enforceSSLAccess,
-			});
+			let updatedCluster = await clsCtrl.updateOneById(
+				cluster._id,
+				{
+					enforceSSLAccess,
+				},
+				{},
+				{
+					cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+				}
+			);
 
 			res.json(updatedCluster);
 		} catch (error) {

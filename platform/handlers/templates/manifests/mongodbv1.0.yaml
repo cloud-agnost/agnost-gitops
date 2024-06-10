@@ -1,0 +1,232 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+type: Opaque
+stringData:
+  username: {{secrets.username}}
+  password: {{secrets.password}}
+  keyfile: {{secrets.keyfile}}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+data:
+  mongod.conf: |
+    storage:
+      dbPath: /data/db
+    net:
+      bindIp: 0.0.0.0
+    replication:
+      replSetName: rs0
+    security:
+      authorization: enabled
+      keyFile: /etc/mongodb-keyfile/keyfile.txt
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{iid}}-init
+  namespace: {{namespace}}
+data:
+  mongod.conf: |
+    storage:
+      dbPath: /data/db
+    net:
+      bindIp: 0.0.0.0
+    replication:
+      replSetName: rs0
+      
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  serviceName: {{iid}}
+  replicas: 1
+  updateStrategy:
+    type: {{statefulSetConfig.strategy}}
+    rollingUpdate:
+      maxUnavailable: {{statefulSetConfig.rollingUpdate.maxUnavailable}}
+      partition: {{statefulSetConfig.rollingUpdate.partition}}
+  revisionHistoryLimit: {{statefulSetConfig.revisionHistoryLimit}}
+  podManagementPolicy: {{statefulSetConfig.podManagementPolicy}}
+  persistentVolumeClaimRetentionPolicy: 
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      app: {{iid}}
+  template:
+    metadata:
+      labels:
+        app: {{iid}}
+    spec:
+      containers:
+      - name: mongodb
+        image: {{registry.imageUrl}}
+        command:
+        - mongod
+        - "--config"
+        - "/config/mongod.conf"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+          name: mongod
+        resources:
+          requests:
+            memory: {{podConfig.memoryRequest}}{{podConfig.memoryRequestType}}
+            cpu: {{podConfig.cpuRequest}}{{podConfig.cpuRequestType}}
+          limits:
+            memory: {{podConfig.memoryLimit}}{{podConfig.memoryLimitType}}
+            cpu: {{podConfig.cpuLimit}}{{podConfig.cpuLimitType}}
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: password
+        livenessProbe:
+          tcpSocket:
+            port: 27017
+          failureThreshold: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 6
+        readinessProbe:
+          tcpSocket:
+            port: 27017
+          failureThreshold: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 6
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: data
+          mountPath: /data/db
+        - name: keyfile
+          mountPath: /etc/secrets
+          readOnly: true
+        - name: keyfile-copy
+          mountPath: /etc/mongodb-keyfile
+      initContainers:
+      - name: init
+        image: {{registry.imageUrl}}
+        command:
+        - bash
+        - -c
+        - >
+          cp /etc/secrets/keyfile.txt /etc/mongodb-keyfile/keyfile.txt &&
+          chmod 600 /etc/mongodb-keyfile/keyfile.txt &&
+          echo "Starting MongoDB..." &&
+          mongod --config /config/mongod.conf --fork --logpath /var/log/mongod.log --dbpath /data/db &&
+          echo "Started MongoDB..." &&
+          sleep 5 &&
+          RS_STATUS=$(mongosh --quiet --eval "rs.status().ok"); 
+          if [[ $RS_STATUS == 1 ]]; then
+            echo "MongoDB is already initialized.";
+          else
+            echo "Initializing MongoDB...";
+            mongosh --eval "rs.initiate({_id: 'rs0', members: [{ _id: 0, host: '{{iid}}-0.{{iid}}.{{namespace}}.svc.cluster.local:27017' }]})";
+            echo "MongoDB initialized.";
+          fi &&
+          USER_EXISTS=$(mongosh --eval "db.getSiblingDB('admin').getUser('${MONGO_INITDB_ROOT_USERNAME}')" --quiet) &&
+          if [[ $USER_EXISTS != "null" ]]; then
+            mongosh --eval "db.getSiblingDB('admin').dropUser('${MONGO_INITDB_ROOT_USERNAME}')";
+          fi &&
+          echo "Creating user..." &&
+          mongosh --eval "db.getSiblingDB('admin').createUser({user: '${MONGO_INITDB_ROOT_USERNAME}', pwd: '${MONGO_INITDB_ROOT_PASSWORD}', roles: [{role: 'root', db: 'admin'}]})" &&
+          echo "Shutting down..." &&
+          mongod --shutdown
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: password
+        volumeMounts:
+        - name: config-init
+          mountPath: /config
+        - name: data
+          mountPath: /data/db
+        - name: keyfile
+          mountPath: /etc/secrets
+        - name: keyfile-copy
+          mountPath: /etc/mongodb-keyfile
+      volumes:
+      - name: config
+        configMap:
+          name: {{iid}}
+      - name: config-init
+        configMap:
+          name: {{iid}}-init
+      - name: keyfile
+        secret:
+          secretName: {{iid}}
+          items:
+          - key: keyfile
+            path: keyfile.txt
+      - name: keyfile-copy
+        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: {{storageConfig.size}}{{storageConfig.sizeType}}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{iid}}-headless
+  namespace: {{namespace}}
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+    name: mongodb
+  clusterIP: None
+  selector:
+    app: {{iid}}
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{iid}}
+  namespace: {{namespace}}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+    name: minio
+  selector:
+    app: {{iid}}

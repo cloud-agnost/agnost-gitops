@@ -22,7 +22,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: dummy-container
-        image: traefik/whoami
+        image: docker.io/traefik/whoami
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4000

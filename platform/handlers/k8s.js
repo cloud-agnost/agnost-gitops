@@ -26,9 +26,31 @@ import {
 	deleteStatefulSet,
 } from "./statefulset.js";
 import { createCronJob, updateCronJob, deleteCronJob } from "./cronjob.js";
-import { sleep } from "../util/helper.js";
+import {
+	createTemplatedK8SResources,
+	deleteTemplatedK8SResources,
+	hasRepoChanges,
+	hasDeploymentChanges,
+	hasPVCChanges,
+	hasServiceChanges,
+	hasHPAChanges,
+	hasIngressChanges,
+	hasCustomDomainChanges,
+	hasTCPProxyChanges,
+	hasStatefulSetChanges,
+	hasCronJobChanges,
+} from "./util.js";
 
-// Payload includes container info, environment info and action
+/**
+ * Manages the container based on the payload.
+ *
+ * @param {object} payload - The payload containing information about the container.
+ * @param {object} payload.container - The container object.
+ * @param {string} payload.container.type - The type of the container (e.g., "deployment", "statefulset", "cronjob").
+ * @param {string} payload.container.name - The name of the container.
+ * @param {string} payload.action - The action to perform on the container.
+ * @throws {Error} If an error occurs while managing the container.
+ */
 export async function manageContainer(payload) {
 	try {
 		if (payload.container.type === "deployment") {
@@ -42,15 +64,29 @@ export async function manageContainer(payload) {
 		throw new Error(
 			`Cannot ${payload.action} the ${payload.container.type} named '${
 				payload.container.name
-			}''. ${err.response?.body?.message ?? err.message}`
+			}'. ${err.response?.body?.message ?? err.message}`
 		);
 	}
 }
 
+/**
+ * Manages the deployment of a container in a Kubernetes cluster.
+ *
+ * @param {Object} options - The options for managing the deployment.
+ * @param {Object} options.container - The container configuration.
+ * @param {Object} options.environment - The environment configuration.
+ * @param {Object} options.gitProvider - The Git provider configuration.
+ * @param {Object} options.registry - The container registry configuration.
+ * @param {Object} options.changes - The changes made to the container configuration.
+ * @param {string} options.action - The action to perform (create, update, delete).
+ * @returns {Promise<void>} - A promise that resolves when the deployment is managed successfully.
+ * @throws {Error} - If an error occurs during the deployment management process.
+ */
 async function manageDeployment({
 	container,
 	environment,
 	gitProvider,
+	registry,
 	changes,
 	action,
 }) {
@@ -65,46 +101,53 @@ async function manageDeployment({
 					err.response?.body?.message ?? err.message
 				}`
 			);
-			await deleteTektonPipeline(container, environment, gitProvider);
+			await deleteTektonPipeline(container, gitProvider);
 			throw err;
 		}
 		await createPVC(container.storageConfig, name, namespace);
 		await createService(container.networking, name, namespace);
-		await createDeployment(container, namespace);
+		await createDeployment(container, namespace, registry);
 		await createHPA(container.deploymentConfig, name, namespace);
 	} else if (action === "update") {
-		if (changes.gitRepo) {
-			await deleteTektonPipeline(container, environment, gitProvider);
+		if (hasRepoChanges(changes)) {
+			await deleteTektonPipeline(container, gitProvider);
 			try {
 				await createTektonPipeline(container, environment, gitProvider);
 			} catch (err) {
-				await deleteTektonPipeline(container, environment, gitProvider);
+				await deleteTektonPipeline(container, gitProvider);
 				throw err;
 			}
 		}
-		await updateDeployment(container, namespace);
-		await updatePVC(container.storageConfig, name, namespace);
-		await updateService(container.networking, name, namespace);
-		await updateHPA(container.deploymentConfig, name, namespace);
-		await updateIngress(
-			container.networking,
-			changes.containerPort,
-			name,
-			namespace
-		);
-		await updateCustomDomainIngress(
-			container.networking,
-			changes.containerPort,
-			changes.customDomain,
-			name,
-			namespace
-		);
-		await updateTCPProxy(
-			container.networking,
-			changes.containerPort,
-			name,
-			namespace
-		);
+		if (hasDeploymentChanges(changes))
+			await updateDeployment(container, namespace, registry);
+		if (hasPVCChanges(changes))
+			await updatePVC(container.storageConfig, name, namespace);
+		if (hasServiceChanges(changes))
+			await updateService(container.networking, name, namespace);
+		if (hasHPAChanges(changes))
+			await updateHPA(container.deploymentConfig, name, namespace);
+		if (hasIngressChanges(changes))
+			await updateIngress(
+				container.networking,
+				changes.containerPort,
+				name,
+				namespace
+			);
+		if (hasCustomDomainChanges(changes))
+			await updateCustomDomainIngress(
+				container.networking,
+				changes.containerPort,
+				changes.customDomain,
+				name,
+				namespace
+			);
+		if (hasTCPProxyChanges(changes))
+			await updateTCPProxy(
+				container.networking,
+				changes.containerPort,
+				name,
+				namespace
+			);
 	} else if (action === "delete") {
 		await deleteDeployment(name, namespace);
 		await deleteHPA(name, namespace);
@@ -113,100 +156,163 @@ async function manageDeployment({
 		await deleteIngress(`${name}-cluster`, namespace);
 		await deleteCustomDomainIngress(`${name}-domain`, namespace);
 		await deleteTCPProxy(
-			container.networking.tcpProxy.enabled
+			container.networking.tcpProxy?.enabled
 				? container.networking.tcpProxy.publicPort
 				: null
 		);
-		await deleteTektonPipeline(container, environment, gitProvider);
+		await deleteTektonPipeline(container, gitProvider);
 	}
 }
 
+/**
+ * Manages the stateful set based on the provided parameters.
+ *
+ * @param {Object} options - The options for managing the stateful set.
+ * @param {Object} options.container - The container information.
+ * @param {Object} options.environment - The environment information.
+ * @param {Object} options.gitProvider - The git provider information.
+ * @param {Object} options.registry - The registry information.
+ * @param {Object} options.changes - The changes information.
+ * @param {string} options.action - The action to perform (create, update, delete).
+ * @returns {Promise<void>} - A promise that resolves when the stateful set is managed.
+ */
 async function manageStatefulSet({
 	container,
 	environment,
 	gitProvider,
+	registry,
 	changes,
 	action,
 }) {
 	const name = container.iid;
 	const namespace = environment.iid;
 	if (action === "create") {
-		try {
-			await createTektonPipeline(container, environment, gitProvider);
-		} catch (err) {
-			console.error(
-				`Cannot create the build pipeline for statefulset '${name}' in namespace ${namespace}. ${
-					err.response?.body?.message ?? err.message
-				}`
-			);
-			await deleteTektonPipeline(container, environment, gitProvider);
-			throw err;
-		}
-		await createService(container.networking, name, namespace, true);
-		// Statefulset creates its own PVCs, no need to make a call to createPVC
-		await createStatefulSet(container, namespace);
-	} else if (action === "update") {
-		if (changes.gitRepo) {
-			await deleteTektonPipeline(container, environment, gitProvider);
+		// Creating containers from a template has a different flow
+		if (container.template?.name) {
+			await createTemplatedK8SResources(container, environment);
+		} else {
 			try {
 				await createTektonPipeline(container, environment, gitProvider);
 			} catch (err) {
-				await deleteTektonPipeline(container, environment, gitProvider);
+				console.error(
+					`Cannot create the build pipeline for statefulset '${name}' in namespace ${namespace}. ${
+						err.response?.body?.message ?? err.message
+					}`
+				);
+				await deleteTektonPipeline(container, gitProvider);
+				throw err;
+			}
+			// Create both a ClusterIP and a headless service for the statefulset
+			await createService(container.networking, name, namespace);
+			await createService(
+				container.networking,
+				`${name}-headless`,
+				namespace,
+				true
+			);
+			// Statefulset creates its own PVCs, no need to make a call to createPVC
+			await createStatefulSet(container, namespace, registry);
+		}
+	} else if (action === "update") {
+		if (hasRepoChanges(changes)) {
+			await deleteTektonPipeline(container, gitProvider);
+			try {
+				await createTektonPipeline(container, environment, gitProvider);
+			} catch (err) {
+				await deleteTektonPipeline(container, gitProvider);
 				throw err;
 			}
 		}
-		await updateStatefulSet(container, namespace);
-		await updateService(container.networking, name, namespace);
-		await updateIngress(
-			container.networking,
-			changes.containerPort,
-			name,
-			namespace
-		);
-		await updateCustomDomainIngress(
-			container.networking,
-			changes.containerPort,
-			changes.customDomain,
-			name,
-			namespace
-		);
-		await updateTCPProxy(
-			container.networking,
-			changes.containerPort,
-			name,
-			namespace
-		);
-		await sleep(2000);
-		await updateStatefulSetPVC(
-			container.storageConfig,
-			container.statefulSetConfig,
-			name,
-			namespace
-		);
+		if (hasStatefulSetChanges(changes))
+			await updateStatefulSet(container, namespace, registry);
+		if (hasServiceChanges(changes)) {
+			await updateService(container.networking, name, namespace);
+			await updateService(container.networking, `${name}-headless`, namespace);
+		}
+		if (hasIngressChanges(changes))
+			await updateIngress(
+				container.networking,
+				changes.containerPort,
+				name,
+				namespace
+			);
+		if (hasCustomDomainChanges(changes))
+			await updateCustomDomainIngress(
+				container.networking,
+				changes.containerPort,
+				changes.customDomain,
+				name,
+				namespace
+			);
+		if (hasTCPProxyChanges(changes))
+			await updateTCPProxy(
+				container.networking,
+				changes.containerPort,
+				name,
+				namespace
+			);
+		if (hasPVCChanges(changes))
+			await updateStatefulSetPVC(
+				container.storageConfig,
+				container.statefulSetConfig,
+				name,
+				namespace
+			);
 	} else if (action === "delete") {
-		await deleteStatefulSet(name, namespace);
-		await deleteService(name, namespace);
-		await deleteIngress(`${name}-cluster`, namespace);
-		await deleteCustomDomainIngress(`${name}-domain`, namespace);
-		await deleteTCPProxy(
-			container.networking.tcpProxy.enabled
-				? container.networking.tcpProxy.publicPort
-				: null
-		);
-		await deleteTektonPipeline(container, environment, gitProvider);
-		await deleteStatefulSetPVC(
-			container.storageConfig,
-			container.statefulSetConfig,
-			name,
-			namespace
-		);
+		if (container.template?.name) {
+			await deleteTemplatedK8SResources(container, environment);
+			await deleteIngress(`${name}-cluster`, namespace);
+			await deleteCustomDomainIngress(`${name}-domain`, namespace);
+			await deleteTCPProxy(
+				container.networking.tcpProxy?.enabled
+					? container.networking.tcpProxy.publicPort
+					: null
+			);
+			await deleteStatefulSetPVC(
+				container.storageConfig,
+				container.statefulSetConfig,
+				name,
+				namespace
+			);
+		} else {
+			await deleteStatefulSet(name, namespace);
+			await deleteService(name, namespace);
+			await deleteService(`${name}-headless`, namespace);
+			await deleteIngress(`${name}-cluster`, namespace);
+			await deleteCustomDomainIngress(`${name}-domain`, namespace);
+			await deleteTCPProxy(
+				container.networking.tcpProxy?.enabled
+					? container.networking.tcpProxy.publicPort
+					: null
+			);
+			await deleteTektonPipeline(container, gitProvider);
+			await deleteStatefulSetPVC(
+				container.storageConfig,
+				container.statefulSetConfig,
+				name,
+				namespace
+			);
+		}
 	}
 }
 
+/**
+ * Manages the CronJob based on the provided action.
+ *
+ * @param {Object} options - The options for managing the CronJob.
+ * @param {Object} options.container - The container object.
+ * @param {Object} options.environment - The environment object.
+ * @param {Object} options.gitProvider - The git provider object.
+ * @param {Object} options.registry - The registry object.
+ * @param {Object} options.changes - The changes object.
+ * @param {string} options.action - The action to perform (create, update, delete).
+ * @returns {Promise<void>} - A Promise that resolves when the CronJob is managed.
+ */
 async function manageCronJob({
 	container,
 	environment,
 	gitProvider,
+	registry,
 	changes,
 	action,
 }) {
@@ -221,26 +327,28 @@ async function manageCronJob({
 					err.response?.body?.message ?? err.message
 				}`
 			);
-			await deleteTektonPipeline(container, environment, gitProvider);
+			await deleteTektonPipeline(container, gitProvider);
 			throw err;
 		}
 		await createPVC(container.storageConfig, name, namespace);
-		await createCronJob(container, namespace);
+		await createCronJob(container, namespace, registry);
 	} else if (action === "update") {
-		if (changes.gitRepo) {
-			await deleteTektonPipeline(container, environment, gitProvider);
+		if (hasRepoChanges(changes)) {
+			await deleteTektonPipeline(container, gitProvider);
 			try {
 				await createTektonPipeline(container, environment, gitProvider);
 			} catch (err) {
-				await deleteTektonPipeline(container, environment, gitProvider);
+				await deleteTektonPipeline(container, gitProvider);
 				throw err;
 			}
 		}
-		await updateCronJob(container, namespace);
-		await updatePVC(container.storageConfig, name, namespace);
+		if (hasCronJobChanges(changes))
+			await updateCronJob(container, namespace, registry);
+		if (hasPVCChanges(changes))
+			await updatePVC(container.storageConfig, name, namespace);
 	} else if (action === "delete") {
 		await deleteCronJob(name, namespace);
 		await deletePVC(name, namespace);
-		await deleteTektonPipeline(container, environment, gitProvider);
+		await deleteTektonPipeline(container, gitProvider);
 	}
 }

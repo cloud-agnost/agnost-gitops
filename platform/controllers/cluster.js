@@ -6,8 +6,10 @@ import prjCtrl from "./project.js";
 import prjEnvCtrl from "./environment.js";
 import regCtrl from "./registry.js";
 import helper from "../util/helper.js";
-
-import { getClusterIPs } from "../handlers/cluster.js";
+import {
+	getClusterIPs,
+	initializeClusterCertificateIssuer,
+} from "../handlers/cluster.js";
 
 class ClusterController extends BaseController {
 	constructor() {
@@ -17,11 +19,23 @@ class ClusterController extends BaseController {
 	async initializeCluster(session, user) {
 		// Check if there is already a cluster configuration or not
 		// If there is a configuration this means that the cluster has already been initialized
-		const cluster = await this.getOneByQuery({
-			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-		});
+		const cluster = await this.getOneByQuery(
+			{
+				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+			},
+			{
+				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+			}
+		);
 
 		if (cluster) return;
+
+		// Get the cluster IPs and check if there are public IPs
+		const ips = await getClusterIPs();
+		const publicIps = ips.filter((ip) => !helper.isPrivateIP(ip));
+
+		// Initialize the cluster certificate issuer if there are public IPs for the cluster
+		if (publicIps.length > 0) await initializeClusterCertificateIssuer();
 
 		// Save cluster config to the database
 		await this.create(
@@ -35,7 +49,7 @@ class ClusterController extends BaseController {
 				ips: await getClusterIPs(),
 				createdBy: user._id,
 			},
-			{ session }
+			{ session, cacheKey: process.env.CLUSTER_ACCESS_TOKEN }
 		);
 
 		// Create the public image registry

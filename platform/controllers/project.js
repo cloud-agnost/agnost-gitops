@@ -43,7 +43,7 @@ class ProjectController extends BaseController {
 				_id: environmentId,
 				orgId: org._id,
 				projectId: project._id,
-				iid: helper.generateSlug("env"),
+				iid: envName, //helper.generateSlug("env")
 				name: envName,
 				private: false,
 				readOnly: true,

@@ -2,6 +2,8 @@ import config from "config";
 import mongoose from "mongoose";
 import { body, param, query } from "express-validator";
 import { projectRoles } from "../config/constants.js";
+import { ProjectEnvModel } from "./environment.js";
+import { getK8SResource } from "../handlers/util.js";
 import helper from "../util/helper.js";
 
 /**
@@ -139,7 +141,35 @@ export const applyRules = (type) => {
 						)} and maximum ${config.get(
 							"general.maxTextLength"
 						)} characters long`
-					),
+					)
+					.bail()
+					.matches(
+						/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
+					)
+					.withMessage(
+						"Environment name can only contain lowercase alphanumeric characters, hyphens and dots, and cannot start or end with a hyphen or dot"
+					)
+					.bail()
+					.custom(async (value, { req }) => {
+						let environment = await ProjectEnvModel.findOne({
+							iid: value,
+						});
+
+						if (environment) {
+							throw new Error(
+								"Environment with the provided name or internal identifier already exists within the cluster"
+							);
+						}
+
+						const namespace = await getK8SResource("Namespace", value);
+						if (namespace) {
+							throw new Error(
+								"A Kubernetes namespace with the provided environment name already exists within the cluster"
+							);
+						}
+
+						return true;
+					}),
 			];
 		case "update-member-role":
 			return [

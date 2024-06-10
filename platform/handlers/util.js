@@ -1,5 +1,9 @@
+import fs from "fs";
 import k8s from "@kubernetes/client-node";
+import path from "path";
+import { fileURLToPath } from "url";
 import clsCtrl from "../controllers/cluster.js";
+import helper from "../util/helper.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
@@ -10,6 +14,10 @@ const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
 const k8sAutoscalingApi = kc.makeApiClient(k8s.AutoscalingV2Api);
 const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
 const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
+const k8sAuthApi = kc.makeApiClient(k8s.RbacAuthorizationV1Api);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Retrieves the cluster record from the database.
@@ -17,9 +25,31 @@ const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
  */
 export async function getClusterRecord() {
 	// Get cluster configuration
-	return await clsCtrl.getOneByQuery({
-		clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-	});
+	return await clsCtrl.getOneByQuery(
+		{
+			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+		},
+		{
+			cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+		}
+	);
+}
+
+/**
+ * Checks if the cluster is publicly accessible.
+ * @returns {Promise<boolean>} A promise that resolves to a boolean indicating if the cluster is publicly accessible.
+ */
+export async function isClusterPubliclyAccessible() {
+	const cluster = await getClusterRecord();
+
+	for (let i = 0; i < cluster.ips.length; i++) {
+		// Means that there is at least one IP address that is not private
+		if (helper.isPrivateIP(cluster.ips[i]) === false) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 export function getProbeConfig(config) {
@@ -48,6 +78,13 @@ export function getProbeConfig(config) {
 	}
 }
 
+/**
+ * Retrieves a Kubernetes resource based on the provided kind, name, and namespace.
+ * @param {string} kind - The kind of the Kubernetes resource.
+ * @param {string} name - The name of the Kubernetes resource.
+ * @param {string} namespace - The namespace of the Kubernetes resource.
+ * @returns {Promise<object|null>} - A promise that resolves to the retrieved Kubernetes resource, or null if not found.
+ */
 export async function getK8SResource(kind, name, namespace) {
 	try {
 		switch (kind) {
@@ -85,8 +122,381 @@ export async function getK8SResource(kind, name, namespace) {
 				console.info(`Skipping: ${kind}`);
 				return null;
 		}
-	} catch (err) {
-		console.error(err);
+	} catch {
 		return null;
 	}
+}
+
+/**
+ * Retrieves the image URL based on the provided parameters.
+ * If the registry is not specified, the original image is returned.
+ * If the registry is of type "Public", the image URL from the container's registry is returned.
+ * If the registry is not of type "Public", the image URL is constructed using the container's registry information.
+ * @param {string} originalImage - The original image.
+ * @param {object} container - The container object.
+ * @param {object} registry - The registry object.
+ * @returns {string} - The image URL.
+ */
+export function getImage(originalImage, container, registry) {
+	if (!registry) return originalImage;
+
+	if (registry.type === "Public") {
+		return container.registry.imageUrl;
+	} else
+		return `${container.registry.imageName}/${container.registry.imageTag}`;
+}
+
+/**
+ * Creates templated Kubernetes resources based on the provided container and environment.
+ * @param {Object} container - The container object.
+ * @param {Object} environment - The environment object.
+ * @returns {Promise<void>} - A promise that resolves when all resources are created successfully.
+ */
+export async function createTemplatedK8SResources(container, environment) {
+	let manifest = fs.readFileSync(
+		`${__dirname}/templates/manifests/${container.template.manifest}`,
+		"utf8"
+	);
+
+	// We need to replace the values in raw manifest with the values from the container and environment
+	const object = { ...container, namespace: environment.iid };
+	const regex = /{{\s*[^\r\n\t\f\v{}]*\s*}}/g;
+	const matches = manifest.match(regex);
+	const results = [...new Set(matches)];
+	for (const result of results) {
+		const key = result.replace("{{", "").replace("}}", "").trim();
+		const value = getObjectValue(object, key);
+		// Create a regular expression to find all occurrences of the key wrapped in {{ }}
+		const replacementRegex = new RegExp(result, "g");
+		// Replace all occurrences with the corresponding value
+		manifest = manifest.replace(replacementRegex, value);
+	}
+
+	const resources = k8s.loadAllYaml(manifest);
+	for (const resource of resources) {
+		try {
+			const { kind, metadata } = resource;
+			switch (kind) {
+				case "ServiceAccount":
+					await k8sCoreApi.createNamespacedServiceAccount(
+						environment.iid,
+						resource
+					);
+					break;
+				case "Secret":
+					await k8sCoreApi.createNamespacedSecret(environment.iid, resource);
+					break;
+				case "ConfigMap":
+					await k8sCoreApi.createNamespacedConfigMap(environment.iid, resource);
+					break;
+				case "ClusterRoleBinding":
+					await k8sAuthApi.createClusterRoleBinding(resource);
+					break;
+				case "RoleBinding":
+					await k8sAuthApi.createNamespacedRoleBinding(
+						environment.iid,
+						resource
+					);
+					break;
+				case "Ingress":
+					await k8sNetworkingApi.createNamespacedIngress(
+						environment.iid,
+						resource
+					);
+					break;
+				case "PersistentVolumeClaim":
+					await k8sCoreApi.createNamespacedPersistentVolumeClaim(
+						environment.iid,
+						resource
+					);
+					break;
+				case "HorizontalPodAutoscaler":
+					await k8sAutoscalingApi.createNamespacedHorizontalPodAutoscaler(
+						environment.iid,
+						resource
+					);
+					break;
+				case "Service":
+					await k8sCoreApi.createNamespacedService(environment.iid, resource);
+					break;
+				case "CronJob":
+					await k8sBatchApi.createNamespacedCronJob(environment.iid, resource);
+					break;
+				case "Deployment":
+					await k8sAppsApi.createNamespacedDeployment(
+						environment.iid,
+						resource
+					);
+					break;
+				case "StatefulSet":
+					await k8sAppsApi.createNamespacedStatefulSet(
+						environment.iid,
+						resource
+					);
+					break;
+				case "Pod":
+					await k8sCoreApi.createNamespacedPod(environment.iid, resource);
+					break;
+				case "Job":
+					await k8sBatchApi.createNamespacedJob(environment.iid, resource);
+					break;
+				default:
+					console.info(
+						`Skipping: ${kind} creation in namespace ${environment.iid}`
+					);
+					continue;
+			}
+			console.info(
+				`${kind} '${metadata.name}' in namespace '${environment.iid}' using template manifest '${container.template.manifest}' created successfully`
+			);
+		} catch (err) {
+			console.error(
+				`Error applying ${container.template.manifest} manifest resource ${
+					resource.kind
+				} ${resource.metadata.name}. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
+			throw err;
+		}
+	}
+}
+
+/**
+ * Deletes templated Kubernetes resources based on the provided container and environment.
+ * @param {object} container - The container object.
+ * @param {object} environment - The environment object.
+ * @returns {Promise<void>} - A promise that resolves when all resources are deleted successfully.
+ */
+export async function deleteTemplatedK8SResources(container, environment) {
+	let manifest = fs.readFileSync(
+		`${__dirname}/templates/manifests/${container.template.manifest}`,
+		"utf8"
+	);
+
+	// We need to replace the values in raw manifest with the values from the container and environment
+	const object = { ...container, namespace: environment.iid };
+	const regex = /{{\s*[^\r\n\t\f\v{}]*\s*}}/g;
+	const matches = manifest.match(regex);
+	const results = [...new Set(matches)];
+	for (const result of results) {
+		const key = result.replace("{{", "").replace("}}", "").trim();
+		const value = getObjectValue(object, key);
+		// Create a regular expression to find all occurrences of the key wrapped in {{ }}
+		const replacementRegex = new RegExp(result, "g");
+		// Replace all occurrences with the corresponding value
+		manifest = manifest.replace(replacementRegex, value);
+	}
+
+	const resources = k8s.loadAllYaml(manifest);
+	for (const resource of resources) {
+		try {
+			const { kind, metadata } = resource;
+			switch (kind) {
+				case "ServiceAccount":
+					await k8sCoreApi.deleteNamespacedServiceAccount(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "Secret":
+					await k8sCoreApi.deleteNamespacedSecret(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "ConfigMap":
+					await k8sCoreApi.deleteNamespacedConfigMap(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "ClusterRoleBinding":
+					await k8sAuthApi.createClusterRoleBinding(metadata.name);
+					break;
+				case "RoleBinding":
+					await k8sAuthApi.deleteNamespacedRoleBinding(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "Ingress":
+					await k8sNetworkingApi.deleteNamespacedIngress(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "PersistentVolumeClaim":
+					await k8sCoreApi.deleteNamespacedPersistentVolumeClaim(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "HorizontalPodAutoscaler":
+					await k8sAutoscalingApi.deleteNamespacedHorizontalPodAutoscaler(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "Service":
+					await k8sCoreApi.deleteNamespacedService(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "CronJob":
+					await k8sBatchApi.deleteNamespacedCronJob(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "Deployment":
+					await k8sAppsApi.deleteNamespacedDeployment(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "StatefulSet":
+					await k8sAppsApi.deleteNamespacedStatefulSet(
+						metadata.name,
+						environment.iid
+					);
+					break;
+				case "Pod":
+					await k8sCoreApi.deleteNamespacedPod(metadata.name, environment.iid);
+					break;
+				case "Job":
+					await k8sBatchApi.deleteNamespacedJob(metadata.name, environment.iid);
+					break;
+				default:
+					console.info(
+						`Skipping: ${kind} creation in namespace ${environment.iid}`
+					);
+					continue;
+			}
+			console.info(
+				`${kind} '${metadata.name}' in namespace '${environment.iid}' from template manifest '${container.template.manifest}' deleted successfully`
+			);
+		} catch (err) {
+			console.error(
+				`Error deleting ${container.template.manifest} manifest resource ${
+					resource.kind
+				} ${resource.metadata.name}. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
+		}
+	}
+}
+
+export function hasRepoChanges(changes) {
+	return areThereChanges(changes, ["repo"]);
+}
+export function hasDeploymentChanges(changes) {
+	return areThereChanges(changes, [
+		"registry",
+		"networking.containerPort",
+		"deploymentConfig",
+		"podConfig",
+		"variables",
+		"probes",
+		"storageConfig.enabled",
+		"storageConfig.mountPath",
+	]);
+}
+export function hasPVCChanges(changes) {
+	return areThereChanges(changes, [
+		"storageConfig.enabled",
+		"storageConfig.sizeType",
+		"storageConfig.size",
+		"storageConfig.accessModes",
+	]);
+}
+export function hasServiceChanges(changes) {
+	return areThereChanges(changes, ["networking.containerPort"]);
+}
+export function hasHPAChanges(changes) {
+	return areThereChanges(changes, [
+		"deploymentConfig.minReplicas",
+		"deploymentConfig.maxReplicas",
+		"deploymentConfig.cpuMetric.enabled",
+		"deploymentConfig.cpuMetric.metricType",
+		"deploymentConfig.cpuMetric.metricValue",
+		"deploymentConfig.memoryMetric.enabled",
+		"deploymentConfig.memoryMetric.metricType",
+		"deploymentConfig.memoryMetric.metricValue",
+	]);
+}
+export function hasIngressChanges(changes) {
+	return areThereChanges(changes, ["networking.ingress.enabled"]);
+}
+export function hasCustomDomainChanges(changes) {
+	return areThereChanges(changes, [
+		"networking.customDomain.enabled",
+		"networking.customDomain.domain",
+	]);
+}
+export function hasTCPProxyChanges(changes) {
+	return areThereChanges(changes, [
+		"networking.tcpProxy.enabled",
+		"networking.tcpProxy.publicPort",
+	]);
+}
+export function hasStatefulSetChanges(changes) {
+	return areThereChanges(changes, [
+		"registry",
+		"networking.containerPort",
+		"statefulSetConfig",
+		"podConfig",
+		"variables",
+		"probes",
+		"storageConfig.enabled",
+		"storageConfig.mountPath",
+	]);
+}
+export function hasCronJobChanges(changes) {
+	return areThereChanges(changes, [
+		"registry",
+		"cronJobConfig",
+		"podConfig",
+		"variables",
+		"storageConfig.enabled",
+		"storageConfig.mountPath",
+	]);
+}
+
+function areThereChanges(changes, prefixes) {
+	for (const prefix of prefixes) {
+		for (const change of changes) {
+			if (change.startsWith(prefix)) return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Retrieves the value of a nested property from an object.
+ *
+ * @param {object} object - The object to retrieve the value from.
+ * @param {string} key - The key representing the nested property.
+ * @returns {any} - The value of the nested property, or null if it doesn't exist.
+ */
+function getObjectValue(object, key) {
+	const path = key.split(".");
+	let current = object;
+	for (let i = 0; i < path.length - 1; i++) {
+		const field = path[i];
+		if (!current[field]) {
+			return null;
+		}
+		current = current[field];
+	}
+
+	let value = current[path[path.length - 1]];
+	if (value === "gibibyte") return "Gi";
+	else if (value === "mebibyte") return "Mi";
+	else if (value === "millicores") return "m";
+	else if (value === "cores") return "";
+	else return value;
 }
