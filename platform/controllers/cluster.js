@@ -6,10 +6,11 @@ import prjCtrl from "./project.js";
 import prjEnvCtrl from "./environment.js";
 import regCtrl from "./registry.js";
 import helper from "../util/helper.js";
+import { getClusterIPs } from "../handlers/cluster.js";
 import {
-	getClusterIPs,
-	initializeClusterCertificateIssuer,
-} from "../handlers/cluster.js";
+	initializeClusterCertificateIssuerForHTTP01,
+	initializeClusterCertificateIssuerForDNS01,
+} from "../handlers/certificate.js";
 
 class ClusterController extends BaseController {
 	constructor() {
@@ -30,18 +31,16 @@ class ClusterController extends BaseController {
 
 		if (cluster) return;
 
-		// Get the cluster IPs and check if there are public IPs
-		const ips = await getClusterIPs();
-		const publicIps = ips.filter((ip) => !helper.isPrivateIP(ip));
-
-		// Initialize the cluster certificate issuer if there are public IPs for the cluster
-		if (publicIps.length > 0) await initializeClusterCertificateIssuer();
+		// Initialize the cluster certificate issuers and path cluster role, rolebinding and service account
+		await initializeClusterCertificateIssuerForHTTP01();
+		await initializeClusterCertificateIssuerForDNS01();
 
 		// Save cluster config to the database
 		await this.create(
 			{
 				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
 				masterToken: process.env.MASTER_TOKEN,
+				slug: process.env.CLUSTER_SLUG,
 				release: process.env.RELEASE_NUMBER,
 				releaseHistory: [
 					{ release: process.env.RELEASE_NUMBER, timestamp: Date.now() },

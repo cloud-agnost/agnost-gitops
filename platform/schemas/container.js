@@ -35,6 +35,13 @@ export const ContainerModel = mongoose.model(
 				index: true,
 				immutable: true,
 			},
+			slug: {
+				// Internal identifier
+				type: String,
+				required: true,
+				index: true,
+				immutable: true,
+			},
 			name: {
 				type: String,
 				required: true,
@@ -159,7 +166,11 @@ export const ContainerModel = mongoose.model(
 					type: {
 						type: String,
 						enum: ["path", "subdomain"],
-						default: "path",
+						default: "subdomain",
+					},
+					// Custom path for the ingress, populated only if the ingress type is path (currently used only by platform and sync deployments of the cluster)
+					path: {
+						type: String,
 					},
 				},
 				customDomain: {

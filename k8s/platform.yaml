@@ -18,7 +18,7 @@ spec:
       serviceAccountName: provisioner-sa
       containers:
         - name: platform
-          image: agnost-gitops/platform
+          image:  cloudagnost/platform:v4
           imagePullPolicy: Never
           ports:
             - containerPort: 4000
@@ -63,6 +63,15 @@ spec:
                 secretKeyRef:
                   name: agnost
                   key: masterToken
+            - name: CLUSTER_SLUG
+              valueFrom:
+                secretKeyRef:
+                  name: agnost
+                  key: clusterSlug
+            - name: GROUP_NAME
+              value: "agnost.dev"
+            - name: SOLVER_NAME
+              value: "agnost"
             - name: MINIO_ENDPOINT
               valueFrom:
                 secretKeyRef:
@@ -85,6 +94,8 @@ spec:
                   key: secretKey
             - name: NGINX_NAMESPACE
               value: "ingress-nginx"
+            - name: CERT_MANAGER_NAMESPACE
+              value: "cert-manager"
             - name: NAMESPACE
               value: agnost
             - name: RELEASE_NUMBER

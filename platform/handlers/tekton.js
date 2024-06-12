@@ -124,16 +124,13 @@ export async function createTektonPipeline(
 						}
 
 						if (cluster.domains.length > 0) {
-							resource.metadata.annotations["cert-manager.io/cluster-issuer"] =
-								"letsencrypt-clusterissuer";
 							resource.metadata.annotations["kubernetes.io/ingress.class"] =
 								"nginx";
 
 							resource.spec.tls = cluster.domains.map((domainName) => {
-								const secretName = helper.getCertSecretName();
 								return {
 									hosts: [domainName],
-									secretName: secretName,
+									secretName: "agnost-root-domain-tls",
 								};
 							});
 
@@ -423,6 +420,8 @@ export async function deleteTektonPipelines(containers) {
 		if (!(container.repo?.connected && container.repo?.gitProviderId?._id))
 			continue;
 
+		// We lookup for git provider informatin when retrieving the containers from the database but we do not decrypt the tokens
+		// So we need to decrypt the tokens before we can use them
 		const gitProvider = container.repo.gitProviderId;
 		if (gitProvider.accessToken)
 			gitProvider.accessToken = helper.decryptText(gitProvider.accessToken);

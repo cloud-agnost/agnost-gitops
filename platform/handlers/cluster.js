@@ -4,10 +4,10 @@ import tcpProxyPortCtrl from "../controllers/tcpProxyPort.js";
 import { getKey, setKey, incrementKey } from "../init/cache.js";
 
 // Create a Kubernetes core API client
-const kubeconfig = new k8s.KubeConfig();
-kubeconfig.loadFromDefault();
-const k8sApi = kubeconfig.makeApiClient(k8s.NetworkingV1Api);
-const k8sCustomObjectApi = kubeconfig.makeApiClient(k8s.CustomObjectsApi);
+const kc = new k8s.KubeConfig();
+kc.loadFromDefault();
+const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
+const k8sApi = kc.makeApiClient(k8s.NetworkingV1Api);
 
 /**
  * Retrieves the IP addresses of the cluster's load balancer ingress.
@@ -20,7 +20,7 @@ export async function getClusterIPs() {
 			process.env.NAMESPACE
 		);
 		const ingress = result.body;
-		return ingress.status.loadBalancer.ingress.map(
+		return ingress.status.loadBalancer?.ingress?.map(
 			(ing) => ing.ip || ing.hostname
 		);
 	} catch (err) {
@@ -69,61 +69,29 @@ export async function getNewTCPPortNumber() {
 }
 
 /**
- * Initializes the certificate issuer available across all namespaces.
- * This function checks if the certificate issuer already exists, and if not, creates it.
- * @returns {Promise<void>} A promise that resolves when the initialization is complete.
+ * Updates the container releases in the cluster. Basically updates the image of the container in the deployment.
+ * @param {Array<Object>} containerUpdates - An array of container updates.
+ * @returns {Promise<void>} - A promise that resolves when all container updates are completed.
  */
-export async function initializeClusterCertificateIssuer() {
-	try {
-		// Check to see if we have the certificate issuer already
-		await k8sCustomObjectApi.getClusterCustomObject(
-			"cert-manager.io",
-			"v1",
-			"clusterissuers",
-			"letsencrypt-clusterissuer"
+export async function updateClusterContainerReleases(containerUpdates) {
+	const containerPromises = containerUpdates.map(async (containerUpdate) => {
+		const deploymentName = containerUpdate.containeriid;
+		const image = containerUpdate.image;
+		const namespace = process.env.NAMESPACE;
+
+		const deployment = await k8sAppsApi.readNamespacedDeployment(
+			deploymentName,
+			namespace
 		);
 
-		return;
-	} catch (err) {
-		// If we get a 404, we need to create the issuer
-		if (err.statusCode === 404) {
-			const clusterIssuer = {
-				apiVersion: "cert-manager.io/v1",
-				kind: "ClusterIssuer",
-				metadata: {
-					name: "letsencrypt-clusterissuer",
-				},
-				spec: {
-					acme: {
-						privateKeySecretRef: {
-							name: "letsencrypt-clusterissuer-key",
-						},
-						server: "https://acme-v02.api.letsencrypt.org/directory",
-						solvers: [
-							{
-								http01: {
-									ingress: {
-										class: "nginx",
-									},
-								},
-							},
-						],
-					},
-				},
-			};
+		deployment.body.spec.template.spec.containers[0].image = image;
 
-			try {
-				await k8sCustomObjectApi.createClusterCustomObject(
-					"cert-manager.io",
-					"v1",
-					"clusterissuers",
-					clusterIssuer
-				);
-			} catch (err) {
-				console.log(err.response?.body?.message ?? err.message);
-			}
+		return k8sAppsApi.replaceNamespacedDeployment(
+			deploymentName,
+			namespace,
+			deployment.body
+		);
+	});
 
-			console.info(`Initialized cluster level certificate issuer.`);
-		}
-	}
+	await Promise.all(containerPromises);
 }

@@ -128,6 +128,24 @@ export async function getK8SResource(kind, name, namespace) {
 }
 
 /**
+ * Retrieves the Nginx Ingress Controller deployment from the specified namespace.
+ * @returns {Object|null} The Nginx Ingress Controller deployment object if found, otherwise null.
+ */
+export async function getNginxIngressControllerDeployment() {
+	const result = await k8sAppsApi.listNamespacedDeployment(
+		process.env.NGINX_NAMESPACE
+	);
+	const items = result.body.items;
+
+	for (const deployment of items) {
+		if (deployment.metadata.name.includes("ingress-nginx-controller"))
+			return deployment;
+	}
+
+	return null;
+}
+
+/**
  * Retrieves the image URL based on the provided parameters.
  * If the registry is not specified, the original image is returned.
  * If the registry is of type "Public", the image URL from the container's registry is returned.
@@ -389,9 +407,22 @@ export async function deleteTemplatedK8SResources(container, environment) {
 	}
 }
 
+/**
+ * Checks if there are changes in the repository.
+ *
+ * @param {Array} changes - The array of changes.
+ * @returns {boolean} - Returns true if there are changes in the repository, otherwise false.
+ */
 export function hasRepoChanges(changes) {
 	return areThereChanges(changes, ["repo"]);
 }
+
+/**
+ * Checks if there are any deployment changes based on the specified changes and properties.
+ *
+ * @param {Object} changes - The changes object containing the modified properties.
+ * @returns {boolean} - Returns true if there are deployment changes, false otherwise.
+ */
 export function hasDeploymentChanges(changes) {
 	return areThereChanges(changes, [
 		"registry",
@@ -404,6 +435,13 @@ export function hasDeploymentChanges(changes) {
 		"storageConfig.mountPath",
 	]);
 }
+
+/**
+ * Checks if there are changes related to Persistent Volume Claims (PVC).
+ *
+ * @param {Object} changes - The changes object.
+ * @returns {boolean} - True if there are changes related to PVC, false otherwise.
+ */
 export function hasPVCChanges(changes) {
 	return areThereChanges(changes, [
 		"storageConfig.enabled",
@@ -412,9 +450,22 @@ export function hasPVCChanges(changes) {
 		"storageConfig.accessModes",
 	]);
 }
+
+/**
+ * Checks if there are changes related to a service.
+ * @param {Object[]} changes - The array of changes.
+ * @returns {boolean} - Returns true if there are changes related to the service, otherwise false.
+ */
 export function hasServiceChanges(changes) {
 	return areThereChanges(changes, ["networking.containerPort"]);
 }
+
+/**
+ * Checks if there are any changes related to Horizontal Pod Autoscaler (HPA) configuration.
+ *
+ * @param {Object} changes - The changes object containing the modified properties.
+ * @returns {boolean} - Returns true if there are changes related to HPA configuration, otherwise false.
+ */
 export function hasHPAChanges(changes) {
 	return areThereChanges(changes, [
 		"deploymentConfig.minReplicas",
@@ -427,21 +478,74 @@ export function hasHPAChanges(changes) {
 		"deploymentConfig.memoryMetric.metricValue",
 	]);
 }
+
+/**
+ * Checks if there are changes related to ingress.
+ *
+ * @param {Object} changes - The changes object.
+ * @returns {boolean} - True if there are changes related to ingress, false otherwise.
+ */
 export function hasIngressChanges(changes) {
-	return areThereChanges(changes, ["networking.ingress.enabled"]);
+	return areThereChanges(changes, [
+		"networking.ingress.containerPort",
+		"networking.ingress.enabled",
+		"networking.ingress.type",
+	]);
 }
+
+/**
+ * Checks if there are changes related to ingress type.
+ *
+ * @param {Object} changes - The changes object.
+ * @returns {boolean} - True if there are changes related to ingress, false otherwise.
+ */
+export function hasIngressTypeChanges(changes) {
+	return areThereChanges(changes, ["networking.ingress.type"]);
+}
+
+/**
+ * Checks if there are changes related to custom domain settings.
+ *
+ * @param {Object} changes - The changes object to check.
+ * @returns {boolean} - True if there are changes related to custom domain settings, false otherwise.
+ */
 export function hasCustomDomainChanges(changes) {
 	return areThereChanges(changes, [
+		"networking.ingress.containerPort",
 		"networking.customDomain.enabled",
 		"networking.customDomain.domain",
 	]);
 }
+
+/**
+ * Checks if there are changes related to custom domain name specificly.
+ *
+ * @param {Object} changes - The changes object to check.
+ * @returns {boolean} - True if there are changes related to custom domain name, false otherwise.
+ */
+export function hasCustomDomainNameChanges(changes) {
+	return areThereChanges(changes, ["networking.customDomain.domain"]);
+}
+
+/**
+ * Checks if there are changes related to TCP proxy configuration.
+ *
+ * @param {Object} changes - The changes object containing the modified properties.
+ * @returns {boolean} - Returns true if there are changes related to TCP proxy configuration, false otherwise.
+ */
 export function hasTCPProxyChanges(changes) {
 	return areThereChanges(changes, [
+		"networking.ingress.containerPort",
 		"networking.tcpProxy.enabled",
 		"networking.tcpProxy.publicPort",
 	]);
 }
+
+/**
+ * Checks if there are changes in the specified properties of a stateful set.
+ * @param {Object} changes - The changes object containing the modified properties.
+ * @returns {boolean} - Returns true if there are changes in the specified properties, otherwise returns false.
+ */
 export function hasStatefulSetChanges(changes) {
 	return areThereChanges(changes, [
 		"registry",
@@ -454,6 +558,12 @@ export function hasStatefulSetChanges(changes) {
 		"storageConfig.mountPath",
 	]);
 }
+
+/**
+ * Checks if there are any changes related to a CronJob.
+ * @param {Object} changes - The changes object.
+ * @returns {boolean} - True if there are changes related to a CronJob, false otherwise.
+ */
 export function hasCronJobChanges(changes) {
 	return areThereChanges(changes, [
 		"registry",
@@ -465,6 +575,13 @@ export function hasCronJobChanges(changes) {
 	]);
 }
 
+/**
+ * Checks if there are any changes that start with the specified prefixes.
+ *
+ * @param {string[]} changes - The array of changes to check.
+ * @param {string[]} prefixes - The array of prefixes to match against the changes.
+ * @returns {boolean} - Returns true if there are changes that start with any of the prefixes, false otherwise.
+ */
 function areThereChanges(changes, prefixes) {
 	for (const prefix of prefixes) {
 		for (const change of changes) {

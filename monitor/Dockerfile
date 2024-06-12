@@ -12,4 +12,4 @@ RUN npm install --omit=dev
 # Copy everything to the image under '/app' directory
 COPY ./ ./
 # This will be the start up command of the docker container, run the development react server
-CMD ["nodemon", "--expose-gc", "server"]
+CMD ["node", "--expose-gc", "server"]

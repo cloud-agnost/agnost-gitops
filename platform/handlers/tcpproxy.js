@@ -210,17 +210,11 @@ export async function createTCPProxy(
 /**
  * Updates the TCP proxy based on the provided definition.
  * @param {Object} definition - The definition object containing the TCP proxy configuration which is a container json object.
- * @param {boolean} isContainerPortChanged - Indicates whether the container port has changed.
  * @param {string} name - The name of the TCP proxy service.
  * @param {string} namespace - The namespace of the TCP proxy service.
  * @returns {Promise<void>} - A promise that resolves when the TCP proxy is updated.
  */
-export async function updateTCPProxy(
-	definition,
-	isContainerPortChanged,
-	name,
-	namespace
-) {
+export async function updateTCPProxy(definition, name, namespace) {
 	const enabled = await isTCPProxyAlreadyEnabled(
 		definition.tcpProxy.publicPort
 	);
@@ -232,7 +226,7 @@ export async function updateTCPProxy(
 				definition.tcpProxy.publicPort,
 				definition.containerPort
 			);
-		} else if (isContainerPortChanged) {
+		} else {
 			await deleteTCPProxy(definition.tcpProxy.publicPort);
 			await createTCPProxy(
 				name,

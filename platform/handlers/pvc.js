@@ -14,7 +14,14 @@ const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Definition is storageConfig
+/**
+ * Creates a Persistent Volume Claim (PVC) based on the provided definition.
+ * @param {object} definition - The definition object for the PVC.
+ * @param {boolean} definition.enabled - Indicates whether the PVC is enabled or not.
+ * @param {string} name - The name of the PVC.
+ * @param {string} namespace - The namespace in which the PVC will be created.
+ * @returns {Promise<void>} - A promise that resolves when the PVC is created successfully.
+ */
 export async function createPVC(definition, name, namespace) {
 	if (!definition.enabled) return;
 
@@ -42,7 +49,17 @@ export async function createPVC(definition, name, namespace) {
 	);
 }
 
-// Definition is storageConfig
+/**
+ * Updates a Persistent Volume Claim (PVC) based on the provided definition.
+ * If the PVC is disabled in the definition, it will be deleted.
+ * If the PVC does not exist, it will be created.
+ * If the PVC already exists, it will be updated with the new configuration.
+ *
+ * @param {object} definition - The definition object containing the PVC configuration.
+ * @param {string} name - The name of the PVC.
+ * @param {string} namespace - The namespace of the PVC.
+ * @returns {Promise<void>} - A Promise that resolves when the PVC is updated.
+ */
 export async function updatePVC(definition, name, namespace) {
 	if (!definition.enabled) {
 		await deletePVC(name, namespace);
@@ -79,6 +96,13 @@ export async function updatePVC(definition, name, namespace) {
 	);
 }
 
+/**
+ * Deletes a Persistent Volume Claim (PVC) in a Kubernetes cluster.
+ *
+ * @param {string} name - The name of the PVC to delete.
+ * @param {string} namespace - The namespace of the PVC.
+ * @returns {Promise<void>} - A promise that resolves when the PVC is deleted successfully.
+ */
 export async function deletePVC(name, namespace) {
 	if (!(await getK8SResource("PVC", name, namespace))) return;
 
@@ -96,7 +120,14 @@ export async function deletePVC(name, namespace) {
 	}
 }
 
-// Definition is storageConfig
+/**
+ * Updates the Persistent Volume Claims (PVCs) for a StatefulSet.
+ * @param {Object} definition - The definition object.
+ * @param {Object} statefulSetConfig - The StatefulSet configuration object.
+ * @param {string} name - The name of the StatefulSet.
+ * @param {string} namespace - The namespace of the StatefulSet.
+ * @returns {Promise<void>} - A Promise that resolves when the PVCs are updated.
+ */
 export async function updateStatefulSetPVC(
 	definition,
 	statefulSetConfig,
@@ -160,7 +191,14 @@ export async function updateStatefulSetPVC(
 	}
 }
 
-// Definition is storageConfig
+/**
+ * Deletes the Persistent Volume Claims (PVCs) associated with a StatefulSet.
+ * @param {object} definition - The definition object.
+ * @param {object} statefulSetConfig - The StatefulSet configuration object.
+ * @param {string} name - The name of the StatefulSet.
+ * @param {string} namespace - The namespace of the StatefulSet.
+ * @returns {Promise<void>} - A Promise that resolves when the PVCs are deleted.
+ */
 export async function deleteStatefulSetPVC(
 	definition,
 	statefulSetConfig,

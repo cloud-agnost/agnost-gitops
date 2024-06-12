@@ -130,7 +130,8 @@ router.post(
 					orgId: org._id,
 					projectId: project._id,
 					environmentId: environment._id,
-					iid: body.name, //helper.generateSlug("cnt")
+					iid: body.name,
+					slug: helper.generateSlug(body.name, 8),
 					createdBy: user._id,
 				},
 				{ cacheKey: containerId }

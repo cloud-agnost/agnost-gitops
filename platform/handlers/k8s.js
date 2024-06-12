@@ -35,7 +35,9 @@ import {
 	hasServiceChanges,
 	hasHPAChanges,
 	hasIngressChanges,
+	hasIngressTypeChanges,
 	hasCustomDomainChanges,
+	hasCustomDomainNameChanges,
 	hasTCPProxyChanges,
 	hasStatefulSetChanges,
 	hasCronJobChanges,
@@ -129,25 +131,19 @@ async function manageDeployment({
 		if (hasIngressChanges(changes))
 			await updateIngress(
 				container.networking,
-				changes.containerPort,
 				name,
-				namespace
+				namespace,
+				hasIngressTypeChanges(changes)
 			);
 		if (hasCustomDomainChanges(changes))
 			await updateCustomDomainIngress(
 				container.networking,
-				changes.containerPort,
-				changes.customDomain,
 				name,
-				namespace
+				namespace,
+				hasCustomDomainNameChanges(changes)
 			);
 		if (hasTCPProxyChanges(changes))
-			await updateTCPProxy(
-				container.networking,
-				changes.containerPort,
-				name,
-				namespace
-			);
+			await updateTCPProxy(container.networking, name, namespace);
 	} else if (action === "delete") {
 		await deleteDeployment(name, namespace);
 		await deleteHPA(name, namespace);
@@ -232,25 +228,19 @@ async function manageStatefulSet({
 		if (hasIngressChanges(changes))
 			await updateIngress(
 				container.networking,
-				changes.containerPort,
 				name,
-				namespace
+				namespace,
+				hasIngressTypeChanges(changes)
 			);
 		if (hasCustomDomainChanges(changes))
 			await updateCustomDomainIngress(
 				container.networking,
-				changes.containerPort,
-				changes.customDomain,
 				name,
-				namespace
+				namespace,
+				hasCustomDomainNameChanges(changes)
 			);
 		if (hasTCPProxyChanges(changes))
-			await updateTCPProxy(
-				container.networking,
-				changes.containerPort,
-				name,
-				namespace
-			);
+			await updateTCPProxy(container.networking, name, namespace);
 		if (hasPVCChanges(changes))
 			await updateStatefulSetPVC(
 				container.storageConfig,

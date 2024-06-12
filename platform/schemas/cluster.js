@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { body, query } from "express-validator";
 import domainCtrl from "../controllers/domain.js";
+import cntrCtrl from "../controllers/container.js";
 
 /**
  * Account is the top level model which will hold the list of organizations, under organization there will be users and apps etc.
@@ -17,6 +18,11 @@ export const ClusterModel = mongoose.model(
 				index: true,
 			},
 			masterToken: {
+				type: String,
+				required: true,
+				index: true,
+			},
+			slug: {
 				type: String,
 				required: true,
 				index: true,
@@ -40,11 +46,6 @@ export const ClusterModel = mongoose.model(
 			domains: {
 				type: [String],
 				index: true,
-			},
-			// Enforce SSL access or not
-			enforceSSLAccess: {
-				type: Boolean,
-				default: false,
 			},
 			// The ip addresses or hostnames of the cluster
 			ips: {
@@ -96,10 +97,7 @@ export const applyRules = (type) => {
 					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.toLowerCase() // convert the value to lowercase
-					.custom((value) => {
-						// The below reges allows for wildcard subdomains
-						// const dnameRegex = /^(?:\*\.)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
-						// Check domain name syntax, we do not currently allow wildcard subdomains
+					.custom(async (value) => {
 						const dnameRegex = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 						// Validate domain name (can be at mulitple levels)
 						if (!dnameRegex.test(value)) {
@@ -107,7 +105,7 @@ export const applyRules = (type) => {
 						}
 
 						// Check to see if this domain is already included in the list list or not
-						const exists = domainCtrl.getOneByQuery({ domain: value });
+						const exists = await domainCtrl.getOneByQuery({ domain: value });
 						if (exists) {
 							throw new Error(
 								"The specified domain '${value}' already exists in used domains list"
@@ -124,10 +122,20 @@ export const applyRules = (type) => {
 					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.toLowerCase() // convert the value to lowercase
-					.custom((value, { req }) => {
+					.custom(async (value, { req }) => {
 						// Check to see if this domain is already included in the list
 						const { domains } = req.cluster;
 						if (domains && domains.find((entry) => entry === value)) {
+							let containers = await cntrCtrl.getManyByQuery({
+								"networking.ingress.enabled": true,
+								"networking.ingress.type": "subdomain",
+							});
+
+							if (containers.length > 0) {
+								throw new Error(
+									`There are total of ${containers.length} containers that are using this domain. You need to update the ingress setting for these containers before deleting the cluster domain.`
+								);
+							}
 							return true;
 						} else {
 							throw new Error(
@@ -135,17 +143,6 @@ export const applyRules = (type) => {
 							);
 						}
 					}),
-			];
-		case "update-enforce-ssl":
-			return [
-				body("enforceSSLAccess")
-					.trim()
-					.notEmpty()
-					.withMessage("Required field, cannot be left empty")
-					.bail()
-					.isBoolean()
-					.withMessage("Not a valid boolean value")
-					.toBoolean(),
 			];
 		default:
 			return [];

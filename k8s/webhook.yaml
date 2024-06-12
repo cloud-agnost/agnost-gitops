@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agnost-webhook
+  namespace: agnost
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agnost-webhook
+      release: agnost
+  template:
+    metadata:
+      labels:
+        app: agnost-webhook
+        release: agnost
+    spec:
+      serviceAccountName: agnost-webhook
+      containers:
+        - name: agnost-webhook
+          image:  cloudagnost/webhook:v4
+          imagePullPolicy: Never
+          args:
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
+          env:
+            - name: GROUP_NAME
+              value: "agnost.dev"
+            - name: SOLVER_NAME
+              value: "agnost"
+            - name: CLUSTER_SLUG
+              valueFrom:
+                secretKeyRef:
+                  name: agnost
+                  key: clusterSlug     
+          ports:
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          volumeMounts:
+            - name: certs
+              mountPath: /tls
+              readOnly: true
+          resources:
+      volumes:
+        - name: certs
+          secret:
+            secretName: agnost-webhook-webhook-tls

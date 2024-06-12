@@ -12,15 +12,23 @@ import { validateCluster } from "../middlewares/validateCluster.js";
 import { validateClusterIPs } from "../middlewares/validateClusterIPs.js";
 import { checkContentType } from "../middlewares/contentType.js";
 import {
-	addClusterCustomDomain,
-	deleteClusterCustomDomains,
-	updateEnforceSSLAccessSettings,
+	addClusterDomainToIngresses,
+	removeClusterDomainFromIngresses,
 } from "../handlers/ingress.js";
+import { updateClusterContainerReleases } from "../handlers/cluster.js";
+import {
+	createClusterDomainCertificates,
+	deleteClusterDomainCertificates,
+} from "../handlers/certificate.js";
 import helper from "../util/helper.js";
 import { templates } from "../handlers/templates/index.js";
 
+import {
+	initializeClusterCertificateIssuerForHTTP01,
+	initializeClusterCertificateIssuerForDNS01,
+} from "../handlers/certificate.js";
+
 import ERROR_CODES from "../config/errorCodes.js";
-import e from "express";
 
 const router = express.Router({ mergeParams: true });
 
@@ -32,6 +40,8 @@ const router = express.Router({ mergeParams: true });
 */
 router.get("/setup-status", async (req, res) => {
 	try {
+		await initializeClusterCertificateIssuerForHTTP01();
+		await initializeClusterCertificateIssuerForDNS01();
 		// Get cluster owner
 		let user = await userCtrl.getOneByQuery({ isClusterOwner: true });
 		res.status(200).json({ status: user ? true : false });
@@ -129,24 +139,15 @@ router.get(
 );
 
 /*
-@route      /v1/cluster/status
+@route      /v1/cluster/containers
 @method     GET
-@desc       Returns status information about the cluster internal resources
+@desc       Returns the list of cluster containers
 @access     public
 */
-router.get("/status", authSession, async (req, res) => {
+router.get("/containers", authSession, async (req, res) => {
 	try {
-		// Get cluster configuration
-		let cluster = await clsCtrl.getOneByQuery(
-			{
-				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-			},
-			{
-				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
-			}
-		);
-
-		res.json(cluster.clusterResourceStatus);
+		const containers = await cntrCtrl.getManyByQuery({ isClusterEntity: true });
+		res.json(containers);
 	} catch (error) {
 		helper.handleError(req, res, error);
 	}
@@ -179,7 +180,7 @@ router.get("/release-info", authSession, async (req, res) => {
 		}
 
 		const latest = await axios.get(
-			"https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/master/releases/latest.json",
+			"https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/main/releases/latest.json",
 			{
 				headers: {
 					Accept: "application/vnd.github.v3+json",
@@ -188,7 +189,7 @@ router.get("/release-info", authSession, async (req, res) => {
 		);
 
 		const current = await axios.get(
-			`https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/master/releases/${cluster.release}.json`,
+			`https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/main/releases/${cluster.release}.json`,
 			{
 				headers: {
 					Accept: "application/vnd.github.v3+json",
@@ -201,33 +202,6 @@ router.get("/release-info", authSession, async (req, res) => {
 			latest: latest.data,
 			cluster: cluster,
 		});
-	} catch (error) {
-		helper.handleError(req, res, error);
-	}
-});
-
-/*
-@route      /v1/cluster/components
-@method     GET
-@desc       Returns information about the cluster components, platform, studio, sync, mongodb, redis, minio etc.
-@access     public
-*/
-router.get("/components", authSession, async (req, res) => {
-	try {
-		const { user } = req;
-		if (!user.isClusterOwner) {
-			return res.status(401).json({
-				error: "Not Authorized",
-				details:
-					"You are not authorized to view cluster components. Only the cluster owner can manage cluster core components.",
-				code: ERROR_CODES.unauthorized,
-			});
-		}
-
-		//let manager = new ClusterManager();
-		//const clusterInfo = await manager.getClusterInfo();
-
-		res.json();
 	} catch (error) {
 		helper.handleError(req, res, error);
 	}
@@ -277,7 +251,7 @@ router.put(
 
 			try {
 				oldReleaseInfo = await axios.get(
-					`https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/master/releases/${cluster.release}.json`,
+					`https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/main/releases/${cluster.release}.json`,
 					{
 						headers: {
 							Accept: "application/vnd.github.v3+json",
@@ -295,7 +269,7 @@ router.put(
 
 			try {
 				newReleaseInfo = await axios.get(
-					`https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/master/releases/${release}.json`,
+					`https://raw.githubusercontent.com/cloud-agnost/agnost-gitops/main/releases/${release}.json`,
 					{
 						headers: {
 							Accept: "application/vnd.github.v3+json",
@@ -316,7 +290,7 @@ router.put(
 			for (const [key, value] of Object.entries(oldReleaseInfo.data.modules)) {
 				if (value !== newReleaseInfo.data.modules[key]) {
 					const entry = {
-						deploymentName: `${key}`,
+						containeriid: `${key}`,
 						tag: newReleaseInfo.data.modules[key],
 						image: `gcr.io/agnost-gitops/${key}:${newReleaseInfo.data.modules[key]}`,
 					};
@@ -328,14 +302,8 @@ router.put(
 			// If no updates do nothing
 			if (requiredUpdates.length === 0) return res.json(cluster);
 
-			/* 			let manager = new ClusterManager();
-			for (const update of requiredUpdates) {
-				await manager.updateDeployment(
-					update.deploymentName,
-					null,
-					update.image
-				);
-			} */
+			// Update the image tag of cluster containers (deployments)
+			await updateClusterContainerReleases(requiredUpdates);
 
 			// Update cluster release information
 			let updatedCluster = await clsCtrl.updateOneByQuery(
@@ -400,7 +368,7 @@ router.post(
 				return res.status(401).json({
 					error: "Not Authorized",
 					details:
-						"You are not authorized to add custom domain to the cluster. Only the cluster owner can manage cluster custom domains.",
+						"You are not authorized to set the custom domain of the cluster. Only the cluster owner can manage the cluster custom domain.",
 					code: ERROR_CODES.unauthorized,
 				});
 			}
@@ -408,43 +376,30 @@ router.post(
 			const domains = cluster.domains ?? [];
 			const { domain } = req.body;
 
-			if (domains.length >= config.get("general.maxClusterCustomDomains")) {
+			if (domains.length > 0) {
 				return res.status(401).json({
 					error: "Not Allowed",
-					details: `You can add maximum '${config.get(
-						"general.maxClusterCustomDomains"
-					)}' custom domains to a cluster.`,
+					details: `The custom domain of the cluster has already been set to '${domains[0]}'. If you want to set a new custom domain then first remove the existing domain.`,
 					code: ERROR_CODES.notAllowed,
 				});
 			}
 
+			// Create the certificate for the domain
+			await createClusterDomainCertificates(domain);
+
 			// Get all container ingresses that will be impacted
+			// The impacted ones will be the ingresses of "platform" and "sync" container.
+			// Subdomain based ingresses will not be impacted ince we cannot add a subdomain based ingress if we do not have a cluster domain
 			let containers = await cntrCtrl.getManyByQuery(
 				{
 					"networking.ingress.enabled": true,
+					"networking.ingress.type": "path",
 				},
 				{ lookup: "environmentId" }
 			);
 
-			containers = containers.map((entry) => {
-				return {
-					containeriid: entry.iid,
-					namespace: entry.environmentId.iid,
-					containerPort: entry.networking.containerPort,
-				};
-			});
-
-			if (containers?.length > 0) {
-				for (const entry of containers) {
-					await addClusterCustomDomain(
-						entry.containeriid,
-						entry.namespace,
-						domain,
-						entry.containerPort,
-						cluster.enforceSSLAccess
-					);
-				}
-			}
+			// Add the domain to the container ingresses
+			await addClusterDomainToIngresses(containers, domain);
 
 			// Update cluster domains information
 			let updatedCluster = await clsCtrl.updateOneById(
@@ -489,7 +444,7 @@ router.delete(
 				return res.status(401).json({
 					error: "Not Authorized",
 					details:
-						"You are not authorized to manage custom domains of the cluster. Only the cluster owner can manage cluster custom domains.",
+						"You are not authorized to manage the custom domain of the cluster. Only the cluster owner can manage the cluster custom domain.",
 					code: ERROR_CODES.unauthorized,
 				});
 			}
@@ -497,27 +452,25 @@ router.delete(
 			const domains = cluster.domains ?? [];
 			const { domain } = req.body;
 
+			// If nothing to delete then return
+			if (cluster.domains.length === 0) return res.json(cluster);
+
+			// Delete the certificate for the domain
+			await deleteClusterDomainCertificates();
+
 			// Get all container ingresses that will be impacted
+			// The impacted ones will be the ingresses of "platform" and "sync" container.
+			// Subdomain based ingresses will not be impacted since we do not allow delete of cluster domain if there are subdomain based ingresses
 			let containers = await cntrCtrl.getManyByQuery(
 				{
 					"networking.ingress.enabled": true,
+					"networking.ingress.type": "path",
 				},
 				{ lookup: "environmentId" }
 			);
 
-			containers = containers.map((entry) => {
-				return { containeriid: entry.iid, namespace: entry.environmentId.iid };
-			});
-
-			if (containers.length > 0) {
-				for (const entry of containers) {
-					await deleteClusterCustomDomains(
-						entry.containeriid,
-						entry.namespace,
-						[domain]
-					);
-				}
-			}
+			// Remove the domain from the container ingresses
+			await removeClusterDomainFromIngresses(containers, domain);
 
 			// Update cluster domains information
 			const updatedList = domains.filter((entry) => entry !== domain);
@@ -529,9 +482,6 @@ router.delete(
 				},
 				{
 					domains: updatedList,
-					// If there are no domains then we need to make sure the cluster is accessible via non-ssl
-					enforceSSLAccess:
-						updatedList.length === 0 ? false : cluster.enforceSSLAccess,
 				},
 				{},
 				{
@@ -541,99 +491,6 @@ router.delete(
 
 			// Remove the domain from the domain list
 			await domainCtrl.deleteOneByQuery({ domain });
-
-			res.json(updatedCluster);
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
-@route      /v1/cluster/domains/enforce-ssl
-@method     PUT
-@desc       Turns on or off enforce ssl access to the cluster
-@access     public
-*/
-router.put(
-	"/domains/enforce-ssl",
-	checkContentType,
-	authSession,
-	validateCluster,
-	applyRules("update-enforce-ssl"),
-	validate,
-	async (req, res) => {
-		try {
-			const { user, cluster } = req;
-			if (!user.isClusterOwner) {
-				return res.status(401).json({
-					error: "Not Authorized",
-					details:
-						"You are not authorized to manage cluster SSL access settings. Only the cluster owner can manage cluster access settings.",
-					code: ERROR_CODES.unauthorized,
-				});
-			}
-
-			const { enforceSSLAccess } = req.body;
-
-			if (enforceSSLAccess && cluster.domains.length === 0) {
-				return res.status(401).json({
-					error: "Not Allowed",
-					details:
-						"You can enforce SSL access to your cluster only if you have a least one domain added to the custom domains list.",
-					code: ERROR_CODES.notAllowed,
-				});
-			}
-
-			// Get all container ingresses that will be impacted
-			let containers = await cntrCtrl.getManyByQuery(
-				{
-					$or: [
-						{ "networking.ingress.enabled": true },
-						{ "networking.customDomain.enabled": true },
-					],
-				},
-				{ lookup: "environmentId" }
-			);
-
-			containers = containers.map((entry) => {
-				return {
-					containeriid: entry.iid,
-					namespace: entry.environmentId.iid,
-					ingress: entry.networking.ingress.enabled,
-					customDomain: entry.networking.customDomain.enabled,
-				};
-			});
-
-			if (containers?.length > 0) {
-				for (const entry of containers) {
-					if (entry.ingress)
-						await updateEnforceSSLAccessSettings(
-							`${entry.containeriid}-cluster`,
-							entry.namespace,
-							enforceSSLAccess
-						);
-
-					if (entry.customDomain)
-						await updateEnforceSSLAccessSettings(
-							`${entry.containeriid}-domain`,
-							entry.namespace,
-							enforceSSLAccess
-						);
-				}
-			}
-
-			// Update cluster SSL access information
-			let updatedCluster = await clsCtrl.updateOneById(
-				cluster._id,
-				{
-					enforceSSLAccess,
-				},
-				{},
-				{
-					cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
-				}
-			);
 
 			res.json(updatedCluster);
 		} catch (error) {

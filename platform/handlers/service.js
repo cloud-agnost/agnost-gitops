@@ -14,7 +14,14 @@ const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Definition is networking
+/**
+ * Creates a service in Kubernetes.
+ * @param {Object} definition - The definition of the service.
+ * @param {string} name - The name of the service.
+ * @param {string} namespace - The namespace in which the service will be created.
+ * @param {boolean} [isHeadless=false] - Indicates whether the service is headless.
+ * @returns {Promise<void>} - A promise that resolves when the service is created successfully.
+ */
 export async function createService(
 	definition,
 	name,
@@ -51,7 +58,14 @@ export async function createService(
 	);
 }
 
-// Definition is networking
+/**
+ * Updates a Kubernetes Service with the provided definition, name, and namespace.
+ * If the Service does not exist, it will be created.
+ * @param {object} definition - The definition of the Service.
+ * @param {string} name - The name of the Service.
+ * @param {string} namespace - The namespace of the Service.
+ * @returns {Promise<void>} - A Promise that resolves when the Service is updated or created.
+ */
 export async function updateService(definition, name, namespace) {
 	const payload = await getK8SResource("Service", name, namespace);
 	if (!payload) {
@@ -78,6 +92,13 @@ export async function updateService(definition, name, namespace) {
 	);
 }
 
+/**
+ * Deletes a service in the specified namespace.
+ *
+ * @param {string} name - The name of the service to delete.
+ * @param {string} namespace - The namespace of the service.
+ * @returns {Promise<void>} - A promise that resolves when the service is deleted successfully.
+ */
 export async function deleteService(name, namespace) {
 	if (!(await getK8SResource("Service", name, namespace))) return;
 

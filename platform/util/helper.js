@@ -68,7 +68,8 @@ function generateSlug(prefix, length = 12) {
 	// Kubernetes resource names need to be alphanumeric and in lowercase letters
 	const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 	const nanoid = customAlphabet(alphabet, length);
-	return `${prefix}-${nanoid()}`;
+	if (prefix) return `${prefix}-${nanoid()}`;
+	else return nanoid();
 }
 
 /**
