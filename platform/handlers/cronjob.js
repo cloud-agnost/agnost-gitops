@@ -14,7 +14,13 @@ const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Definition is container
+/**
+ * Creates a CronJob based on the provided definition.
+ * @param {Object} definition - The definition object containing the configuration for the CronJob.
+ * @param {string} namespace - The namespace in which to create the CronJob.
+ * @param {string} registry - The registry from which to pull the container image.
+ * @returns {Promise<void>} - A Promise that resolves when the CronJob is created successfully.
+ */
 export async function createCronJob(definition, namespace, registry) {
 	const manifest = fs.readFileSync(
 		`${__dirname}/manifests/cronjob.yaml`,
@@ -93,7 +99,13 @@ export async function createCronJob(definition, namespace, registry) {
 	);
 }
 
-// Definition is container
+/**
+ * Updates a CronJob in Kubernetes with the provided definition.
+ * @param {Object} definition - The definition of the CronJob.
+ * @param {string} namespace - The namespace of the CronJob.
+ * @param {string} registry - The registry for the container image.
+ * @returns {Promise<void>} - A Promise that resolves when the CronJob is updated successfully.
+ */
 export async function updateCronJob(definition, namespace, registry) {
 	const payload = await getK8SResource("CronJob", definition.iid, namespace);
 	const { metadata, spec } = payload.body;
@@ -173,6 +185,13 @@ export async function updateCronJob(definition, namespace, registry) {
 	);
 }
 
+/**
+ * Deletes a CronJob with the specified name and namespace.
+ *
+ * @param {string} name - The name of the CronJob to delete.
+ * @param {string} namespace - The namespace of the CronJob.
+ * @returns {Promise<void>} - A Promise that resolves when the CronJob is deleted successfully.
+ */
 export async function deleteCronJob(name, namespace) {
 	if (!(await getK8SResource("CronJob", name, namespace))) return;
 

@@ -37,6 +37,32 @@ export async function isValidGitProviderAccessToken(accessToken, gitProvider) {
 				}; // Other errors
 			}
 		}
+	} else if (gitProvider === "gitlab") {
+		try {
+			const result = await axios.get("https://gitlab.com/api/v4/user", {
+				headers: { Authorization: `Bearer ${accessToken}` },
+			});
+
+			return {
+				valid: true,
+				user: {
+					providerUserId: result.data.id.toString(),
+					username: result.data.username,
+					email: result.data.email,
+					avatar: result.data.avatar_url,
+					provider: gitProvider,
+				},
+			};
+		} catch (error) {
+			if (error.response && error.response.status === 401) {
+				return { valid: false, error: "Invalid or expired token." }; // Token is invalid
+			} else {
+				return {
+					valid: false,
+					error: error.response?.body?.message ?? error.message,
+				}; // Other errors
+			}
+		}
 	}
 	return { valid: false, error: "Unsupported Git repository provider." };
 }
@@ -86,17 +112,10 @@ export async function revokeGitProviderAccessToken(
 	refreshToken
 ) {
 	try {
-		await axios.post(
-			`https://auth.agnost.dev/provider/${provider}/revoke`,
-			{ accessToken, refreshToken },
-			{
-				headers: {
-					Accept: "application/vnd.github.v3+json",
-					"User-Agent": "OAuth App",
-					Authorization: `token ${accessToken}`,
-				},
-			}
-		);
+		await axios.post(`https://api.agnost.dev/provider/${provider}/revoke`, {
+			accessToken,
+			refreshToken,
+		});
 	} catch (err) {
 		console.error(err);
 	}
@@ -119,6 +138,7 @@ export async function fetchAllPages(url, config) {
 			`${url}?page=${page}&per_page=100`,
 			config
 		);
+
 		if (response.data.length > 0) {
 			results = results.concat(response.data);
 			page++;
@@ -153,14 +173,48 @@ export async function getGitProviderRepos(gitProvider) {
 				config
 			);
 
-			const userReposData = userRepos.map((entry) => ({
-				repoId: entry.id,
-				owner: entry.owner.login,
-				repo: entry.name,
-				fullName: entry.full_name,
-				private: entry.private,
-				url: entry.html_url,
-			}));
+			// In order for a user to add or delete a webhook in GitHub, the user must have at least "Admin" access.
+			const userReposData = userRepos
+				.filter((entry) => entry.permissions?.admin)
+				.map((entry) => ({
+					repoId: entry.id,
+					repo: entry.name,
+					fullName: entry.full_name,
+					private: entry.private,
+					url: entry.html_url,
+				}));
+
+			return userReposData;
+		} catch (err) {
+			console.error(err);
+			return [];
+		}
+	} else if (gitProvider.provider === "gitlab") {
+		try {
+			const config = {
+				headers: {
+					Authorization: `Bearer ${gitProvider.accessToken}`,
+				},
+				params: {
+					membership: true, // Only get projects the user is a member of
+				},
+			};
+
+			const userRepos = await fetchAllPages(
+				`https://gitlab.com/api/v4/projects`,
+				config
+			);
+
+			// In order for a user to add or delete a webhook in GitLab, the user must have at least "Maintainer" (40) access.
+			const userReposData = userRepos
+				.filter((entry) => entry.permissions?.group_access?.access_level >= 40)
+				.map((entry) => ({
+					repoId: entry.id,
+					repo: entry.path,
+					fullName: entry.path_with_namespace,
+					private: entry.visibility === "private",
+					url: entry.web_url,
+				}));
 
 			return userReposData;
 		} catch (err) {
@@ -182,14 +236,11 @@ export async function getGitProviderRepos(gitProvider) {
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of branch objects.
  * Each branch object has a `name` property representing the branch name and a `protected` property indicating if the branch is protected.
  */
-export async function getGitProviderRepoBranches(
-	gitProvider,
-	owner,
-	repo,
-	maxPages = 100
-) {
+export async function getGitProviderRepoBranches(params) {
+	const { gitProvider } = params;
 	if (gitProvider.provider === "github") {
 		try {
+			const { owner, repo, maxPages = 100 } = params;
 			let url = `https://api.github.com/repos/${owner}/${repo}/branches?per_page=${maxPages}`;
 			const branches = [];
 			let pageCount = 0;
@@ -215,6 +266,39 @@ export async function getGitProviderRepoBranches(
 				}
 
 				pageCount++;
+			}
+
+			return branches;
+		} catch (err) {
+			console.error(err);
+			return [];
+		}
+	} else if (gitProvider.provider === "gitlab") {
+		try {
+			const { projectId, maxPages = 100 } = params;
+			let url = `https://gitlab.com/api/v4/projects/${projectId}/repository/branches`;
+			const branches = [];
+			let page = 1;
+
+			while (url && page < maxPages) {
+				const response = await axios.get(url, {
+					headers: {
+						Authorization: `Bearer ${gitProvider.accessToken}`,
+					},
+					params: {
+						per_page: maxPages, // Number of branches per page
+						page: page,
+					},
+				});
+
+				response.data.forEach((branch) => {
+					branches.push({ name: branch.name, protected: branch.protected });
+				});
+
+				const totalPages = response.headers["x-total-pages"];
+				if (page < totalPages) {
+					page++;
+				} else break;
 			}
 
 			return branches;

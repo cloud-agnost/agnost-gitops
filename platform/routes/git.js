@@ -1,5 +1,6 @@
 import express from "express";
 import gitCtrl from "../controllers/gitProvider.js";
+import cntrCtrl from "../controllers/container.js";
 import { applyRules } from "../schemas/gitProvider.js";
 import { authSession } from "../middlewares/authSession.js";
 import { checkContentType } from "../middlewares/contentType.js";
@@ -11,6 +12,8 @@ import {
 	getGitProviderRepoBranches,
 } from "../handlers/git.js";
 import helper from "../util/helper.js";
+
+import ERROR_CODES from "../config/errorCodes.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -47,7 +50,8 @@ router.post(
 	validate,
 	async (req, res) => {
 		try {
-			const { provider, accessToken, refreshToken, gitUser } = req.body;
+			const { provider, accessToken, refreshToken, expiresAt, gitUser } =
+				req.body;
 
 			// Check if the user has already linked the provider
 			const existingProvider = await gitCtrl.getOneByQuery({
@@ -64,6 +68,7 @@ router.post(
 						refreshToken: refreshToken
 							? helper.encryptText(refreshToken)
 							: null,
+						expiresAt: expiresAt,
 						username: gitUser.username,
 						email: gitUser.email,
 						avatar: gitUser.avatar,
@@ -81,6 +86,7 @@ router.post(
 					provider: provider,
 					accessToken: helper.encryptText(accessToken),
 					refreshToken: refreshToken ? helper.encryptText(refreshToken) : null,
+					expiresAt: expiresAt,
 					username: gitUser.username,
 					email: gitUser.email,
 					avatar: gitUser.avatar,
@@ -99,7 +105,7 @@ router.post(
 /*
 @route      /v1/user/git/:gitProviderId
 @method     DELETE
-@desc       Disconnect git provider
+@desc       Delete git provider
 @access     private
 */
 router.delete(
@@ -109,6 +115,20 @@ router.delete(
 	async (req, res) => {
 		try {
 			const { gitProvider } = req;
+
+			const containers = await cntrCtrl.getManyByQuery({
+				repoOrRegistry: "repo",
+				"repo.connected": true,
+				"repo.gitProviderId": gitProvider._id,
+			});
+
+			if (containers.length > 0) {
+				return res.status(401).json({
+					error: "Not Allowed",
+					details: `There are containers with build pipelines dependent to this ${gitProvider.provider} account. First disconnect ${gitProvider.provider} repositories from these containers and then delete this account.`,
+					code: ERROR_CODES.notAllowed,
+				});
+			}
 
 			// First revoke the access token
 			await revokeGitProviderAccessToken(
@@ -165,13 +185,14 @@ router.get(
 	async (req, res) => {
 		try {
 			const { gitProvider } = req;
-			const { owner, repo } = req.query;
+			const { owner, repo, projectId } = req.query;
 
-			const branches = await getGitProviderRepoBranches(
+			const branches = await getGitProviderRepoBranches({
 				gitProvider,
 				owner,
-				repo
-			);
+				repo,
+				projectId,
+			});
 
 			res.json(branches);
 		} catch (error) {

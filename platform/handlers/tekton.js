@@ -26,12 +26,14 @@ const __dirname = path.dirname(__filename);
  * @param {object} container - The container object.
  * @param {object} environment - The environment object.
  * @param {object} gitProvider - The git provider object.
+ * @param {object} session - The session object of the database transaction.
  * @returns {Promise<void>} - A promise that resolves when the Tekton pipeline is created.
  */
 export async function createTektonPipeline(
 	container,
 	environment,
-	gitProvider
+	gitProvider,
+	session = null
 ) {
 	// If the repo is not connected then return
 	if (!container.repo?.connected || !gitProvider) return;
@@ -39,7 +41,7 @@ export async function createTektonPipeline(
 	const { repo } = container;
 	const namespace = environment.iid;
 	const gitRepoType = repo.type;
-	const pipelineId = container.iid;
+	const pipelineId = container.slug;
 	const gitRepoUrl = repo.url;
 	const gitPat = gitProvider.accessToken;
 	const gitBranch = repo.branch;
@@ -47,7 +49,7 @@ export async function createTektonPipeline(
 	const appKind = formatKubernetesName(container.type);
 	const appName = container.iid;
 	const dockerfile = repo.dockerfile;
-	const containerImageName = container.iid;
+	const containerImageName = container.slug;
 	const originalManifest = fs.readFileSync(
 		`${__dirname}/manifests/${gitRepoType}-pipeline.yaml`,
 		"utf8"
@@ -106,55 +108,43 @@ export async function createTektonPipeline(
 					resource.spec.rules[0].http.paths[0].backend.service.name +=
 						resourceNameSuffix;
 					// If cluster has SSL settings and custom domains then also add these to the API server ingress
-					if (cluster) {
-						if (cluster.enforceSSLAccess) {
-							resource.metadata.annotations[
-								"nginx.ingress.kubernetes.io/ssl-redirect"
-							] = "true";
-							resource.metadata.annotations[
-								"nginx.ingress.kubernetes.io/force-ssl-redirect"
-							] = "true";
-						} else {
-							resource.metadata.annotations[
-								"nginx.ingress.kubernetes.io/ssl-redirect"
-							] = "false";
-							resource.metadata.annotations[
-								"nginx.ingress.kubernetes.io/force-ssl-redirect"
-							] = "false";
-						}
+					if (cluster.domains.length > 0) {
+						/* 						resource.metadata.annotations[
+							"nginx.ingress.kubernetes.io/ssl-redirect"
+						] = "true";
+						resource.metadata.annotations[
+							"nginx.ingress.kubernetes.io/force-ssl-redirect"
+						] = "true"; */
+						resource.metadata.annotations["kubernetes.io/ingress.class"] =
+							"nginx";
 
-						if (cluster.domains.length > 0) {
-							resource.metadata.annotations["kubernetes.io/ingress.class"] =
-								"nginx";
+						resource.spec.tls = cluster.domains.map((domainName) => {
+							return {
+								hosts: [domainName],
+							};
+						});
 
-							resource.spec.tls = cluster.domains.map((domainName) => {
-								return {
-									hosts: [domainName],
-									secretName: "agnost-root-domain-tls",
-								};
-							});
-
-							for (const domainName of cluster.domains) {
-								resource.spec.rules.unshift({
-									host: domainName,
-									http: {
-										paths: [
-											{
-												path: "/tekton-" + pipelineId + "(/|$)(.*)",
-												pathType: "ImplementationSpecific",
-												backend: {
-													service: {
-														name: `el-github-listener-${pipelineId}`,
-														port: { number: 8080 },
-													},
+						for (const domainName of cluster.domains) {
+							resource.spec.rules.unshift({
+								host: domainName,
+								http: {
+									paths: [
+										{
+											path: `/tekton-${pipelineId}(/|$)(.*)`,
+											pathType: "ImplementationSpecific",
+											backend: {
+												service: {
+													name: `el-github-listener-${pipelineId}`,
+													port: { number: 8080 },
 												},
 											},
-										],
-									},
-								});
-							}
+										},
+									],
+								},
+							});
 						}
 					}
+
 					await k8sNetworkingApi.createNamespacedIngress(
 						resource_namespace,
 						resource
@@ -233,11 +223,11 @@ export async function createTektonPipeline(
 	let sslVerification = false;
 	if (cluster.domains.length) {
 		{
-			webhookUrl = "https://" + cluster.domains[0] + "/tekton-" + pipelineId;
+			webhookUrl = "https://" + cluster.domains[0] + `/tekton-${pipelineId}`;
 			sslVerification = true;
 		}
 	} else {
-		webhookUrl = "http://" + cluster.ips[0] + "/tekton-" + pipelineId;
+		webhookUrl = "http://" + cluster.ips[0] + `/tekton-${pipelineId}`;
 		sslVerification = false;
 	}
 
@@ -272,7 +262,7 @@ export async function createTektonPipeline(
 			container._id,
 			{ "repo.webHookId": webHookId },
 			{},
-			{ cacheKey: container._id }
+			{ cacheKey: container._id, session }
 		);
 	}
 }
@@ -281,12 +271,14 @@ export async function createTektonPipeline(
  * Deletes a Tekton pipeline.
  * @param {object} container - The container object.
  * @param {object} gitProvider - The git provider object.
+ * @param {object} session - The session object of the database transaction.
  * @param {boolean} [updateDb=true] - Whether to update the database after deleting the pipeline.
  * @returns {Promise<void>} - A promise that resolves when the pipeline is deleted.
  */
 export async function deleteTektonPipeline(
 	container,
 	gitProvider,
+	session = null,
 	updateDb = true
 ) {
 	// If the repo is not connected then return
@@ -294,7 +286,7 @@ export async function deleteTektonPipeline(
 
 	const { repo } = container;
 	const gitRepoType = repo.type;
-	const pipelineId = container.iid;
+	const pipelineId = container.slug;
 	const gitRepoUrl = repo.url;
 	const hookId = repo.webHookId;
 	const gitPat = gitProvider?.accessToken;
@@ -403,7 +395,7 @@ export async function deleteTektonPipeline(
 			container._id,
 			{},
 			{ "repo.webHookId": "" },
-			{ cacheKey: container._id }
+			{ cacheKey: container._id, session }
 		);
 	}
 }
@@ -428,7 +420,7 @@ export async function deleteTektonPipelines(containers) {
 		if (gitProvider.refreshToken)
 			gitProvider.refreshToken = helper.decryptText(gitProvider.refreshToken);
 
-		await deleteTektonPipeline(container, gitProvider, false);
+		await deleteTektonPipeline(container, gitProvider, null, false);
 	}
 }
 

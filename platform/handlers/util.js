@@ -160,8 +160,9 @@ export function getImage(originalImage, container, registry) {
 
 	if (registry.type === "Public") {
 		return container.registry.imageUrl;
-	} else
-		return `${container.registry.imageName}/${container.registry.imageTag}`;
+	}
+	// TO-DO this part needs to be updated to support private registries
+	else return `${container.registry.imageName}/${container.registry.imageTag}`;
 }
 
 /**
@@ -487,7 +488,7 @@ export function hasHPAChanges(changes) {
  */
 export function hasIngressChanges(changes) {
 	return areThereChanges(changes, [
-		"networking.ingress.containerPort",
+		"networking.containerPort",
 		"networking.ingress.enabled",
 		"networking.ingress.type",
 	]);
@@ -511,7 +512,7 @@ export function hasIngressTypeChanges(changes) {
  */
 export function hasCustomDomainChanges(changes) {
 	return areThereChanges(changes, [
-		"networking.ingress.containerPort",
+		"networking.containerPort",
 		"networking.customDomain.enabled",
 		"networking.customDomain.domain",
 	]);
@@ -535,7 +536,7 @@ export function hasCustomDomainNameChanges(changes) {
  */
 export function hasTCPProxyChanges(changes) {
 	return areThereChanges(changes, [
-		"networking.ingress.containerPort",
+		"networking.containerPort",
 		"networking.tcpProxy.enabled",
 		"networking.tcpProxy.publicPort",
 	]);

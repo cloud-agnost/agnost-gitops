@@ -29,6 +29,7 @@
 		"port": 6379
 	},
 	"general": {
+		"clusterDomainSecret": "agnost-cluster-tls",
 		"storageBucket": "cluster-storage",
 		"minNameLength": 2,
 		"maxTextLength": 64,

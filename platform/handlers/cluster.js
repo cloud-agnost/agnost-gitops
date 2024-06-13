@@ -86,6 +86,22 @@ export async function updateClusterContainerReleases(containerUpdates) {
 
 		deployment.body.spec.template.spec.containers[0].image = image;
 
+		let releaseUpdated = false;
+		container.env = deployment.body.spec.template.spec.containers[0].env.map(
+			(entry) => {
+				if (entry.name === "RELEASE_NUMBER") {
+					releaseUpdated = true;
+					return { ...entry, value: image.split(":")[1] };
+				} else return entry;
+			}
+		);
+
+		if (!releaseUpdated)
+			deployment.body.spec.template.spec.containers[0].env.push({
+				name: "RELEASE_NUMBER",
+				value: image.split(":")[1],
+			});
+
 		return k8sAppsApi.replaceNamespacedDeployment(
 			deploymentName,
 			namespace,

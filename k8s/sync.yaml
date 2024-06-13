@@ -36,3 +36,5 @@ spec:
                          key: password
                  - name: NAMESPACE
                    value: agnost
+                 - name: RELEASE_NUMBER
+                   value: "v1.0.0"

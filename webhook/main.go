@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -15,15 +14,11 @@ import (
 
 var GroupName = os.Getenv("GROUP_NAME")
 var SolverName = os.Getenv("SOLVER_NAME")
-var ClusterSlug = os.Getenv("CLUSTER_SLUG")
 
 func main() {
 	if GroupName == "" {
 		panic("GROUP_NAME must be specified")
 	}
-
-	log.SetOutput(os.Stdout)
-	log.Println("Starting cert-manager webhook...")
 
 	// This will register our custom DNS provider with the webhook serving
 	// library, making it available as an API under the provided GroupName.
@@ -71,6 +66,7 @@ type customDNSProviderConfig struct {
 
 	//Email           string `json:"email"`
 	//APIKeySecretRef v1alpha1.SecretKeySelector `json:"apiKeySecretRef"`
+	Slug          string                   `json:"slug"`
 }
 
 // Name is used as the name for this DNS solver when referencing it on the ACME
@@ -91,28 +87,22 @@ func (c *agnostDNSProviderSolver) Name() string {
 func (c *agnostDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
-		log.Printf("agnost.dev: cannot load config for domain add: %v", err)
 		return fmt.Errorf("agnost.dev: cannot load config for domain add: %v", err)
 	}
 
-	// Print the decoded configuration to the logs
-	log.Printf("Decoded configuration present: %v", cfg)
-
 	// Define the DNS record
 	record := map[string]interface{}{
-		"name":    ch.ResolvedFQDN,
-		"value":   ch.Key,
-		"slug":    ClusterSlug,
+		"name":		ch.ResolvedFQDN,
+		"value":	ch.Key,
+		"slug":		cfg.Slug,
 	}
 	recordJSON, err := json.Marshal(record)
 	if err != nil {
-		log.Printf("agnost.dev: error getting record json: %v", err)
 		return fmt.Errorf("agnost.dev: error getting record json: %v", err)
 	}
 
 	_, err = c.makeAgnostRequest("POST", "https://api.agnost.dev/domains/records/add", recordJSON)
 	if err != nil {
-		log.Printf("agnost.dev: error adding domain record: %v", err)
 		return fmt.Errorf("agnost.dev: error adding domain record: %v", err)
 	}
 
@@ -128,29 +118,23 @@ func (c *agnostDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 func (c *agnostDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
-		log.Printf("agnost.dev: cannot load config for domain cleanup: %v", err)
 		return fmt.Errorf("agnost.dev: cannot load config for domain cleanup: %v", err)
 	}
 
-	// Print the decoded configuration to the logs
-	log.Printf("Decoded configuration present: %v", cfg)
-
 	// Define the DNS record
 	record := map[string]interface{}{
-		"name":    ch.ResolvedFQDN,
-		"value":   ch.Key,
-		"slug":    ClusterSlug,
+		"name":		ch.ResolvedFQDN,
+		"value": 	ch.Key,
+		"slug":		cfg.Slug,
 	}
 	
 	recordJSON, err := json.Marshal(record)
 	if err != nil {
-		log.Printf("agnost.dev: error getting record json: %v", err)
 		return fmt.Errorf("agnost.dev: error getting record json: %v", err)
 	}
 
 	_, err = c.makeAgnostRequest("POST", "https://api.agnost.dev/domains/records/remove", recordJSON)
 	if err != nil {
-		log.Printf("agnost.dev: error cleaning domain record: %v", err)
 		return fmt.Errorf("agnost.dev: error cleaning domain record: %v", err)
 	}
 

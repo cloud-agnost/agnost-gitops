@@ -17,8 +17,8 @@ import {
 } from "../handlers/ingress.js";
 import { updateClusterContainerReleases } from "../handlers/cluster.js";
 import {
-	createClusterDomainCertificates,
-	deleteClusterDomainCertificates,
+	createClusterDomainCertificate,
+	deleteClusterDomainCertificate,
 } from "../handlers/certificate.js";
 import helper from "../util/helper.js";
 import { templates } from "../handlers/templates/index.js";
@@ -118,7 +118,6 @@ router.get(
 		try {
 			const { name, version } = req.query;
 			for (const category of templates) {
-				console.log(category);
 				for (const template of category.templates) {
 					if (template.name === name && template.version === version) {
 						return res.json(template);
@@ -385,7 +384,7 @@ router.post(
 			}
 
 			// Create the certificate for the domain
-			await createClusterDomainCertificates(domain);
+			await createClusterDomainCertificate(domain);
 
 			// Get all container ingresses that will be impacted
 			// The impacted ones will be the ingresses of "platform" and "sync" container.
@@ -456,7 +455,7 @@ router.delete(
 			if (cluster.domains.length === 0) return res.json(cluster);
 
 			// Delete the certificate for the domain
-			await deleteClusterDomainCertificates();
+			await deleteClusterDomainCertificate();
 
 			// Get all container ingresses that will be impacted
 			// The impacted ones will be the ingresses of "platform" and "sync" container.

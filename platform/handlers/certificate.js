@@ -1,4 +1,5 @@
 import k8s from "@kubernetes/client-node";
+import config from "config";
 import { getNginxIngressControllerDeployment } from "./util.js";
 
 // Create a Kubernetes core API client
@@ -74,7 +75,7 @@ export async function initializeClusterCertificateIssuerForHTTP01() {
 }
 
 /**
- * Initializes the certificate issuer available across all namespaces for DNS01 challenge which will be used to issue certificates for wildcard domains.
+ * Initializes the certificate issuer for DNS01 challenge which will be used to issue certificate specifically for the cluster domain.
  * This function checks if the certificate issuer already exists, and if not, creates it.
  * @returns {Promise<void>} A promise that resolves when the initialization is complete.
  */
@@ -111,7 +112,8 @@ export async function initializeClusterCertificateIssuerForDNS01() {
 										groupName: process.env.GROUP_NAME,
 										solverName: process.env.SOLVER_NAME,
 										config: {
-											endpoint: `https://agnost-webhook.${process.env.NAMESPACE}.svc.cluster.local:443`,
+											endpoint: `https://${process.env.WEBHOOK_SERVICE}.${process.env.WEBHOOK_NAMESPACE}.svc.cluster.local:443`,
+											slug: process.env.CLUSTER_SLUG,
 										},
 									},
 								},
@@ -144,19 +146,115 @@ export async function initializeClusterCertificateIssuerForDNS01() {
 }
 
 /**
+ * Creates the certificate issuer available for the specified namespaces for DNS01 challenges which will be used to issue certificates for root and wildcard domains.
+ * @param {string} name - The name of the certificate issuer.
+ * @param {string} namespace - The namespace where the certificate issuer will be created.
+ * @param {string} slug - The slug for the webhook configuration.
+ * @returns {Promise<void>} - A promise that resolves when the certificate issuer is created.
+ */
+export async function createCertificateIssuerForDNS01(name, namespace, slug) {
+	try {
+		// Check to see if we have the certificate issuer already
+		await k8sCustomObjectApi.getNamespacedCustomObject(
+			"cert-manager.io",
+			"v1",
+			namespace,
+			"issuers",
+			name
+		);
+
+		return;
+	} catch (err) {
+		// If we get a 404, we need to create the issuer
+		if (err.statusCode === 404) {
+			const issuer = {
+				apiVersion: "cert-manager.io/v1",
+				kind: "Issuer",
+				metadata: {
+					name: name,
+					namespace: namespace,
+				},
+				spec: {
+					acme: {
+						privateKeySecretRef: {
+							name: `${name}-tls`,
+						},
+						server: "https://acme-v02.api.letsencrypt.org/directory",
+						solvers: [
+							{
+								dns01: {
+									webhook: {
+										groupName: process.env.GROUP_NAME,
+										solverName: process.env.SOLVER_NAME,
+										config: {
+											endpoint: `https://${process.env.WEBHOOK_SERVICE}.${process.env.WEBHOOK_NAMESPACE}.svc.cluster.local:443`,
+											slug: slug,
+										},
+									},
+								},
+							},
+						],
+					},
+				},
+			};
+
+			try {
+				await k8sCustomObjectApi.createNamespacedCustomObject(
+					"cert-manager.io",
+					"v1",
+					namespace,
+					"issuers",
+					issuer
+				);
+			} catch (err) {
+				console.error(
+					`Cannot create the DNS01 challenge certificate issuer for ingress ${name} in namespace ${namespace}. ${
+						err.response?.body?.message ?? err.message
+					}`
+				);
+			}
+
+			console.info(
+				`Created the DNS01 challenge certificate issuer for ingress ${name} in namespace ${namespace}.`
+			);
+		}
+	}
+}
+
+/**
+ * Deletes a certificate issuer for DNS01 challenge type in provided namespaces if it exists.
+ * @param {string} name - The name of the certificate issuer.
+ * @param {string} namespace - The namespace of the certificate issuer.
+ * @returns {Promise<void>} - A promise that resolves when the certificate issuer is deleted.
+ */
+export async function deleteCertificateIssuerForDNS01(name, namespace) {
+	try {
+		await k8sCustomObjectApi.deleteNamespacedCustomObject(
+			"cert-manager.io",
+			"v1",
+			namespace,
+			"issuers",
+			name
+		);
+
+		return;
+	} catch {}
+}
+
+/**
  * Creates certificate for the cluster's root domain and wildcard domain.
  * Uses different cluster issuers for each challenge type.
  * @param {string} domain - The domain for which the certificate is created.
  * @returns {Promise<void>} - A promise that resolves when the certificates are created successfully.
  */
-export async function createClusterDomainCertificates(domain) {
+export async function createClusterDomainCertificate(domain) {
 	// Create the certificate for the root and wildcard domain
-	const secretName = "agnost-cluster-tls";
+	const secretName = config.get("general.clusterDomainSecret");
 	const clusterDomainCertificate = {
 		apiVersion: "cert-manager.io/v1",
 		kind: "Certificate",
 		metadata: {
-			name: "agnost-cluster-tls",
+			name: secretName,
 			namespace: process.env.NAMESPACE,
 		},
 		spec: {
@@ -177,7 +275,7 @@ export async function createClusterDomainCertificates(domain) {
 			"certificates",
 			clusterDomainCertificate
 		);
-		console.log(
+		console.info(
 			`Created the cluster domain '${domain}' and '*.${domain}' certificate.`
 		);
 
@@ -223,20 +321,69 @@ export async function createClusterDomainCertificates(domain) {
 }
 
 /**
- * Deletes the cluster domain certificates.
+ * Deletes the cluster domain certificate.
  * @returns {Promise<void>} A promise that resolves when the certificates are deleted.
  */
-export async function deleteClusterDomainCertificates() {
-	await deleteCertificateResources("agnost-cluster-tls", process.env.NAMESPACE);
+export async function deleteClusterDomainCertificate() {
+	const secretName = config.get("general.clusterDomainSecret");
+	await deleteCertificate(secretName, process.env.NAMESPACE);
+}
+
+/**
+ * Creates a certificate for given domains.
+ * @param {string} name - The name of the certificate.
+ * @param {string} namespace - The namespace where the certificate will be created.
+ * @param {string} issuerName - The name of the issuer for the certificate.
+ * @param {string[]} domains - An array of domain names for the certificate.
+ * @returns {Promise<void>} - A promise that resolves when the certificate is created successfully.
+ */
+export async function createCertificate(name, namespace, issuerName, domains) {
+	const certificate = {
+		apiVersion: "cert-manager.io/v1",
+		kind: "Certificate",
+		metadata: {
+			name: name,
+			namespace: namespace,
+		},
+		spec: {
+			secretName: `${name}-tls`,
+			dnsNames: domains,
+			issuerRef: {
+				name: issuerName,
+				kind: "Issuer",
+			},
+		},
+	};
+
+	try {
+		await k8sCustomObjectApi.createNamespacedCustomObject(
+			"cert-manager.io",
+			"v1",
+			namespace,
+			"certificates",
+			certificate
+		);
+		console.info(
+			`Created the domain '${domains.join(
+				", "
+			)}' certificate named ${name} in namespace ${namespace}.`
+		);
+	} catch (err) {
+		console.error(
+			`Cannot create cluster level domain certificates. ${
+				err.response?.body?.message ?? err.message
+			}`
+		);
+	}
 }
 
 /**
  * Deletes the resources associated with a certificate.
- * @param {string} certificateName - The name of the certificate to delete.
+ * @param {string} name - The name of the certificate to delete.
  * @param {string} namespace - The namespace of the certificate.
  * @returns {Promise<void>} - A promise that resolves when the resources are deleted.
  */
-export async function deleteCertificateResources(certificateName, namespace) {
+export async function deleteCertificate(name, namespace) {
 	try {
 		// Get the list of certificates
 		const certificates = await k8sCustomObjectApi.listNamespacedCustomObject(
@@ -247,17 +394,17 @@ export async function deleteCertificateResources(certificateName, namespace) {
 		);
 
 		for (const cert of certificates.body.items) {
-			if (cert.metadata.name === certificateName) {
+			if (cert.metadata.name === name) {
 				try {
 					await k8sCustomObjectApi.deleteNamespacedCustomObject(
 						"cert-manager.io",
 						"v1",
 						namespace,
 						"certificates",
-						certificateName
+						name
 					);
 
-					console.log(`Deleted certificate ${certificateName}.`);
+					console.info(`Deleted certificate ${name}.`);
 				} catch {}
 			}
 		}
@@ -272,7 +419,7 @@ export async function deleteCertificateResources(certificateName, namespace) {
 			);
 
 		for (const certReq of certificateRequests.body.items) {
-			if (certReq.metadata.name.startsWith(certificateName)) {
+			if (certReq.metadata.name.startsWith(name)) {
 				try {
 					await k8sCustomObjectApi.deleteNamespacedCustomObject(
 						"cert-manager.io",
@@ -281,7 +428,7 @@ export async function deleteCertificateResources(certificateName, namespace) {
 						"certificaterequests",
 						certReq.metadata.name
 					);
-					console.log(`Deleted certificaterequest ${certReq.metadata.name}.`);
+					console.info(`Deleted certificaterequest ${certReq.metadata.name}.`);
 				} catch {}
 			}
 		}
@@ -295,7 +442,7 @@ export async function deleteCertificateResources(certificateName, namespace) {
 		);
 
 		for (const order of orders.body.items) {
-			if (order.metadata.name.startsWith(certificateName)) {
+			if (order.metadata.name.startsWith(name)) {
 				try {
 					await k8sCustomObjectApi.deleteNamespacedCustomObject(
 						"acme.cert-manager.io",
@@ -304,7 +451,7 @@ export async function deleteCertificateResources(certificateName, namespace) {
 						"orders",
 						order.metadata.name
 					);
-					console.log(`Deleted order ${order.metadata.name}.`);
+					console.info(`Deleted order ${order.metadata.name}.`);
 				} catch {}
 			}
 		}
@@ -318,7 +465,7 @@ export async function deleteCertificateResources(certificateName, namespace) {
 		);
 
 		for (const challenge of challenges.body.items) {
-			if (challenge.metadata.name.startsWith(certificateName)) {
+			if (challenge.metadata.name.startsWith(name)) {
 				try {
 					await k8sCustomObjectApi.deleteNamespacedCustomObject(
 						"acme.cert-manager.io",
@@ -327,13 +474,13 @@ export async function deleteCertificateResources(certificateName, namespace) {
 						"challenges",
 						challenge.metadata.name
 					);
-					console.log(`Deleted challenge ${challenge.metadata.name}.`);
+					console.info(`Deleted challenge ${challenge.metadata.name}.`);
 				} catch {}
 			}
 		}
 	} catch (err) {
 		console.error(
-			`Cannot delete cluster level domain certificate ${certificateName}. ${
+			`Cannot delete cluster level domain certificate ${name}. ${
 				err.response?.body?.message ?? err.message
 			}`
 		);

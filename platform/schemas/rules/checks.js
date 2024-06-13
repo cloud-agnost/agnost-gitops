@@ -3,12 +3,12 @@ import { body } from "express-validator";
 import parser from "cron-parser";
 import cntrCtrl from "../../controllers/container.js";
 import domainCtrl from "../../controllers/domain.js";
-import clsCtrl from "../../controllers/cluster.js";
 import gitCtrl from "../../controllers/gitProvider.js";
 import regCtrl from "../../controllers/registry.js";
 import { timezones } from "../../config/timezones.js";
 import helper from "../../util/helper.js";
-import { isClusterPubliclyAccessible } from "../../handlers/util.js";
+import { getClusterRecord } from "../../handlers/util.js";
+import { providerTypes } from "../../config/constants.js";
 
 export const checkName = (containerType, actionType) => {
 	return [
@@ -137,7 +137,7 @@ export const checkRepo = () => {
 			.notEmpty()
 			.withMessage("Required field, cannot be left empty")
 			.bail()
-			.isIn(["github", "gitlab", "bitbucket"])
+			.isIn(providerTypes)
 			.withMessage("Unsupported Git provider"),
 		body("repo.connected")
 			.if((value, { req }) => req.body.repoOrRegistry === "repo")
@@ -298,16 +298,14 @@ export const checkNetworking = (containerType, actionType) => {
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty")
 					.bail()
-					.isIn(["path", "subdomain"])
+					.isIn(["subdomain"]) // We only allow subdomain based ingress for now
 					.withMessage("Unsupported ingress type")
 					.bail()
-					.custom(async (value) => {
-						if (
-							!(await isClusterPubliclyAccessible()) &&
-							value === "subdomain"
-						) {
+					.custom(async () => {
+						const cluster = await getClusterRecord();
+						if (cluster.domains?.length === 0) {
 							throw new Error(
-								`Your cluster IP addresses are private which are not routable on the internet. You cannot create a subdomain based ingress for a cluster which is not accessible outside of the cluster. Try creating a 'path' based ingress instead.`
+								`Your cluster IP addresses are private which are not routable on the internet. You cannot create a subdomain based ingress for a cluster which is not accessible outside of the cluster.`
 							);
 						}
 						return true;
@@ -320,8 +318,9 @@ export const checkNetworking = (containerType, actionType) => {
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
 					.bail()
-					.custom(async (value) => {
-						if (!(await isClusterPubliclyAccessible()) && value === true) {
+					.custom(async () => {
+						const cluster = await getClusterRecord();
+						if (cluster.domains?.length === 0) {
 							throw new Error(
 								`Your cluster IP addresses are private which are not routable on the internet. You cannot create a custom domain based ingress for a cluster which is not accessible outside of the cluster.`
 							);
@@ -339,10 +338,8 @@ export const checkNetworking = (containerType, actionType) => {
 					.bail()
 					.toLowerCase() // convert the value to lowercase
 					.custom(async (value) => {
-						// The below reges allows for wildcard subdomains
-						// const dnameRegex = /^(?:\*\.)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
-						// Check domain name syntax, we do not currently allow wildcard subdomains
-						const dnameRegex = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+						// Check domain name syntax, the below reges allows for wildcard subdomains
+						const dnameRegex = /^(?:\*\.)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 						// Validate domain name (can be at mulitple levels)
 						if (!dnameRegex.test(value)) {
 							throw new Error(`Not a valid domain name '${value}'`);
@@ -359,36 +356,7 @@ export const checkNetworking = (containerType, actionType) => {
 							);
 						}
 
-						// Get the cluster object
-						const cluster = await clsCtrl.getOneByQuery(
-							{
-								clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-							},
-							{
-								cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
-							}
-						);
-
-						if (cluster?.domains?.find((entry) => entry === value)) {
-							throw new Error(
-								`The specified domain '${value}' already exists in cluster custom domains list`
-							);
-						}
-
-						const clusterIPs = await helper.getClusterIPs();
-						for (let i = 0; i < clusterIPs.length; i++) {
-							// Means that there is at least one IP address that is not private
-							if (helper.isPrivateIP(clusterIPs[i]) === false) {
-								return true;
-							}
-						}
-
-						// This means all cluster IPs are private
-						throw new Error(
-							`Your cluster IP addresses '${clusterIPs.join(
-								", "
-							)}' are private which are not routable on the internet. You cannot add a custom domain to an Agnost cluster with cluster IP addresses that are all private.`
-						);
+						return true;
 					}),
 				body("networking.tcpProxy.enabled")
 					.if((value, { req }) =>

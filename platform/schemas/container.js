@@ -3,7 +3,7 @@ import { body } from "express-validator";
 import deploymentRules from "./rules/deployment.js";
 import statefulSetRules from "./rules/statefulSet.js";
 import cronJobRules from "./rules/cronJob.js";
-import { containerTypes } from "../config/constants.js";
+import { containerTypes, providerTypes } from "../config/constants.js";
 import { templates } from "../handlers/templates/index.js";
 
 /**
@@ -98,7 +98,7 @@ export const ContainerModel = mongoose.model(
 			repo: {
 				type: {
 					type: String,
-					enum: ["github", "gitlab", "bitbucket"],
+					enum: providerTypes,
 				},
 				// Whether the repo is connected or not
 				connected: {
@@ -784,7 +784,7 @@ export function getValueChanges(oldConfig, newConfig) {
 			else continue;
 		}
 
-		if (isObjectButNotArray(oldValue) && isObjectButNotArray(newValue)) {
+		if (isObjectButNotArray(oldValue) || isObjectButNotArray(newValue)) {
 			if (oldValue.toString() !== newValue.toString()) changes.push(field);
 			else continue;
 		}

@@ -14,7 +14,13 @@ const k8sAutoscalingApi = kc.makeApiClient(k8s.AutoscalingV2Api);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Definition is deploymentConfig
+/**
+ * Creates a Horizontal Pod Autoscaler (HPA) based on the provided definition.
+ * @param {Object} definition - The definition object containing the HPA configuration.
+ * @param {string} name - The name of the HPA.
+ * @param {string} namespace - The namespace in which the HPA should be created.
+ * @returns {Promise<void>} - A promise that resolves when the HPA is created successfully.
+ */
 export async function createHPA(definition, name, namespace) {
 	if (!definition.cpuMetric.enabled && !definition.cpuMetric.memoryMetric)
 		return;
@@ -84,7 +90,15 @@ export async function createHPA(definition, name, namespace) {
 	);
 }
 
-// Definition is deploymentConfig
+/**
+ * Updates the Horizontal Pod Autoscaler (HPA) based on the provided definition.
+ * If the CPU and memory metrics are disabled, the HPA will be deleted.
+ * If the HPA does not exist, it will be created.
+ * @param {Object} definition - The definition object containing the HPA configuration.
+ * @param {string} name - The name of the HPA.
+ * @param {string} namespace - The namespace of the HPA.
+ * @returns {Promise<void>} - A promise that resolves when the HPA is updated.
+ */
 export async function updateHPA(definition, name, namespace) {
 	if (!definition.cpuMetric.enabled && !definition.cpuMetric.memoryMetric) {
 		await deleteHPA(name, namespace);
@@ -159,6 +173,13 @@ export async function updateHPA(definition, name, namespace) {
 	);
 }
 
+/**
+ * Deletes a Horizontal Pod Autoscaler (HPA) in the specified namespace.
+ *
+ * @param {string} name - The name of the HPA to delete.
+ * @param {string} namespace - The namespace of the HPA.
+ * @returns {Promise<void>} - A Promise that resolves when the HPA is deleted successfully.
+ */
 export async function deleteHPA(name, namespace) {
 	if (!(await getK8SResource("HPA", name, namespace))) return;
 

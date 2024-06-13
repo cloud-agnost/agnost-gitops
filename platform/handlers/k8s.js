@@ -35,7 +35,6 @@ import {
 	hasServiceChanges,
 	hasHPAChanges,
 	hasIngressChanges,
-	hasIngressTypeChanges,
 	hasCustomDomainChanges,
 	hasCustomDomainNameChanges,
 	hasTCPProxyChanges,
@@ -91,19 +90,20 @@ async function manageDeployment({
 	registry,
 	changes,
 	action,
+	session,
 }) {
 	const name = container.iid;
 	const namespace = environment.iid;
 	if (action === "create") {
 		try {
-			await createTektonPipeline(container, environment, gitProvider);
+			await createTektonPipeline(container, environment, gitProvider, session);
 		} catch (err) {
 			console.error(
 				`Cannot create the build pipeline for deployment '${name}' in namespace ${namespace}. ${
 					err.response?.body?.message ?? err.message
 				}`
 			);
-			await deleteTektonPipeline(container, gitProvider);
+			await deleteTektonPipeline(container, gitProvider, session);
 			throw err;
 		}
 		await createPVC(container.storageConfig, name, namespace);
@@ -112,11 +112,16 @@ async function manageDeployment({
 		await createHPA(container.deploymentConfig, name, namespace);
 	} else if (action === "update") {
 		if (hasRepoChanges(changes)) {
-			await deleteTektonPipeline(container, gitProvider);
+			await deleteTektonPipeline(container, gitProvider, session);
 			try {
-				await createTektonPipeline(container, environment, gitProvider);
+				await createTektonPipeline(
+					container,
+					environment,
+					gitProvider,
+					session
+				);
 			} catch (err) {
-				await deleteTektonPipeline(container, gitProvider);
+				await deleteTektonPipeline(container, gitProvider, session);
 				throw err;
 			}
 		}
@@ -129,17 +134,13 @@ async function manageDeployment({
 		if (hasHPAChanges(changes))
 			await updateHPA(container.deploymentConfig, name, namespace);
 		if (hasIngressChanges(changes))
-			await updateIngress(
-				container.networking,
-				name,
-				namespace,
-				hasIngressTypeChanges(changes)
-			);
+			await updateIngress(container.networking, name, namespace);
 		if (hasCustomDomainChanges(changes))
 			await updateCustomDomainIngress(
 				container.networking,
 				name,
 				namespace,
+				container.slug,
 				hasCustomDomainNameChanges(changes)
 			);
 		if (hasTCPProxyChanges(changes))
@@ -156,7 +157,7 @@ async function manageDeployment({
 				? container.networking.tcpProxy.publicPort
 				: null
 		);
-		await deleteTektonPipeline(container, gitProvider);
+		await deleteTektonPipeline(container, gitProvider, session, false);
 	}
 }
 
@@ -179,6 +180,7 @@ async function manageStatefulSet({
 	registry,
 	changes,
 	action,
+	session,
 }) {
 	const name = container.iid;
 	const namespace = environment.iid;
@@ -188,14 +190,19 @@ async function manageStatefulSet({
 			await createTemplatedK8SResources(container, environment);
 		} else {
 			try {
-				await createTektonPipeline(container, environment, gitProvider);
+				await createTektonPipeline(
+					container,
+					environment,
+					gitProvider,
+					session
+				);
 			} catch (err) {
 				console.error(
 					`Cannot create the build pipeline for statefulset '${name}' in namespace ${namespace}. ${
 						err.response?.body?.message ?? err.message
 					}`
 				);
-				await deleteTektonPipeline(container, gitProvider);
+				await deleteTektonPipeline(container, gitProvider, session);
 				throw err;
 			}
 			// Create both a ClusterIP and a headless service for the statefulset
@@ -211,11 +218,16 @@ async function manageStatefulSet({
 		}
 	} else if (action === "update") {
 		if (hasRepoChanges(changes)) {
-			await deleteTektonPipeline(container, gitProvider);
+			await deleteTektonPipeline(container, gitProvider, session);
 			try {
-				await createTektonPipeline(container, environment, gitProvider);
+				await createTektonPipeline(
+					container,
+					environment,
+					gitProvider,
+					session
+				);
 			} catch (err) {
-				await deleteTektonPipeline(container, gitProvider);
+				await deleteTektonPipeline(container, gitProvider, session);
 				throw err;
 			}
 		}
@@ -226,17 +238,13 @@ async function manageStatefulSet({
 			await updateService(container.networking, `${name}-headless`, namespace);
 		}
 		if (hasIngressChanges(changes))
-			await updateIngress(
-				container.networking,
-				name,
-				namespace,
-				hasIngressTypeChanges(changes)
-			);
+			await updateIngress(container.networking, name, namespace);
 		if (hasCustomDomainChanges(changes))
 			await updateCustomDomainIngress(
 				container.networking,
 				name,
 				namespace,
+				container.slug,
 				hasCustomDomainNameChanges(changes)
 			);
 		if (hasTCPProxyChanges(changes))
@@ -275,7 +283,7 @@ async function manageStatefulSet({
 					? container.networking.tcpProxy.publicPort
 					: null
 			);
-			await deleteTektonPipeline(container, gitProvider);
+			await deleteTektonPipeline(container, gitProvider, session, false);
 			await deleteStatefulSetPVC(
 				container.storageConfig,
 				container.statefulSetConfig,
@@ -305,30 +313,36 @@ async function manageCronJob({
 	registry,
 	changes,
 	action,
+	session,
 }) {
 	const name = container.iid;
 	const namespace = environment.iid;
 	if (action === "create") {
 		try {
-			await createTektonPipeline(container, environment, gitProvider);
+			await createTektonPipeline(container, environment, gitProvider, session);
 		} catch (err) {
 			console.error(
 				`Cannot create the build pipeline for cronjob '${name}' in namespace ${namespace}. ${
 					err.response?.body?.message ?? err.message
 				}`
 			);
-			await deleteTektonPipeline(container, gitProvider);
+			await deleteTektonPipeline(container, gitProvider, session);
 			throw err;
 		}
 		await createPVC(container.storageConfig, name, namespace);
 		await createCronJob(container, namespace, registry);
 	} else if (action === "update") {
 		if (hasRepoChanges(changes)) {
-			await deleteTektonPipeline(container, gitProvider);
+			await deleteTektonPipeline(container, gitProvider, session);
 			try {
-				await createTektonPipeline(container, environment, gitProvider);
+				await createTektonPipeline(
+					container,
+					environment,
+					gitProvider,
+					session
+				);
 			} catch (err) {
-				await deleteTektonPipeline(container, gitProvider);
+				await deleteTektonPipeline(container, gitProvider, session);
 				throw err;
 			}
 		}
@@ -339,6 +353,6 @@ async function manageCronJob({
 	} else if (action === "delete") {
 		await deleteCronJob(name, namespace);
 		await deletePVC(name, namespace);
-		await deleteTektonPipeline(container, gitProvider);
+		await deleteTektonPipeline(container, gitProvider, session, false);
 	}
 }

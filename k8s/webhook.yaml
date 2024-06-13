@@ -28,11 +28,8 @@ spec:
               value: "agnost.dev"
             - name: SOLVER_NAME
               value: "agnost"
-            - name: CLUSTER_SLUG
-              valueFrom:
-                secretKeyRef:
-                  name: agnost
-                  key: clusterSlug     
+            - name: RELEASE_NUMBER
+              value: "v1.0.0"
           ports:
             - name: https
               containerPort: 443

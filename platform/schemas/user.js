@@ -96,7 +96,7 @@ export const applyRules = (type) => {
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty")
 					.bail()
-					.isIn(["github"])
+					.isIn(providerTypes)
 					.withMessage("Unsupported Git repository provider"),
 				body("accessToken")
 					.trim()
@@ -115,7 +115,23 @@ export const applyRules = (type) => {
 						req.body.gitUser = user;
 						return true;
 					}),
-				body("refreshToken").trim().optional(),
+				body("refreshToken")
+					.if((value, { req }) => req.body.provider === "gitlab")
+					.trim()
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty"),
+				body("expiresAt")
+					.if((value, { req }) => req.body.provider === "gitlab")
+					.trim()
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty")
+					.bail()
+					.isInt({ min: 0 }) // Check if it's a positive integer
+					.customSanitizer((value) => {
+						const date = new Date(value * 1000);
+						return isNaN(date.getTime()) ? null : date;
+					})
+					.withMessage("Invalid epoch timestamp"),
 			];
 		case "end-setup":
 			return [
@@ -227,7 +243,7 @@ export const applyRules = (type) => {
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty")
 					.bail()
-					.isIn(["github"])
+					.isIn(providerTypes)
 					.withMessage("Unsupported Git repository provider"),
 				query("accessToken")
 					.trim()
@@ -246,7 +262,23 @@ export const applyRules = (type) => {
 						req.body.gitUser = user;
 						return true;
 					}),
-				query("refreshToken").trim().optional(),
+				query("refreshToken")
+					.if((value, { req }) => req.query.provider === "gitlab")
+					.trim()
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty"),
+				query("expiresAt")
+					.if((value, { req }) => req.query.provider === "gitlab")
+					.trim()
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty")
+					.bail()
+					.isInt({ min: 0 }) // Check if it's a positive integer
+					.customSanitizer((value) => {
+						const date = new Date(value * 1000);
+						return isNaN(date.getTime()) ? null : date;
+					})
+					.withMessage("Invalid epoch timestamp"),
 			];
 		case "accept-org-invite-session":
 		case "accept-project-invite-session":

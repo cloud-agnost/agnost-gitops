@@ -92,6 +92,10 @@ spec:
                 secretKeyRef:
                   name: minio
                   key: secretKey
+            - name: WEBHOOK_NAMESPACE
+              value: agnost
+            - name: WEBHOOK_SERVICE
+              value: "agnost-webhook"
             - name: NGINX_NAMESPACE
               value: "ingress-nginx"
             - name: CERT_MANAGER_NAMESPACE
@@ -100,5 +104,6 @@ spec:
               value: agnost
             - name: RELEASE_NUMBER
               value: "v1.0.0"
+    
 
 

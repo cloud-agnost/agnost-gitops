@@ -133,9 +133,22 @@ export const applyRules = (type) => {
 
 							if (containers.length > 0) {
 								throw new Error(
-									`There are total of ${containers.length} containers that are using this domain. You need to update the ingress setting for these containers before deleting the cluster domain.`
+									`There are total of ${containers.length} containers that are using a subdomain of this cluster domain in their ingress definitions. You need to disable the ingress setting for these containers before deleting the cluster domain.`
 								);
 							}
+
+							containers = await cntrCtrl.getManyByQuery({
+								repoOrRegistry: "repo",
+								"repo.connected": true,
+								"repo.webHookId": { $exists: true },
+							});
+
+							if (containers.length > 0) {
+								throw new Error(
+									`There are total of ${containers.length} containers that are using this cluster domain in their git repo webhooks. You need to disconnect the repos of these containers before deleting the cluster domain.`
+								);
+							}
+
 							return true;
 						} else {
 							throw new Error(

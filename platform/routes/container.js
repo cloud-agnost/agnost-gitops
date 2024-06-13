@@ -131,7 +131,7 @@ router.post(
 					projectId: project._id,
 					environmentId: environment._id,
 					iid: body.name,
-					slug: helper.generateSlug(body.name, 8),
+					slug: helper.generateSlug(null, 8),
 					createdBy: user._id,
 				},
 				{ cacheKey: containerId }
@@ -249,6 +249,7 @@ router.put(
 	applyRules("update"),
 	validate,
 	async (req, res) => {
+		const session = await cntrCtrl.startSession();
 		try {
 			const {
 				org,
@@ -333,6 +334,7 @@ router.put(
 				unset,
 				{
 					cacheKey: container._id,
+					session,
 				}
 			);
 
@@ -344,7 +346,11 @@ router.put(
 				registry,
 				changes: getValueChanges(container, updatedContainer), // Get the list of the fields that have changed
 				action: "update",
+				session: session,
 			});
+
+			// Commit the database transaction
+			await cntrCtrl.commit(session);
 
 			res.json(updatedContainer);
 
@@ -364,6 +370,7 @@ router.put(
 				}
 			);
 		} catch (err) {
+			await cntrCtrl.rollback(session);
 			helper.handleError(req, res, err);
 		}
 	}

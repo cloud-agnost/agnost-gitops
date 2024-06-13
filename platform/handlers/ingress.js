@@ -1,131 +1,25 @@
 import k8s from "@kubernetes/client-node";
 import { getClusterRecord, getK8SResource } from "./util.js";
-import helper from "../util/helper.js";
+import {
+	createCertificateIssuerForDNS01,
+	deleteCertificateIssuerForDNS01,
+	deleteCertificate,
+} from "./certificate.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
 
-// Definition is networking
+/**
+ * Creates an Ingress resource (subdomain of cluster domain) in Kubernetes.
+ * @param {Object} definition - The definition object.
+ * @param {string} name - The name of the Ingress.
+ * @param {string} namespace - The namespace in which to create the Ingress.
+ * @returns {Promise<void>} - A promise that resolves when the Ingress is created successfully.
+ * @throws {Error} - If the Ingress cannot be created.
+ */
 export async function createIngress(definition, name, namespace) {
-	if (definition.ingress.type === "path")
-		await createPathIngress(definition, name, namespace);
-	else await createSubDomainIngress(definition, name, namespace);
-}
-
-// Definition is networking
-export async function createPathIngress(definition, name, namespace) {
-	// Get cluster info from the database
-	const cluster = await getClusterRecord();
-
-	const ingress = {
-		apiVersion: "networking.k8s.io/v1",
-		kind: "Ingress",
-		metadata: {
-			name: `${name}-path`,
-			namespace: namespace,
-			annotations: {
-				"nginx.ingress.kubernetes.io/proxy-body-size": "500m",
-				"nginx.ingress.kubernetes.io/proxy-connect-timeout": "6000",
-				"nginx.ingress.kubernetes.io/proxy-send-timeout": "6000",
-				"nginx.ingress.kubernetes.io/proxy-read-timeout": "6000",
-				"nginx.ingress.kubernetes.io/proxy-next-upstream-timeout": "6000",
-				"nginx.ingress.kubernetes.io/rewrite-target": "/$2",
-			},
-		},
-		spec: {
-			ingressClassName: "nginx",
-			rules: [
-				{
-					http: {
-						paths: [
-							{
-								path: `/${name}-${namespace}(/|$)(.*)`,
-								pathType: "Prefix",
-								backend: {
-									service: {
-										name: `${name}`,
-										port: { number: definition.containerPort },
-									},
-								},
-							},
-						],
-					},
-				},
-			],
-		},
-	};
-
-	// If cluster has SSL settings and custom domains then also add these to the API server ingress
-	if (cluster) {
-		if (cluster.enforceSSLAccess) {
-			ingress.metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"] =
-				"true";
-			ingress.metadata.annotations[
-				"nginx.ingress.kubernetes.io/force-ssl-redirect"
-			] = "true";
-		} else {
-			ingress.metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"] =
-				"false";
-			ingress.metadata.annotations[
-				"nginx.ingress.kubernetes.io/force-ssl-redirect"
-			] = "false";
-		}
-
-		if (cluster.domains.length > 0) {
-			ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
-				"agnost-letsencrypt-clusterissuer";
-			ingress.metadata.annotations["kubernetes.io/ingress.class"] = "nginx";
-
-			ingress.spec.tls = cluster.domains.map((domainName) => {
-				const secretName = domainName.replaceAll(".", "-") + "-path-tls";
-				return {
-					hosts: [domainName],
-					secretName: secretName,
-				};
-			});
-
-			for (const domainName of cluster.domains) {
-				ingress.spec.rules.unshift({
-					host: domainName,
-					http: {
-						paths: [
-							{
-								path: `/${name}-${namespace}(/|$)(.*)`,
-								pathType: "Prefix",
-								backend: {
-									service: {
-										name: `${name}`,
-										port: { number: definition.containerPort },
-									},
-								},
-							},
-						],
-					},
-				});
-			}
-		}
-	}
-
-	try {
-		// Create the ingress with the provided spec
-		await k8sNetworkingApi.createNamespacedIngress(namespace, ingress);
-		console.info(
-			`Ingress '${name}-path' in namespace '${namespace}' created successfully`
-		);
-	} catch (err) {
-		console.error(
-			`Ingress '${name}-path' in namespace '${namespace}' cannot be created. ${
-				err.response?.body?.message ?? err.message
-			}`
-		);
-		throw err;
-	}
-}
-
-// Definition is networking
-export async function createSubDomainIngress(definition, name, namespace) {
 	// Get cluster info from the database
 	const cluster = await getClusterRecord();
 	// If cluster has no domains then return
@@ -143,6 +37,9 @@ export async function createSubDomainIngress(definition, name, namespace) {
 				"nginx.ingress.kubernetes.io/proxy-send-timeout": "6000",
 				"nginx.ingress.kubernetes.io/proxy-read-timeout": "6000",
 				"nginx.ingress.kubernetes.io/proxy-next-upstream-timeout": "6000",
+				"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+				"nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
+				"kubernetes.io/ingress.class": "nginx",
 			},
 		},
 		spec: {
@@ -151,30 +48,10 @@ export async function createSubDomainIngress(definition, name, namespace) {
 		},
 	};
 
-	// If cluster has SSL settings and custom domains then also add these to the API server ingress
-	if (cluster.enforceSSLAccess) {
-		ingress.metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"] =
-			"true";
-		ingress.metadata.annotations[
-			"nginx.ingress.kubernetes.io/force-ssl-redirect"
-		] = "true";
-	} else {
-		ingress.metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"] =
-			"false";
-		ingress.metadata.annotations[
-			"nginx.ingress.kubernetes.io/force-ssl-redirect"
-		] = "false";
-	}
-
-	ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
-		"agnost-letsencrypt-clusterissuer";
-	ingress.metadata.annotations["kubernetes.io/ingress.class"] = "nginx";
-
+	// We do not specify the secret name here, so that ingress-controller will use the default certificate which is the agnost-cluster-tls valid for root and wildcard domains
 	ingress.spec.tls = cluster.domains.map((domainName) => {
-		const secretName = domainName.replaceAll(".", "-") + "-subdomain-tls";
 		return {
 			hosts: [`${name}-${namespace}.${domainName}`],
-			secretName: secretName,
 		};
 	});
 
@@ -214,100 +91,103 @@ export async function createSubDomainIngress(definition, name, namespace) {
 	}
 }
 
-// Definition is networking
-export async function updateIngress(
-	definition,
-	name,
-	namespace,
-	isTypeChanged = false
-) {
+/**
+ * Updates the Ingress resource (subdomain of cluster domain) based on the provided definition, name, and namespace.
+ * @param {Object} definition - The definition object containing the configuration for the Ingress.
+ * @param {string} name - The name of the Ingress.
+ * @param {string} namespace - The namespace of the Ingress.
+ * @returns {Promise<void>} - A Promise that resolves when the Ingress is updated successfully.
+ */
+export async function updateIngress(definition, name, namespace) {
 	if (definition.ingress.enabled) {
 		const payload = await getK8SResource(
 			"Ingress",
-			`${name}-${definition.ingress.type === "path" ? "path" : "subdomain"}`,
+			`${name}-subdomain`,
 			namespace
 		);
+
 		if (!payload) {
 			await createIngress(definition, name, namespace);
 			return;
 		} else {
-			if (isTypeChanged) {
-				// If the new type is path then we delete the subdomain ingress and create a new path ingress and vice versa
-				await deleteIngress(
-					`${name}-${
-						definition.ingress.type === "path" ? "subdomain" : "path"
-					}`,
-					namespace
-				);
-				await createIngress(definition, name, namespace);
-				return;
-			} else {
-				// Update the ingress
-				const { spec } = payload.body;
-				spec.rules = spec.rules.map((entry) => {
-					entry.http.paths = entry.http.paths.map((path) => {
-						path.backend.service.port.number = definition.containerPort;
-						return path;
-					});
-
-					return entry;
+			// Update the ingress
+			const { spec } = payload.body;
+			spec.rules = spec.rules.map((entry) => {
+				entry.http.paths = entry.http.paths.map((path) => {
+					path.backend.service.port.number = definition.containerPort;
+					return path;
 				});
 
-				const requestOptions = {
-					headers: { "Content-Type": "application/merge-patch+json" },
-				};
-				await k8sNetworkingApi.replaceNamespacedIngress(
-					`${name}-${
-						definition.ingress.type === "path" ? "path" : "subdomain"
-					}`,
-					namespace,
-					payload.body,
-					undefined,
-					undefined,
-					undefined,
-					undefined,
-					undefined,
-					requestOptions
-				);
+				return entry;
+			});
 
-				console.info(
-					`Ingress '${name}-cluster' in namespace '${namespace}' updated successfully`
-				);
-			}
+			const requestOptions = {
+				headers: { "Content-Type": "application/merge-patch+json" },
+			};
+			await k8sNetworkingApi.replaceNamespacedIngress(
+				`${name}-subdomain`,
+				namespace,
+				payload.body,
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				requestOptions
+			);
+
+			console.info(
+				`Ingress ${name}-subdomain' in namespace '${namespace}' updated successfully`
+			);
 		}
 	} else {
-		await deleteIngress(
-			`${name}-${definition.ingress.type === "path" ? "path" : "subdomain"}`,
-			namespace
-		);
+		await deleteIngress(name, namespace);
 		return;
 	}
 }
 
+/**
+ * Deletes an Ingress resource (subdomain of cluster domain) in the specified namespace.
+ *
+ * @param {string} name - The name of the Ingress resource.
+ * @param {string} namespace - The namespace of the Ingress resource.
+ * @returns {Promise<void>} - A Promise that resolves when the Ingress resource is deleted successfully.
+ */
 export async function deleteIngress(name, namespace) {
-	if (!(await getK8SResource("Ingress", name, namespace))) return;
+	if (!(await getK8SResource("Ingress", `${name}-subdomain`, namespace)))
+		return;
 
 	try {
-		await k8sNetworkingApi.deleteNamespacedIngress(name, namespace);
+		await k8sNetworkingApi.deleteNamespacedIngress(
+			`${name}-subdomain`,
+			namespace
+		);
 		console.info(
-			`Ingress '${name}' in namespace ${namespace} deleted successfully`
+			`Ingress '${name}-subdomain' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting ingress '${name}' in namespace ${namespace}. ${
+			`Error deleting ingress '${name}-subdomain' in namespace ${namespace}. ${
 				err.response?.body?.message ?? err.message
 			}`
 		);
 	}
 }
 
-// Definition is networking
-export async function createCustomDomainIngress(definition, name, namespace) {
-	// Get cluster info from the database
-	const cluster = await getClusterRecord();
-	const secretName =
-		definition.customDomain.domain.replaceAll(".", "-") + "-domain-tls";
-
+/**
+ * Creates a custom domain ingress.
+ * @param {Object} definition - The definition object.
+ * @param {string} name - The name of the ingress.
+ * @param {string} namespace - The namespace of the ingress.
+ * @param {string} slug - The slug of the ingress.
+ * @returns {Promise<void>} - A promise that resolves when the ingress is created successfully.
+ */
+export async function createCustomDomainIngress(
+	definition,
+	name,
+	namespace,
+	slug
+) {
 	const ingress = {
 		apiVersion: "networking.k8s.io/v1",
 		kind: "Ingress",
@@ -320,6 +200,9 @@ export async function createCustomDomainIngress(definition, name, namespace) {
 				"nginx.ingress.kubernetes.io/proxy-send-timeout": "6000",
 				"nginx.ingress.kubernetes.io/proxy-read-timeout": "6000",
 				"nginx.ingress.kubernetes.io/proxy-next-upstream-timeout": "6000",
+				"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+				"nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
+				"kubernetes.io/ingress.class": "nginx",
 			},
 		},
 		spec: {
@@ -327,7 +210,7 @@ export async function createCustomDomainIngress(definition, name, namespace) {
 			tls: [
 				{
 					hosts: [definition.customDomain.domain],
-					secretName: secretName,
+					secretName: `${name}-tls`,
 				},
 			],
 			rules: [
@@ -352,23 +235,19 @@ export async function createCustomDomainIngress(definition, name, namespace) {
 		},
 	};
 
-	if (cluster.enforceSSLAccess) {
-		ingress.metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"] =
-			"true";
-		ingress.metadata.annotations[
-			"nginx.ingress.kubernetes.io/force-ssl-redirect"
-		] = "true";
+	// Set the issuer of the certifiate
+	const isWildcard = definition.customDomain.domain.startsWith("*");
+	if (isWildcard) {
+		// In case of wildcard domain we need to create the issuer with DNS01 solver
+		// Create the namespace scoped issuer
+		await createCertificateIssuerForDNS01(name, namespace, slug);
+		// Assign issuer as annotation
+		ingress.metadata.annotations["cert-manager.io/issuer"] = name;
 	} else {
-		ingress.metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"] =
-			"false";
-		ingress.metadata.annotations[
-			"nginx.ingress.kubernetes.io/force-ssl-redirect"
-		] = "false";
+		// In case of non-wildcard domain we can use the default cluster scoped http01 solver
+		ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
+			"agnost-http01";
 	}
-
-	ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
-		"agnost-letsencrypt-clusterissuer";
-	ingress.metadata.annotations["kubernetes.io/ingress.class"] = "nginx";
 
 	// Create the ingress with the provided spec
 	await k8sNetworkingApi.createNamespacedIngress(namespace, ingress);
@@ -377,11 +256,20 @@ export async function createCustomDomainIngress(definition, name, namespace) {
 	);
 }
 
-// Definition is networking
+/**
+ * Updates the custom domain ingress based on the provided parameters.
+ * @param {Object} definition - The definition object containing the custom domain configuration.
+ * @param {string} name - The name of the custom domain ingress.
+ * @param {string} namespace - The namespace of the custom domain ingress.
+ * @param {string} slug - The slug of the custom domain ingress.
+ * @param {boolean} [isDomainNameChanged=false] - Indicates whether the domain name has changed.
+ * @returns {Promise<void>} - A promise that resolves when the custom domain ingress is updated.
+ */
 export async function updateCustomDomainIngress(
 	definition,
 	name,
 	namespace,
+	slug,
 	isDomainNameChanged = false
 ) {
 	if (definition.customDomain.enabled) {
@@ -391,17 +279,16 @@ export async function updateCustomDomainIngress(
 			namespace
 		);
 		if (!payload) {
-			await createCustomDomainIngress(definition, name, namespace);
+			await createCustomDomainIngress(definition, name, namespace, slug);
 			return;
 		} else {
 			if (isDomainNameChanged) {
-				await deleteCustomDomainIngress(`${name}-domain`, namespace);
-				await createCustomDomainIngress(definition, name, namespace);
+				await deleteCustomDomainIngress(name, namespace);
+				await createCustomDomainIngress(definition, name, namespace, slug);
 				return;
 			} else {
 				// Update the ingress
 				const { spec } = payload.body;
-				spec.tls[0].hosts = [definition.customDomain.domain];
 				spec.rules = spec.rules.map((entry) => {
 					entry.host = definition.customDomain.domain;
 					entry.http.paths = entry.http.paths.map((path) => {
@@ -433,22 +320,32 @@ export async function updateCustomDomainIngress(
 			}
 		}
 	} else {
-		await deleteIngress(`${name}-domain`, namespace);
+		await deleteCustomDomainIngress(name, namespace);
 		return;
 	}
 }
 
+/**
+ * Deletes the custom domain ingress.
+ * @param {string} name - The name of the custom domain.
+ * @param {string} namespace - The namespace of the custom domain.
+ * @returns {Promise<void>} - A promise that resolves when the ingress is deleted successfully.
+ */
 export async function deleteCustomDomainIngress(name, namespace) {
-	if (!(await getK8SResource("Ingress", name, namespace))) return;
+	if (!(await getK8SResource("Ingress", `${name}-domain`, namespace))) return;
 
 	try {
-		await k8sNetworkingApi.deleteNamespacedIngress(name, namespace);
+		// Delete the certificate resources associated with the custom domain
+		await deleteCertificate(`${name}-tls`, namespace);
+		// In case of wildcard domain we need to delete the issuer with DNS01 solver, if it exists
+		await deleteCertificateIssuerForDNS01(name, namespace);
+		await k8sNetworkingApi.deleteNamespacedIngress(`${name}-domain`, namespace);
 		console.info(
-			`Ingress '${name}' in namespace ${namespace} deleted successfully`
+			`Ingress '${name}-domain' in namespace ${namespace} deleted successfully`
 		);
 	} catch (err) {
 		console.error(
-			`Error deleting ingress '${name}' in namespace ${namespace}. ${
+			`Error deleting ingress '${name}-domain' in namespace ${namespace}. ${
 				err.response?.body?.message ?? err.message
 			}`
 		);
@@ -456,7 +353,7 @@ export async function deleteCustomDomainIngress(name, namespace) {
 }
 
 /**
- * Adds the cluster domain to the ingresses of the specified containers (platform and sync).
+ * Adds the cluster domain to the ingresses of the specified containers (platform and sync). Only applicable for platform containers, not the containers created by the platform users.
  * @param {Array} containers - The containers to update the ingresses for.
  * @param {string} domain - The cluster domain to add.
  * @returns {Promise<void>} - A promise that resolves when all ingresses have been updated.
@@ -547,7 +444,10 @@ export async function addClusterDomainToIngresses(containers, domain) {
 }
 
 /**
- * Deletes custom domains from a cluster container's ingress (platform or sync).
+ * Removes the specified domain from the ingress resources (platform and sync) associated with the given containers.
+ * @param {Array<Object>} containers - The containers to remove the domain from.
+ * @param {string} domain - The domain to be removed.
+ * @returns {Promise<void>} - A promise that resolves when the domain has been removed from all ingress resources.
  */
 export async function removeClusterDomainFromIngresses(containers, domain) {
 	if (containers?.length === 0) return;

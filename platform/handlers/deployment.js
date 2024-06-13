@@ -14,7 +14,13 @@ const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Definition is container
+/**
+ * Creates a deployment based on the provided definition.
+ * @param {Object} definition - The deployment definition.
+ * @param {string} namespace - The namespace for the deployment.
+ * @param {string} registry - The container registry for the deployment.
+ * @returns {Promise<void>} - A promise that resolves when the deployment is created successfully.
+ */
 export async function createDeployment(definition, namespace, registry) {
 	const manifest = fs.readFileSync(
 		`${__dirname}/manifests/deployment.yaml`,
@@ -101,7 +107,13 @@ export async function createDeployment(definition, namespace, registry) {
 	);
 }
 
-// Definition is container
+/**
+ * Updates a Kubernetes Deployment with the provided definition.
+ * @param {Object} definition - The definition of the Deployment.
+ * @param {string} namespace - The namespace of the Deployment.
+ * @param {string} registry - The registry for the container image.
+ * @returns {Promise<void>} - A Promise that resolves when the Deployment is updated successfully.
+ */
 export async function updateDeployment(definition, namespace, registry) {
 	const payload = await getK8SResource("Deployment", definition.iid, namespace);
 	const { metadata, spec } = payload.body;
@@ -188,6 +200,12 @@ export async function updateDeployment(definition, namespace, registry) {
 	);
 }
 
+/**
+ * Deletes a deployment with the specified name and namespace.
+ * @param {string} name - The name of the deployment to delete.
+ * @param {string} namespace - The namespace of the deployment.
+ * @returns {Promise<void>} - A promise that resolves when the deployment is deleted successfully.
+ */
 export async function deleteDeployment(name, namespace) {
 	if (!(await getK8SResource("Deployment", name, namespace))) return;
 
