@@ -184,14 +184,13 @@ export const checkRepo = () => {
 			.notEmpty()
 			.withMessage("Required field, cannot be left empty")
 			.bail()
-			.matches(/^([\w\-./]*)$/)
+			.matches(/^(\/([A-Za-z0-9-_+.]+\/)*([A-Za-z0-9-_+.]+\/?)?)?$/)
 			.withMessage(
-				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
+				'Not a valid path. Paths start with "/" and contain only alphanumeric characters, dots (.), underscores (_), hyphens (-), slashes (/).'
 			) // Remove trailing slashes using custom sanitizer
 			.customSanitizer((value) => {
 				if (value !== "/") value = value.replace(/\/+$/, "");
 				if (!value.startsWith("/")) value = `/${value}`;
-
 				return value;
 			}),
 		body("repo.dockerfile")
@@ -203,13 +202,14 @@ export const checkRepo = () => {
 			.notEmpty()
 			.withMessage("Required field, cannot be left empty")
 			.bail()
-			.matches(/^[\w\-/]*$/)
+			.matches(/^([A-Za-z0-9-_+.]+\/)*([A-Za-z0-9-_+.]+\/?)?$/)
 			.withMessage(
-				"Not a valid dockerfile path. Dockerfile path names include alphanumeric characters, underscore, hyphens, and additional slashes."
-			) // Rem
+				"Not a valid dockerfile path. Paths contain only alphanumeric characters, dots (.), underscores (_), hyphens (-), slashes (/)."
+			) // Remove trailing slashes using custom sanitizer
 			.customSanitizer((value) => {
-				// Remove trailing slashes using custom sanitizer
-				return value.replace(/\/+$/, "");
+				if (value !== "/") value = value.replace(/\/+$/, "");
+				if (!value.startsWith("/")) value = `/${value}`;
+				return value;
 			}),
 		body("repo.gitProviderId")
 			.if(
@@ -299,6 +299,15 @@ export const checkNetworking = (containerType, actionType) => {
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
 					.bail()
+					.custom(async () => {
+						const cluster = await getClusterRecord();
+						if (cluster.domains?.length === 0) {
+							throw new Error(
+								`You have not set the domain of your cluster yet. Subdomain based ingress for a container can only be activiated after the cluster domain has been set.`
+							);
+						}
+						return true;
+					})
 					.toBoolean(),
 				body("networking.ingress.type")
 					.if((value, { req }) => req.body.networking.ingress.enabled === true)
@@ -308,17 +317,7 @@ export const checkNetworking = (containerType, actionType) => {
 					.withMessage("Required field, cannot be left empty")
 					.bail()
 					.isIn(["subdomain"]) // We only allow subdomain based ingress for now
-					.withMessage("Unsupported ingress type")
-					.bail()
-					.custom(async () => {
-						const cluster = await getClusterRecord();
-						if (cluster.domains?.length === 0) {
-							throw new Error(
-								`Your cluster IP addresses are private which are not routable on the internet. You cannot create a subdomain based ingress for a cluster which is not accessible outside of the cluster.`
-							);
-						}
-						return true;
-					}),
+					.withMessage("Unsupported ingress type"),
 				body("networking.customDomain.enabled")
 					.trim()
 					.notEmpty()
@@ -331,7 +330,7 @@ export const checkNetworking = (containerType, actionType) => {
 						const cluster = await getClusterRecord();
 						if (cluster.domains?.length === 0) {
 							throw new Error(
-								`Your cluster IP addresses are private which are not routable on the internet. You cannot create a custom domain based ingress for a cluster which is not accessible outside of the cluster.`
+								`You have not set the domain of your cluster yet. Custom domains can only be activiated after the cluster domain has been set.`
 							);
 						}
 						return true;
@@ -724,11 +723,15 @@ export const checkStorageConfig = (containerType, actionType) => {
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.matches(/^\/([\w\-/]*)$/)
+			.matches(/^(\/([A-Za-z0-9-_+.]+\/)*([A-Za-z0-9-_+.]+\/?)?)?$/)
 			.withMessage(
-				"Not a valid mount path. Mount paths include alphanumeric characters, underscore, hyphens, and additional slashes."
+				'Not a valid mount path. Paths start with "/" and contain only alphanumeric characters, dots (.), underscores (_), hyphens (-), slashes (/).'
 			) // Remove trailing slashes using custom sanitizer
-			.customSanitizer((value) => value.replace(/\/+$/, "")),
+			.customSanitizer((value) => {
+				if (value !== "/") value = value.replace(/\/+$/, "");
+				if (!value.startsWith("/")) value = `/${value}`;
+				return value;
+			}),
 		body("storageConfig.accessModes")
 			.if(
 				(value, { req }) =>

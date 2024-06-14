@@ -31,7 +31,12 @@ export const validateClusterIPs = async (req, res, next) => {
 			});
 		}
 
+		const eksHostnameRegex =
+			/^([a-zA-Z0-9-]+)-([a-f0-9]{16})\.[a-z0-9-]+\.elb\.amazonaws\.com$/;
 		for (let i = 0; i < clusterIPs.length; i++) {
+			// In AWS Elastic Kubernetes Service (EKS), when an ingress resource is set up, the load balancer created for the ingress object typically has a DNS hostname rather than a static IP address.
+			// If the cluster IP address is an EKS hostname, then it is allowed, meaning that the cluster is running on AWS EKS and can be accessed through the EKS hostname.
+			if (eksHostnameRegex.test(clusterIPs[i])) return next();
 			// Means that there is at least one IP address that is not private
 			if (helper.isPrivateIP(clusterIPs[i]) === false) {
 				return next();

@@ -113,6 +113,10 @@ spec:
               #!/busybox/sh
               export IMAGE=$(cat $(workspaces.ws.path)/image)
               export CONTEXT=$(echo $(tt.params.gitrepo) | sed "s|git://|git://$(tt.params.githubpat)@|")
+              echo "Context: ${CONTEXT}"
+              echo "Sub path: $(tt.params.gitsubpath)"
+              echo "Dockerfile: $(tt.params.dockerfile)"
+              echo "Image: ${IMAGE}"
               if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 /kaniko/executor \
                   --destination=${IMAGE} \

@@ -36,22 +36,19 @@ export async function getClusterRecord() {
 }
 
 /**
- * Checks if the cluster is publicly accessible.
- * @returns {Promise<boolean>} A promise that resolves to a boolean indicating if the cluster is publicly accessible.
+ * Returns the probe configuration based on the provided config object.
+ * @param {Object} config - The configuration object.
+ * @param {number} config.initialDelaySeconds - The initial delay in seconds before starting the probe.
+ * @param {number} config.periodSeconds - The period in seconds between probe checks.
+ * @param {number} config.timeoutSeconds - The timeout in seconds for each probe check.
+ * @param {number} config.failureThreshold - The number of consecutive failures required to mark the probe as failed.
+ * @param {string} config.checkMechanism - The mechanism used for probe checks. Possible values: "exec", "httpGet", "tcpSocket".
+ * @param {string} [config.execCommand] - The command to execute for the "exec" check mechanism.
+ * @param {string} [config.httpPath] - The path to use for the "httpGet" check mechanism.
+ * @param {number} [config.httpPort] - The port to use for the "httpGet" check mechanism.
+ * @param {number} [config.tcpPort] - The port to use for the "tcpSocket" check mechanism.
+ * @returns {Object} - The probe configuration object.
  */
-export async function isClusterPubliclyAccessible() {
-	const cluster = await getClusterRecord();
-
-	for (let i = 0; i < cluster.ips.length; i++) {
-		// Means that there is at least one IP address that is not private
-		if (helper.isPrivateIP(cluster.ips[i]) === false) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 export function getProbeConfig(config) {
 	const probe = {
 		initialDelaySeconds: config.initialDelaySeconds,

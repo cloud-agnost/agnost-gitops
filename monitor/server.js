@@ -4,6 +4,7 @@ import config from "config";
 import responseTime from "response-time";
 import logger from "./init/logger.js";
 import { monitorContainers } from "./handler/monitorContainers.js";
+import { monitorAccessTokens } from "./handler/monitorAccessTokens.js";
 import { connectToDatabase, disconnectFromDatabase } from "./init/db.js";
 import { handleUndefinedPaths } from "./middlewares/undefinedPaths.js";
 import { logRequest } from "./middlewares/logRequest.js";
@@ -13,6 +14,7 @@ import {
 } from "./handler/watchTaskRuns.js";
 
 var processing = false;
+var processingTokens = false;
 
 (async function () {
 	console.info(`Process ${process.pid} is running`);
@@ -74,6 +76,16 @@ function initMonitoringScheduler() {
 			processing = false;
 		}
 	}, config.get("general.monitoringInterval"));
+
+	setInterval(async () => {
+		// If we are already monitoring the tokens skip this cycle
+		if (processingTokens) return;
+		else {
+			processingTokens = true;
+			await monitorAccessTokens();
+			processingTokens = false;
+		}
+	}, config.get("general.monitoringIntervalTokens"));
 }
 
 function setUpGC() {

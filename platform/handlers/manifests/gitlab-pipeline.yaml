@@ -108,27 +108,19 @@ spec:
               #!/bin/bash
               export URL=$(echo $(tt.params.gitrepourl) | sed "s|://|://oauth2:$(tt.params.gitlabpat)@|")
               export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
-              echo "Workspace path: $(workspaces.ws.path)"
-              echo "Repo name: ${REPO_NAME}"
               cd $(workspaces.ws.path)
               git clone ${URL} -b $(tt.params.gitbranch)
               cd ${REPO_NAME}
               echo "$(tt.params.containerregistry)/$(tt.params.imagename):$(echo $(tt.params.gitrevision) | head -c 7)" > $(workspaces.ws.path)/image
-              echo "Image: $(cat $(workspaces.ws.path)/image)"
           - name: build
             image: gcr.io/kaniko-project/executor:v1.21.1-debug
             script: |
               #!/busybox/sh
-              echo "Workspace path: $(workspaces.ws.path)"
-              echo "Contents of $(workspaces.ws.path):"
-              ls "$(workspaces.ws.path)"
               export IMAGE=$(cat $(workspaces.ws.path)/image)
               export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
-              echo "Repo name: ${REPO_NAME}"
-              echo "Image: ${IMAGE}"
-              echo "Context: $(workspaces.ws.path)/${REPO_NAME}"
-              echo "Sub path: $(tt.params.gitsubpath)"
+              echo "Context: $(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath)"
               echo "Dockerfile: $(tt.params.dockerfile)"
+              echo "Image: ${IMAGE}"
               if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 /kaniko/executor \
                   --destination=${IMAGE} \

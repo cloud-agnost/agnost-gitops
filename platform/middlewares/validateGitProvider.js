@@ -38,3 +38,27 @@ export const validateGitProvider = async (req, res, next) => {
 		return helper.handleError(req, res, err);
 	}
 };
+
+export const validateGitProviderForRefresh = async (req, res, next) => {
+	try {
+		const { gitProviderId } = req.params;
+
+		// Get the domain object
+		let gitProvider = await gitCtrl.getOneById(gitProviderId);
+
+		if (!gitProvider) {
+			return res.status(404).json({
+				error: "Not Found",
+				details: `No such Git provider entry with the provided id '${gitProviderId}' exists.`,
+				code: ERROR_CODES.notFound,
+			});
+		}
+
+		// Assign Git provider data
+		req.gitProvider = gitProvider;
+
+		next();
+	} catch (err) {
+		return helper.handleError(req, res, err);
+	}
+};

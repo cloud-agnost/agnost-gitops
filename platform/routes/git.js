@@ -3,14 +3,19 @@ import gitCtrl from "../controllers/gitProvider.js";
 import cntrCtrl from "../controllers/container.js";
 import { applyRules } from "../schemas/gitProvider.js";
 import { authSession } from "../middlewares/authSession.js";
+import { authMasterToken } from "../middlewares/authMasterToken.js";
 import { checkContentType } from "../middlewares/contentType.js";
 import { validate } from "../middlewares/validate.js";
-import { validateGitProvider } from "../middlewares/validateGitProvider.js";
+import {
+	validateGitProvider,
+	validateGitProviderForRefresh,
+} from "../middlewares/validateGitProvider.js";
 import {
 	revokeGitProviderAccessToken,
 	getGitProviderRepos,
 	getGitProviderRepoBranches,
 } from "../handlers/git.js";
+import { updateTriggerTemplateAccessTokens } from "../handlers/tekton.js";
 import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
@@ -139,6 +144,54 @@ router.delete(
 
 			// Delete the git provider entry
 			await gitCtrl.deleteOneById(gitProvider._id);
+
+			res.json();
+		} catch (error) {
+			helper.handleError(req, res, error);
+		}
+	}
+);
+
+/*
+@route      /v1/user/git/:gitProviderId/refresh
+@method     POST
+@desc       Updates the access and refresh tokens of a git provider
+@access     private
+*/
+router.post(
+	"/:gitProviderId/refresh",
+	checkContentType,
+	authMasterToken,
+	validateGitProviderForRefresh,
+	async (req, res) => {
+		try {
+			const { gitProvider } = req;
+			const { accessToken, refreshToken, expiresAt } = req.body;
+
+			await gitCtrl.updateOneById(
+				gitProvider._id,
+				{
+					accessToken: helper.encryptText(accessToken),
+					refreshToken: helper.encryptText(refreshToken),
+					expiresAt: expiresAt,
+				},
+				{},
+				{ cacheKey: gitProvider._id }
+			);
+
+			// When we upate the access token we also need to update the tekton trigger bindings
+			// First get the list of containers that are using this git provider
+			const containers = await cntrCtrl.getManyByQuery({
+				repoOrRegistry: "repo",
+				"repo.connected": true,
+				"repo.gitProviderId": gitProvider._id,
+			});
+
+			await updateTriggerTemplateAccessTokens(
+				containers,
+				gitProvider.provider,
+				accessToken
+			);
 
 			res.json();
 		} catch (error) {

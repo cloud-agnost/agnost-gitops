@@ -73,18 +73,6 @@ function generateSlug(prefix, length = 12) {
 }
 
 /**
- * Generates a secret name for a certificate.
- * @param {number} [length=12] - The length of the secret name. Default is 12.
- * @returns {string} - The generated secret name.
- */
-function getCertSecretName(length = 12) {
-	// Kubernetes resource names need to be alphanumeric and in lowercase letters
-	const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-	const nanoid = customAlphabet(alphabet, length);
-	return `cert-secret-${nanoid()}`;
-}
-
-/**
  * Generate a new unique MongoDB identifier
  */
 function generateId() {
@@ -137,74 +125,6 @@ function encryptText(text) {
 function decryptText(cipherText) {
 	const bytes = cyripto.AES.decrypt(cipherText, process.env.PASSPHRASE);
 	return bytes.toString(cyripto.enc.Utf8);
-}
-
-/**
- * Encrtypes sensitive connection data
- * @param  {Object} access The connection settings needed to connect to the resource
- */
-function encyrptSensitiveData(access) {
-	if (Array.isArray(access)) {
-		let list = [];
-		access.forEach((entry) => {
-			list.push(encyrptSensitiveData(entry));
-		});
-
-		return list;
-	}
-
-	let encrypted = {};
-	for (const key in access) {
-		const value = access[key];
-		if (Array.isArray(value)) {
-			encrypted[key] = value.map((entry) => {
-				if (entry && typeof entry === "object")
-					return encyrptSensitiveData(entry);
-				if (entry && typeof entry === "string") return encryptText(entry);
-				else return entry;
-			});
-		} else if (typeof value === "object" && value !== null) {
-			encrypted[key] = encyrptSensitiveData(value);
-		} else if (value && typeof value === "string")
-			encrypted[key] = encryptText(value);
-		else encrypted[key] = value;
-	}
-
-	return encrypted;
-}
-
-/**
- * Decrypt connection data
- * @param  {Object} access The encrypted connection settings needed to connect to the resource
- */
-function decryptSensitiveData(access) {
-	if (Array.isArray(access)) {
-		let list = [];
-		access.forEach((entry) => {
-			list.push(decryptSensitiveData(entry));
-		});
-
-		return list;
-	}
-
-	let decrypted = {};
-	for (const key in access) {
-		const value = access[key];
-		if (Array.isArray(value)) {
-			decrypted[key] = value.map((entry) => {
-				if (entry && typeof entry === "object")
-					return decryptSensitiveData(entry);
-				if (entry && typeof entry === "string") return decryptText(entry);
-				else return entry;
-			});
-		} else if (typeof value === "object" && value !== null) {
-			decrypted[key] = decryptSensitiveData(value);
-		} else if (value && typeof value === "string")
-			decrypted[key] = decryptText(value);
-		else decrypted[key] = value;
-	}
-
-	return decrypted;
 }
 
 /**
@@ -317,32 +237,19 @@ function handleError(req, res, error) {
 	console.info(JSON.stringify(entry, null, 2));
 }
 
-/**
- * Sleeps for the specified number of milliseconds.
- * @param {number} ms - The number of milliseconds to sleep.
- * @returns {Promise<void>} - A promise that resolves after the specified number of milliseconds.
- */
-export function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export default {
 	constants,
 	getIP,
 	generateColor,
 	generateSlug,
 	generateSecret,
-	getCertSecretName,
 	generateId,
 	objectId,
 	isValidId,
 	encryptText,
 	decryptText,
-	encyrptSensitiveData,
-	decryptSensitiveData,
 	isPrivateIP,
 	getSyncUrl,
 	escapeStringRegexp,
 	handleError,
-	sleep,
 };

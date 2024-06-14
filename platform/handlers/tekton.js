@@ -110,12 +110,6 @@ export async function createTektonPipeline(
 						resourceNameSuffix;
 					// If cluster has SSL settings and custom domains then also add these to the API server ingress
 					if (cluster.domains.length > 0) {
-						resource.metadata.annotations[
-							"nginx.ingress.kubernetes.io/ssl-redirect"
-						] = "true";
-						resource.metadata.annotations[
-							"nginx.ingress.kubernetes.io/force-ssl-redirect"
-						] = "true";
 						resource.metadata.annotations["kubernetes.io/ingress.class"] =
 							"nginx";
 
@@ -600,5 +594,52 @@ async function deleteGitlabWebhook(gitPat, projectId, hookId) {
 		console.info("GitLab project webhook deleted");
 	} catch (err) {
 		console.error("Error deleting GitLab repo webhook", err);
+	}
+}
+
+export async function updateTriggerTemplateAccessTokens(
+	containers,
+	provider,
+	accessToken
+) {
+	if (!containers || containers.length === 0) return;
+	// Iterage over the containers
+	for (const container of containers) {
+		try {
+			// Get the TriggerBinding object
+			const payload = await k8sCustomObjectApi.getNamespacedCustomObject(
+				"triggers.tekton.dev",
+				"v1beta1",
+				"tekton-builds",
+				"triggerbindings",
+				`${provider}-push-binding-${container.slug}`
+			);
+
+			const { metadata, spec } = payload.body;
+			spec.params = spec.params.map((param) => {
+				if (param.name === "gitlabpat" && provider === "gitlab") {
+					param.value = accessToken;
+				}
+				return param;
+			});
+
+			// Update the TriggerBinding object
+			await k8sCustomObjectApi.replaceNamespacedCustomObject(
+				"triggers.tekton.dev",
+				"v1beta1",
+				"tekton-builds",
+				"triggerbindings",
+				metadata.name,
+				payload.body
+			);
+		} catch (err) {
+			console.error(
+				`Error updating tekton triggerbinding resource '${provider}-push-binding-${
+					container.slug
+				}' for updated access token. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
+		}
 	}
 }

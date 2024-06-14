@@ -388,7 +388,7 @@ router.post(
 
 			// Get all container ingresses that will be impacted
 			// The impacted ones will be the ingresses of "platform" and "sync" container.
-			// Subdomain based ingresses will not be impacted ince we cannot add a subdomain based ingress if we do not have a cluster domain
+			// Subdomain based ingresses will not be impacted since we cannot add a subdomain based ingress if we do not have a cluster domain
 			let containers = await cntrCtrl.getManyByQuery(
 				{
 					"networking.ingress.enabled": true,

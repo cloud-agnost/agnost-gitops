@@ -6,8 +6,10 @@
 	},
 	"general": {
 		"monitoringInterval": 3000,
+		"monitoringIntervalTokens": 600000,
 		"resourcePaginationSize": 100,
 		"containerPaginationSize": 100,
+		"gitProviderPaginationSize": 100,
 		"gcSeconds": 30
 	},
 	"database": {

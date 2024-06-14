@@ -50,6 +50,11 @@ spec:
                       secretKeyRef:
                          name: agnost
                          key: masterToken
+                 - name: PASSPHRASE
+                   valueFrom:
+                      secretKeyRef:
+                         name: agnost
+                         key: passPhrase
                  - name: NAMESPACE
                    value: agnost
                  - name: RELEASE_NUMBER
