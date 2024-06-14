@@ -184,16 +184,15 @@ export const checkRepo = () => {
 			.notEmpty()
 			.withMessage("Required field, cannot be left empty")
 			.bail()
-			.custom((value) => value.startsWith("/"))
-			.withMessage("Path must start with a '/' character")
-			.bail()
-			.matches(/^\/([\w\-/]*)$/)
+			.matches(/^([\w\-./]*)$/)
 			.withMessage(
 				"Not a valid path. Path names include alphanumeric characters, underscore, hyphens, and additional slashes."
 			) // Remove trailing slashes using custom sanitizer
 			.customSanitizer((value) => {
-				if (value !== "/") return value.replace(/\/+$/, "");
-				else return value;
+				if (value !== "/") value = value.replace(/\/+$/, "");
+				if (!value.startsWith("/")) value = `/${value}`;
+
+				return value;
 			}),
 		body("repo.dockerfile")
 			.if(
@@ -246,6 +245,16 @@ export const checkRepo = () => {
 				req.gitProvider = gitProvider;
 				return true;
 			}),
+		body("repo.repoId")
+			.if(
+				(value, { req }) =>
+					req.body.repoOrRegistry === "repo" &&
+					req.body.repo.connected &&
+					req.body.repo.type === "gitlab"
+			)
+			.trim()
+			.notEmpty()
+			.withMessage("Required field, cannot be left empty"),
 	];
 };
 

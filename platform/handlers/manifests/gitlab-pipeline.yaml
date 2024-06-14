@@ -9,6 +9,8 @@ spec:
       value: willbereplaced
     - name: resourcename
       value: willbereplaced
+    - name: agnostnamespace
+      value: willbereplaced
     - name: resourcenamespace
       value: willbereplaced
     - name: containerregistry
@@ -25,23 +27,20 @@ spec:
       value: willbereplaced
     - name: gitrevision
       value: $(body.after)
+    - name: gitrepo
+      value: $(body.repository.url)
+    - name: gitcommitter
+      value: $(body.user_username)
+    - name: gitcommiturl
+      value: $(body.commits[0].url)
     - name: gitrepourl
       value: $(body.repository.git_http_url)
     - name: gitreponame
-      value: $(body.repository.name)
-    - name: gitcommitter
-      value: $(body.head_commit.committer.username)
-    - name: gitcommiturl
-      value: $(body.head_commit.url)
-    - name: gitrepourl
-      value: $(body.repository.html_url)
-    - name: gitreponame
-      value: $(body.repository.full_name)
+      value: $(body.project.path_with_namespace)
     - name: gitcommitmessage
-      value: $(body.head_commit.message)
+      value: $(body.commits[0].message)
     - name: gitcommittimestamp
-      value: $(body.head_commit.timestamp)
-    
+      value: $(body.commits[0].timestamp)
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
@@ -52,9 +51,10 @@ spec:
   params:
     - name: kind
     - name: resourcename
+    - name: agnostnamespace
     - name: resourcenamespace
     - name: containerregistry
-    - name: githubpat
+    - name: gitlabpat
     - name: gitbranch
     - name: gitsubpath
     - name: gitrevision
@@ -107,36 +107,46 @@ spec:
             script: |
               #!/bin/bash
               export URL=$(echo $(tt.params.gitrepourl) | sed "s|://|://oauth2:$(tt.params.gitlabpat)@|")
+              export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
+              echo "Workspace path: $(workspaces.ws.path)"
+              echo "Repo name: ${REPO_NAME}"
               cd $(workspaces.ws.path)
               git clone ${URL} -b $(tt.params.gitbranch)
-              cd $(tt.params.gitreponame)
-              IMAGE_TAG=$(git rev-parse --short=7 $(tt.params.gitbranch))
-              echo "$(tt.params.containerregistry)/$(tt.params.imagename):${IMAGE_TAG}" > $(workspaces.ws.path)/image
+              cd ${REPO_NAME}
+              echo "$(tt.params.containerregistry)/$(tt.params.imagename):$(echo $(tt.params.gitrevision) | head -c 7)" > $(workspaces.ws.path)/image
+              echo "Image: $(cat $(workspaces.ws.path)/image)"
           - name: build
             image: gcr.io/kaniko-project/executor:v1.21.1-debug
             script: |
               #!/busybox/sh
+              echo "Workspace path: $(workspaces.ws.path)"
+              echo "Contents of $(workspaces.ws.path):"
+              ls "$(workspaces.ws.path)"
               export IMAGE=$(cat $(workspaces.ws.path)/image)
-              if [ "$(tt.params.containerregistry)" == "local-registry.default:5000" ]; then
+              export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
+              echo "Repo name: ${REPO_NAME}"
+              echo "Image: ${IMAGE}"
+              echo "Context: $(workspaces.ws.path)/${REPO_NAME}"
+              echo "Sub path: $(tt.params.gitsubpath)"
+              echo "Dockerfile: $(tt.params.dockerfile)"
+              if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 /kaniko/executor \
                   --destination=${IMAGE} \
-                  --context=$(workspaces.ws.path)/$(tt.params.gitreponame) \
-                  --context-sub-path=$(tt.params.gitsubpath) \
+                  --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
                   --dockerfile=$(tt.params.dockerfile) \
                   --no-push \
                   --tar-path=$(workspaces.ws.path)/image.tar
               else
                 /kaniko/executor \
                   --destination=${IMAGE} \
-                  --context=$(workspaces.ws.path)/$(tt.params.gitreponame) \
-                  --context-sub-path=$(tt.params.gitsubpath) \
-                  --dockerfile=$(tt.params.dockerfile) \
+                  --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
+                  --dockerfile=$(tt.params.dockerfile)
               fi
-          - image: quay.io/skopeo/stable:latest
-            name: local-push
+          - name: local-push
+            image: quay.io/skopeo/stable:latest
             script: |
               #!/bin/bash
-              if [ "$(tt.params.containerregistry)" == "local-registry.default:5000" ]; then
+              if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 export IMAGE=$(cat $(workspaces.ws.path)/image)
                 skopeo --insecure-policy copy \
                   --dest-authfile /root/.docker/config.json \
@@ -149,7 +159,7 @@ spec:
             image: bitnami/kubectl:1.29.2
             script: |
               #!/usr/bin/bash
-              export IMAGE=$(cat $(workspaces.ws.path)/image)
+              export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/zot.$(tt.params.agnostnamespace):5000/localhost:30050/')
               kubectl set image $(tt.params.kind)/$(tt.params.resourcename) $(tt.params.resourcename)=${IMAGE} -n $(tt.params.resourcenamespace)
               kubectl rollout status $(tt.params.kind)/$(tt.params.resourcename) -n $(tt.params.resourcenamespace) -w
               kubectl annotate $(tt.params.kind)/$(tt.params.resourcename) kubernetes.io/change-cause="Update image to ${IMAGE}" -n $(tt.params.resourcenamespace)
@@ -219,8 +229,8 @@ spec:
           params:
             - name: "filter"
               value: "body.ref == 'refs/heads/master'"
-            - name: "filter"
-              value: "will be replaced or removed"
+            # - name: "filter"
+            #   value: "will be replaced or removed"
       bindings:
         - ref: gitlab-push-binding
       template:
@@ -235,10 +245,10 @@ spec:
               - resources:
                   requests:
                     memory: "64Mi"
-                    cpu: "250m"
+                    cpu: "50m"
                   limits:
                     memory: "128Mi"
-                    cpu: "500m"
+                    cpu: "100m"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

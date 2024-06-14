@@ -9,6 +9,8 @@ spec:
       value: willbereplaced
     - name: resourcename
       value: willbereplaced
+    - name: agnostnamespace
+      value: willbereplaced
     - name: resourcenamespace
       value: willbereplaced
     - name: containerregistry
@@ -34,7 +36,7 @@ spec:
     - name: gitrepourl
       value: $(body.repository.html_url)
     - name: gitreponame
-      value: $(body.repository.full_name)
+      value: $(body.repository.name)
     - name: gitcommitmessage
       value: $(body.head_commit.message)
     - name: gitcommittimestamp
@@ -49,6 +51,7 @@ spec:
   params:
     - name: kind
     - name: resourcename
+    - name: agnostnamespace
     - name: resourcenamespace
     - name: containerregistry
     - name: githubpat
@@ -110,7 +113,7 @@ spec:
               #!/busybox/sh
               export IMAGE=$(cat $(workspaces.ws.path)/image)
               export CONTEXT=$(echo $(tt.params.gitrepo) | sed "s|git://|git://$(tt.params.githubpat)@|")
-              if [ "$(tt.params.containerregistry)" == "local-registry.default:5000" ]; then
+              if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 /kaniko/executor \
                   --destination=${IMAGE} \
                   --context=${CONTEXT} \
@@ -131,7 +134,7 @@ spec:
             name: local-push
             script: |
               #!/bin/bash
-              if [ "$(tt.params.containerregistry)" == "local-registry.default:5000" ]; then
+              if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 export IMAGE=$(cat $(workspaces.ws.path)/image)
                 skopeo --insecure-policy copy \
                   --dest-authfile /root/.docker/config.json \
@@ -144,7 +147,7 @@ spec:
             image: bitnami/kubectl:1.29.2
             script: |
               #!/usr/bin/bash
-              export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/local-registry.default:5000/localhost:30050/')
+              export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/zot.$(tt.params.agnostnamespace):5000/localhost:30050/')
               kubectl set image $(tt.params.kind)/$(tt.params.resourcename) $(tt.params.resourcename)=${IMAGE} -n $(tt.params.resourcenamespace)
               kubectl rollout status $(tt.params.kind)/$(tt.params.resourcename) -n $(tt.params.resourcenamespace) -w
               kubectl annotate $(tt.params.kind)/$(tt.params.resourcename) kubernetes.io/change-cause="Update image to ${IMAGE}" -n $(tt.params.resourcenamespace)
@@ -230,10 +233,10 @@ spec:
               - resources:
                   requests:
                     memory: "64Mi"
-                    cpu: "250m"
+                    cpu: "50m"
                   limits:
                     memory: "128Mi"
-                    cpu: "500m"
+                    cpu: "100m"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

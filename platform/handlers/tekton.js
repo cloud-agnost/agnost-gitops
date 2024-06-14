@@ -2,6 +2,7 @@ import fs from "fs";
 import crypto from "crypto";
 import k8s from "@kubernetes/client-node";
 import path from "path";
+import axios from "axios";
 import { Octokit } from "@octokit/core";
 import { fileURLToPath } from "url";
 import { getClusterRecord } from "./util.js";
@@ -109,12 +110,12 @@ export async function createTektonPipeline(
 						resourceNameSuffix;
 					// If cluster has SSL settings and custom domains then also add these to the API server ingress
 					if (cluster.domains.length > 0) {
-						/* 						resource.metadata.annotations[
+						resource.metadata.annotations[
 							"nginx.ingress.kubernetes.io/ssl-redirect"
 						] = "true";
 						resource.metadata.annotations[
 							"nginx.ingress.kubernetes.io/force-ssl-redirect"
-						] = "true"; */
+						] = "true";
 						resource.metadata.annotations["kubernetes.io/ingress.class"] =
 							"nginx";
 
@@ -159,10 +160,10 @@ export async function createTektonPipeline(
 					resource.spec.resources.kubernetesResource.spec.template.spec.serviceAccountName +=
 						resourceNameSuffix;
 					if (gitSubPath != "/") {
-						resource.spec.triggers[0].interceptors[1].params[1].name = "filter";
+						//resource.spec.triggers[0].interceptors[1].params[1].name = "filter";
 						// remove leading slash, if exists
 						var path = gitSubPath.replace(/^\/+/, "");
-						resource.spec.triggers[0].interceptors[1].params[1].value = `body.commits.all(c, c.modified.exists(m, m.startsWith("${path}")) || c.added.exists(a, a.startsWith("${path}")) || c.removed.exists(r, r.startsWith("${path}")))`;
+						//resource.spec.triggers[0].interceptors[1].params[1].value = `body.commits.all(c, c.modified.exists(m, m.startsWith("${path}")) || c.added.exists(a, a.startsWith("${path}")) || c.removed.exists(r, r.startsWith("${path}")))`;
 					} else {
 						delete resource.spec.triggers[0].interceptors[1].params[1];
 					}
@@ -177,13 +178,14 @@ export async function createTektonPipeline(
 				case "TriggerBinding":
 					resource.spec.params[0].value = appKind;
 					resource.spec.params[1].value = appName;
-					resource.spec.params[2].value = namespace;
-					resource.spec.params[3].value = "zot." + agnostNamespace + ":5000";
-					resource.spec.params[4].value = gitPat;
-					resource.spec.params[5].value = gitBranch;
-					resource.spec.params[6].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
-					resource.spec.params[7].value = containerImageName;
-					resource.spec.params[8].value = dockerfile.replace(/^\/+/, ""); // remove leading slash, if exists
+					resource.spec.params[2].value = agnostNamespace;
+					resource.spec.params[3].value = namespace;
+					resource.spec.params[4].value = "zot." + agnostNamespace + ":5000";
+					resource.spec.params[5].value = gitPat;
+					resource.spec.params[6].value = gitBranch;
+					resource.spec.params[7].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
+					resource.spec.params[8].value = containerImageName;
+					resource.spec.params[9].value = dockerfile.replace(/^\/+/, ""); // remove leading slash, if exists
 					await k8sCustomObjectApi.createNamespacedCustomObject(
 						group,
 						version,
@@ -245,7 +247,7 @@ export async function createTektonPipeline(
 		case "gitlab":
 			webHookId = await createGitlabWebhook(
 				gitPat,
-				gitRepoUrl,
+				repo.repoId,
 				webhookUrl,
 				secretToken,
 				gitBranch,
@@ -383,7 +385,7 @@ export async function deleteTektonPipeline(
 			await deleteGithubWebhook(gitPat, gitRepoUrl, hookId);
 			break;
 		case "gitlab":
-			await deleteGitlabWebhook(gitPat, gitRepoUrl, hookId);
+			await deleteGitlabWebhook(gitPat, repo.repoId, hookId);
 			break;
 		default:
 			throw new Error("Unknown repo type: " + gitRepoType);
@@ -458,7 +460,7 @@ async function createGithubWebhook(
 	const path = new URL(gitRepoUrl).pathname;
 
 	try {
-		var githubHook = await octokit.request("POST /repos" + path + "/hooks", {
+		const githubHook = await octokit.request("POST /repos" + path + "/hooks", {
 			owner: path.split("/")[1],
 			repo: path.split("/")[2],
 			name: "web",
@@ -474,6 +476,9 @@ async function createGithubWebhook(
 				"X-GitHub-Api-Version": "2022-11-28",
 			},
 		});
+
+		console.info("GitHub repo webhook created");
+		return githubHook.data.id;
 	} catch (err) {
 		console.error(
 			`Cannot create the GitHub repo webhook. ${
@@ -483,9 +488,6 @@ async function createGithubWebhook(
 
 		throw err;
 	}
-
-	console.info("GitHub repo webhook created");
-	return githubHook.data.id;
 }
 
 /**
@@ -512,7 +514,7 @@ async function deleteGithubWebhook(gitPat, gitRepoUrl, hookId) {
 		});
 		console.info("GitHub repo webhook deleted");
 	} catch (err) {
-		console.error("Error deleting GitLab repo webhook", err);
+		console.error("Error deleting GitHub repo webhook", err);
 	}
 }
 
@@ -520,7 +522,7 @@ async function deleteGithubWebhook(gitPat, gitRepoUrl, hookId) {
  * Creates a GitLab webhook for a specific repository.
  *
  * @param {string} gitPat - The GitLab personal access token.
- * @param {string} gitRepoUrl - The URL of the GitLab repository.
+ * @param {string} projectId - The GitLab project ID.
  * @param {string} webhookUrl - The URL of the webhook to be created.
  * @param {string} secretToken - The secret token for the webhook.
  * @param {string} gitBranch - The branch to filter push events for the webhook.
@@ -530,142 +532,72 @@ async function deleteGithubWebhook(gitPat, gitRepoUrl, hookId) {
  */
 async function createGitlabWebhook(
 	gitPat,
-	gitRepoUrl,
+	projectId,
 	webhookUrl,
 	secretToken,
 	gitBranch,
 	sslVerification = false
 ) {
-	const gitlabUrl = new URL(gitRepoUrl);
-	const apiPath = "/api/v4";
-	const projectName = gitlabUrl.pathname.split("/")[2];
-	gitlabUrl.pathname = apiPath;
-	const gitlabApiBaseUrl = gitlabUrl.toString();
+	try {
+		const webhookPayload = {
+			url: webhookUrl,
+			push_events: true,
+			issues_events: false,
+			merge_requests_events: false,
+			tag_push_events: false,
+			repository_update_events: false,
+			enable_ssl_verification: sslVerification,
+			token: secretToken,
+			push_events_branch_filter: gitBranch,
+		};
 
-	// Step 1: Get User ID
-	const responseUser = await fetch(`${gitlabApiBaseUrl}/user`, {
-		headers: { "PRIVATE-TOKEN": gitPat },
-	});
-	if (!responseUser.ok) {
-		throw new Error("Failed to fetch user data");
+		const response = await axios.post(
+			`https://gitlab.com/api/v4/projects/${projectId}/hooks`,
+			webhookPayload,
+			{
+				headers: {
+					Authorization: `Bearer ${gitPat}`,
+					"Content-Type": "application/json",
+				},
+			}
+		);
+
+		console.info("GitLab project webhook created");
+		return response.data.id;
+	} catch (err) {
+		console.error(
+			`Cannot create the GitLab project webhook. ${
+				err.response?.body?.message ?? err.message
+			}`
+		);
+
+		throw err;
 	}
-	const user = await responseUser.json();
-	const userId = user.id;
-
-	// Step 2: Get All Project IDs Owned by User
-	const responseProject = await fetch(
-		`${gitlabApiBaseUrl}/users/${userId}/projects`,
-		{
-			headers: { "PRIVATE-TOKEN": gitPat },
-		}
-	);
-	if (!responseProject.ok) {
-		throw new Error("Failed to fetch project data");
-	}
-	const projects = await responseProject.json();
-
-	// Step 3: Find Specific Project ID
-	const project = projects.find((project) => project.name === projectName);
-	if (!project) {
-		console.error(`Project '${projectName}' not found.`);
-		return;
-	}
-	const projectId = project.id;
-
-	// Step 4: Create Webhook
-	const webhookPayload = {
-		url: webhookUrl,
-		push_events: true,
-		issues_events: false,
-		merge_requests_events: false,
-		tag_push_events: false,
-		repository_update_events: false,
-		enable_ssl_verification: sslVerification,
-		token: secretToken,
-		push_events_branch_filter: gitBranch,
-	};
-	const response = await fetch(
-		`${gitlabApiBaseUrl}/projects/${projectId}/hooks`,
-		{
-			method: "POST",
-			headers: {
-				"PRIVATE-TOKEN": gitPat,
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(webhookPayload),
-		}
-	);
-	if (!response.ok) {
-		throw new Error("Network response was not ok");
-	}
-	const webhook = await response.json();
-	console.info("GitLab repo webhook created");
-
-	return webhook.id;
 }
 
 /**
  * Deletes a GitLab webhook.
  *
  * @param {string} gitPat - The GitLab personal access token.
- * @param {string} gitRepoUrl - The URL of the GitLab repository.
+ * @param {string} projectId - The GitLab project ID.
  * @param {number} hookId - The ID of the webhook to delete.
  * @returns {Promise<void>} - A promise that resolves when the webhook is deleted successfully, or rejects with an error.
  */
-async function deleteGitlabWebhook(gitPat, gitRepoUrl, hookId) {
-	if (!gitPat || !gitRepoUrl || !hookId) return;
+async function deleteGitlabWebhook(gitPat, projectId, hookId) {
+	if (!gitPat || !projectId || !hookId) return;
+
 	try {
-		const gitlabUrl = new URL(gitRepoUrl);
-		const apiPath = "/api/v4";
-		const projectName = gitlabUrl.pathname.split("/")[2];
-		gitlabUrl.pathname = apiPath;
-		const gitlabApiBaseUrl = gitlabUrl.toString();
-
-		// Step 1: Get User ID
-		const responseUser = await fetch(`${gitlabApiBaseUrl}/user`, {
-			headers: { "PRIVATE-TOKEN": gitPat },
-		});
-		if (!responseUser.ok) {
-			throw new Error("Failed to fetch GitLab user data");
-		}
-		const user = await responseUser.json();
-		const userId = user.id;
-
-		// Step 2: Get All Project IDs Owned by User
-		const responseProject = await fetch(
-			`${gitlabApiBaseUrl}/users/${userId}/projects`,
+		await axios.delete(
+			`https://gitlab.com/api/v4/projects/${projectId}/hooks/${hookId}`,
 			{
-				headers: { "PRIVATE-TOKEN": gitPat },
-			}
-		);
-		if (!responseProject.ok) {
-			throw new Error("Failed to fetch project data");
-		}
-		const projects = await responseProject.json();
-
-		// Step 3: Find Specific Project ID
-		const project = projects.find((project) => project.name === projectName);
-		if (!project) {
-			console.error(`Project '${projectName}' not found.`);
-			return;
-		}
-		const projectId = project.id;
-
-		// Step 4: Delete Webhook
-		const response = await fetch(
-			`${gitlabApiBaseUrl}/projects/${projectId}/hooks/${hookId}`,
-			{
-				method: "DELETE",
 				headers: {
-					"PRIVATE-TOKEN": gitPat,
+					Authorization: `Bearer ${gitPat}`,
 					"Content-Type": "application/json",
 				},
 			}
 		);
-		if (!response.ok) {
-			throw new Error("Network response was not ok");
-		}
-		console.info("GitLab repo webhook deleted");
+
+		console.info("GitLab project webhook deleted");
 	} catch (err) {
 		console.error("Error deleting GitLab repo webhook", err);
 	}

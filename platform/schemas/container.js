@@ -133,6 +133,10 @@ export const ContainerModel = mongoose.model(
 				webHookId: {
 					type: String,
 				},
+				// Mainly used to store project/repo id (required for gitlab but not required for gibhub)
+				repoId: {
+					type: String,
+				},
 			},
 			registry: {
 				registryId: {
