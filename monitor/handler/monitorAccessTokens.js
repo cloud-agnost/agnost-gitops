@@ -41,7 +41,7 @@ export async function monitorAccessTokens() {
 }
 
 /**
- * Returns the list of git providers (gitlab) from the cluster database whose access tokens need to be refreshed.
+ * Returns the list of git providers (gitlab, bitbucket) from the cluster database whose access tokens need to be refreshed.
  * @param  {number} pageNumber Curent page number (used for pagination)
  * @param  {number} pageSize The records per page
  */
@@ -53,7 +53,7 @@ async function getGitProviders(tenMinutesLater, pageNumber, pageSize) {
 		.collection("git_providers")
 		.find(
 			{
-				provider: "gitlab",
+				provider: { $in: ["gitlab", "bitbucket"] },
 				accessToken: { $exists: true },
 				refreshToken: { $exists: true },
 				expiresAt: { $lte: tenMinutesLater },

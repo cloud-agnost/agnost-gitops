@@ -1,6 +1,5 @@
-// Types of login providers supported. Initially we support github,
-// later on we can support "bitbucket", "gitlab" etc.
-export const providerTypes = ["github", "gitlab"];
+// Types of login providers supported.
+export const providerTypes = ["github", "gitlab", "bitbucket"];
 
 // Notification types
 export const notificationTypes = ["org", "project", "environment", "container"];

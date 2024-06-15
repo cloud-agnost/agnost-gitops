@@ -51,15 +51,9 @@ export async function createTektonPipeline(
 	const appName = container.iid;
 	const dockerfile = repo.dockerfile;
 	const containerImageName = container.slug;
-	const originalManifest = fs.readFileSync(
+	const manifest = fs.readFileSync(
 		`${__dirname}/manifests/${gitRepoType}-pipeline.yaml`,
 		"utf8"
-	);
-
-	// Update the local-registry service information
-	const manifest = originalManifest.replaceAll(
-		"local-registry.default",
-		`zot.${agnostNamespace}`
 	);
 
 	const resources = k8s.loadAllYaml(manifest);
@@ -148,16 +142,46 @@ export async function createTektonPipeline(
 				case "EventListener":
 					resource.spec.triggers[0].interceptors[0].params[0].value.secretName +=
 						resourceNameSuffix;
-					resource.spec.triggers[0].interceptors[1].params[0].value = `body.ref == 'refs/heads/${gitBranch}'`;
+					if (gitProvider.provider === "bitbucket") {
+						resource.spec.triggers[0].interceptors[1].params[0].value = `body.push.changes[0].new.name == '${gitBranch}'`;
+					} else {
+						resource.spec.triggers[0].interceptors[1].params[0].value = `body.ref == 'refs/heads/${gitBranch}'`;
+					}
 					resource.spec.triggers[0].bindings[0].ref += resourceNameSuffix;
 					resource.spec.triggers[0].template.ref += resourceNameSuffix;
 					resource.spec.resources.kubernetesResource.spec.template.spec.serviceAccountName +=
 						resourceNameSuffix;
 					if (gitSubPath != "/") {
-						//resource.spec.triggers[0].interceptors[1].params[1].name = "filter";
 						// remove leading slash, if exists
-						var path = gitSubPath.replace(/^\/+/, "");
-						//resource.spec.triggers[0].interceptors[1].params[1].value = `body.commits.all(c, c.modified.exists(m, m.startsWith("${path}")) || c.added.exists(a, a.startsWith("${path}")) || c.removed.exists(r, r.startsWith("${path}")))`;
+						let path = gitSubPath.replace(/^\/+/, "");
+						resource.spec.triggers[0].interceptors[1].params[1].name = "filter";
+						if (gitProvider.provider === "bitbucket") {
+							resource.spec.triggers[0].interceptors[1].params[1].value = `
+								size(body.push.changes) > 0 && 
+								body.push.changes.exists(change, 
+									change.commits.exists(commit, 
+										commit.added.exists(file, 
+											file.startsWith("${path}")
+										) ||
+										commit.modified.exists(file, 
+											file.startsWith("${path}")
+										) ||
+										commit.removed.exists(file, 
+											file.startsWith("${path}")
+										)
+									)
+								)
+							`;
+						} else {
+							resource.spec.triggers[0].interceptors[1].params[1].value = `
+								size(body.commits) > 0 && 
+								body.commits.exists(c, 
+									c.modified.exists(m, m.startsWith("${path}")) || 
+									c.added.exists(a, a.startsWith("${path}")) || 
+									c.removed.exists(r, r.startsWith("${path}"))
+								)
+								`;
+						}
 					} else {
 						delete resource.spec.triggers[0].interceptors[1].params[1];
 					}
@@ -246,6 +270,14 @@ export async function createTektonPipeline(
 				secretToken,
 				gitBranch,
 				sslVerification
+			);
+			break;
+		case "bitbucket":
+			webHookId = await createBitbucketWebhook(
+				gitPat,
+				repo.name,
+				webhookUrl,
+				secretToken
 			);
 			break;
 		default:
@@ -381,6 +413,9 @@ export async function deleteTektonPipeline(
 		case "gitlab":
 			await deleteGitlabWebhook(gitPat, repo.repoId, hookId);
 			break;
+		case "bitbucket":
+			await deleteBitbucketWebhook(gitPat, repo.name, hookId);
+			break;
 		default:
 			throw new Error("Unknown repo type: " + gitRepoType);
 	}
@@ -475,9 +510,9 @@ async function createGithubWebhook(
 		return githubHook.data.id;
 	} catch (err) {
 		console.error(
-			`Cannot create the GitHub repo webhook. ${
-				err.response?.body?.message ?? err.message
-			}`
+			`Cannot create the GitHub repo webhook. ${JSON.stringify(
+				err.response?.data
+			)}`
 		);
 
 		throw err;
@@ -508,7 +543,11 @@ async function deleteGithubWebhook(gitPat, gitRepoUrl, hookId) {
 		});
 		console.info("GitHub repo webhook deleted");
 	} catch (err) {
-		console.error("Error deleting GitHub repo webhook", err);
+		console.error(
+			`Error deleting GitHub repo webhook. ${JSON.stringify(
+				err.response?.data
+			)}`
+		);
 	}
 }
 
@@ -560,9 +599,9 @@ async function createGitlabWebhook(
 		return response.data.id;
 	} catch (err) {
 		console.error(
-			`Cannot create the GitLab project webhook. ${
-				err.response?.body?.message ?? err.message
-			}`
+			`Cannot create the GitLab project webhook. ${JSON.stringify(
+				err.response?.data
+			)}`
 		);
 
 		throw err;
@@ -593,7 +632,91 @@ async function deleteGitlabWebhook(gitPat, projectId, hookId) {
 
 		console.info("GitLab project webhook deleted");
 	} catch (err) {
-		console.error("Error deleting GitLab repo webhook", err);
+		console.error(
+			`Error deleting GitLab project webhook. ${JSON.stringify(
+				err.response?.data
+			)}`
+		);
+	}
+}
+
+/**
+ * Creates a Bitbucket repository webhook.
+ *
+ * @param {string} gitPat - The personal access token for authenticating with Bitbucket API.
+ * @param {string} repoName - The name of the repository in the format of "{workspace}/{repo_slug}".
+ * @param {string} webhookUrl - The URL to receive webhook events.
+ * @param {string} secretToken - The secret token for verifying the authenticity of webhook events.
+ * @returns {string} The UUID of the created webhook.
+ * @throws {Error} If the Bitbucket repository webhook creation fails.
+ */
+async function createBitbucketWebhook(
+	gitPat,
+	repoName,
+	webhookUrl,
+	secretToken
+) {
+	try {
+		const webhookPayload = {
+			description: "Agnost Webhok",
+			url: webhookUrl,
+			active: true,
+			secret: secretToken,
+			events: ["repo:push"],
+		};
+
+		const response = await axios.post(
+			`https://api.bitbucket.org/2.0/repositories/${repoName}/hooks`,
+			webhookPayload,
+			{
+				headers: {
+					Authorization: `Bearer ${gitPat}`,
+					Accept: "application/json",
+				},
+			}
+		);
+
+		console.info("Bitbucket repository webhook created");
+		return response.data.uuid;
+	} catch (err) {
+		console.error(
+			`Cannot create the Bitbucket repository webhook. ${JSON.stringify(
+				err.response?.data
+			)}`
+		);
+
+		throw err;
+	}
+}
+
+/**
+ * Deletes a Bitbucket repository webhook.
+ *
+ * @param {string} gitPat - The personal access token for authenticating with Bitbucket API.
+ * @param {string} repoName - The name of the repository in the format of "{workspace}/{repo_slug}".
+ * @param {string} hookId - The ID of the webhook to be deleted.
+ * @returns {Promise<void>} - A promise that resolves when the webhook is successfully deleted.
+ */
+async function deleteBitbucketWebhook(gitPat, repoName, hookId) {
+	if (!gitPat || !repoName || !hookId) return;
+
+	try {
+		await axios.delete(
+			`https://api.bitbucket.org/2.0/repositories/${repoName}/hooks/${hookId}`,
+			{
+				headers: {
+					Authorization: `Bearer ${gitPat}`,
+				},
+			}
+		);
+
+		console.info("Bitbucket repository webhook deleted");
+	} catch (err) {
+		console.error(
+			`Error deleting Bitbuckeet repository webhook. ${JSON.stringify(
+				err.response?.data
+			)}`
+		);
 	}
 }
 
@@ -618,6 +741,8 @@ export async function updateTriggerTemplateAccessTokens(
 			const { metadata, spec } = payload.body;
 			spec.params = spec.params.map((param) => {
 				if (param.name === "gitlabpat" && provider === "gitlab") {
+					param.value = accessToken;
+				} else if (param.name === "bitbucketpat" && provider === "bitbucket") {
 					param.value = accessToken;
 				}
 				return param;

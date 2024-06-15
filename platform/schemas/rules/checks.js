@@ -193,6 +193,7 @@ export const checkRepo = () => {
 				if (!value.startsWith("/")) value = `/${value}`;
 				return value;
 			}),
+		// Dockerfile is relative to the repo path
 		body("repo.dockerfile")
 			.if(
 				(value, { req }) =>
@@ -204,11 +205,10 @@ export const checkRepo = () => {
 			.bail()
 			.matches(/^([A-Za-z0-9-_+.]+\/)*([A-Za-z0-9-_+.]+\/?)?$/)
 			.withMessage(
-				"Not a valid dockerfile path. Paths contain only alphanumeric characters, dots (.), underscores (_), hyphens (-), slashes (/)."
+				"Not a valid file path. Dockerfile faths contain only alphanumeric characters, dots (.), underscores (_), hyphens (-), slashes (/)."
 			) // Remove trailing slashes using custom sanitizer
 			.customSanitizer((value) => {
 				if (value !== "/") value = value.replace(/\/+$/, "");
-				if (!value.startsWith("/")) value = `/${value}`;
 				return value;
 			}),
 		body("repo.gitProviderId")

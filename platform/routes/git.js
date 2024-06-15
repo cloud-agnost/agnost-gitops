@@ -238,13 +238,13 @@ router.get(
 	async (req, res) => {
 		try {
 			const { gitProvider } = req;
-			const { owner, repo, projectId } = req.query;
+			const { owner, repo, repoId } = req.query;
 
 			const branches = await getGitProviderRepoBranches({
 				gitProvider,
 				owner,
 				repo,
-				projectId,
+				repoId,
 			});
 
 			res.json(branches);

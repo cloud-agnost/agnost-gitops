@@ -82,6 +82,9 @@ export const applyRules = (type) => {
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty")
 					.bail()
+					.customSanitizer((value) => {
+						return decodeURIComponent(value);
+					})
 					.custom(async (value, { req }) => {
 						const { valid, error, user } = await isValidGitProviderAccessToken(
 							value,
@@ -95,12 +98,23 @@ export const applyRules = (type) => {
 						return true;
 					}),
 				body("refreshToken")
-					.if((value, { req }) => req.body.provider === "gitlab")
+					.if(
+						(value, { req }) =>
+							req.body.provider === "gitlab" ||
+							req.body.provider === "bitbucket"
+					)
 					.trim()
 					.notEmpty()
-					.withMessage("Required field, cannot be left empty"),
+					.withMessage("Required field, cannot be left empty")
+					.customSanitizer((value) => {
+						return decodeURIComponent(value);
+					}),
 				body("expiresAt")
-					.if((value, { req }) => req.body.provider === "gitlab")
+					.if(
+						(value, { req }) =>
+							req.body.provider === "gitlab" ||
+							req.body.provider === "bitbucket"
+					)
 					.trim()
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty")
@@ -115,16 +129,24 @@ export const applyRules = (type) => {
 		case "get-repo-branches":
 			return [
 				query("repo")
-					.if((value, { req }) => req.gitProvider.provider === "github")
+					.if(
+						(value, { req }) =>
+							req.gitProvider.provider === "github" ||
+							req.gitProvider.provider === "bitbucket"
+					)
 					.trim()
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty"),
 				query("owner")
-					.if((value, { req }) => req.gitProvider.provider === "github")
+					.if(
+						(value, { req }) =>
+							req.gitProvider.provider === "github" ||
+							req.gitProvider.provider === "bitbucket"
+					)
 					.trim()
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty"),
-				query("projectId")
+				query("repoId")
 					.if((value, { req }) => req.gitProvider.provider === "gitlab")
 					.trim()
 					.notEmpty()

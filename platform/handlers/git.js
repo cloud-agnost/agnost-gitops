@@ -33,7 +33,7 @@ export async function isValidGitProviderAccessToken(accessToken, gitProvider) {
 			} else {
 				return {
 					valid: false,
-					error: error.response?.body?.message ?? error.message,
+					error: JSON.stringify(error.response?.data ?? error.message),
 				}; // Other errors
 			}
 		}
@@ -59,11 +59,43 @@ export async function isValidGitProviderAccessToken(accessToken, gitProvider) {
 			} else {
 				return {
 					valid: false,
-					error: error.response?.body?.message ?? error.message,
+					error: JSON.stringify(error.response?.data ?? error.message),
+				}; // Other errors
+			}
+		}
+	} else if (gitProvider === "bitbucket") {
+		try {
+			const result = await axios.get("https://api.bitbucket.org/2.0/user", {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					Accept: "application/json",
+				},
+			});
+
+			const email = await getBitbucketUserEmail(accessToken);
+
+			return {
+				valid: true,
+				user: {
+					providerUserId: result.data.uuid,
+					username: result.data.username,
+					email: email,
+					avatar: result.data.links?.avatar?.href,
+					provider: gitProvider,
+				},
+			};
+		} catch (error) {
+			if (error.response && error.response.status === 401) {
+				return { valid: false, error: "Invalid or expired token." }; // Token is invalid
+			} else {
+				return {
+					valid: false,
+					error: JSON.stringify(error.response?.data ?? error.message),
 				}; // Other errors
 			}
 		}
 	}
+
 	return { valid: false, error: "Unsupported Git repository provider." };
 }
 
@@ -86,6 +118,36 @@ export async function getGitHubUserEmail(accessToken) {
 			for (let i = 0; i < result.data.length; i++) {
 				const emeilEntry = result.data[i];
 				if (emeilEntry && emeilEntry.primary && emeilEntry.email)
+					return emeilEntry.email;
+			}
+		}
+
+		return null;
+	} catch (err) {
+		console.error(err);
+	}
+
+	return null;
+}
+
+/**
+ * Retrieves the primary email address associated with the Bitbucket user.
+ * @param {string} accessToken - The access token for authenticating the request.
+ * @returns {Promise<string|null>} The primary email address of the GitHub user, or null if not found.
+ */
+export async function getBitbucketUserEmail(accessToken) {
+	try {
+		let result = await axios.get("https://api.bitbucket.org/2.0/user/emails", {
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				Accept: "application/json",
+			},
+		});
+
+		if (result.data) {
+			for (let i = 0; i < result.data.values?.length; i++) {
+				const emeilEntry = result.data.values[i];
+				if (emeilEntry && emeilEntry.is_primary && emeilEntry.email)
 					return emeilEntry.email;
 			}
 		}
@@ -126,24 +188,36 @@ export async function revokeGitProviderAccessToken(
  *
  * @param {string} url - The URL to fetch the data from.
  * @param {object} config - The configuration object for the request.
+ * @param {string} provider - The name of the Git provider.
  * @returns {Promise<Array>} - A promise that resolves to an array of fetched data.
  */
-export async function fetchAllPages(url, config) {
+export async function fetchAllPages(url, config, provider) {
 	let results = [];
 	let page = 1;
 	let moreData = true;
 
 	while (moreData) {
 		const response = await axios.get(
-			`${url}?page=${page}&per_page=100`,
+			`${url}?page=${page}&${
+				provider === "bitbucket" ? "pagelen" : "per_page"
+			}=100`,
 			config
 		);
 
-		if (response.data.length > 0) {
-			results = results.concat(response.data);
-			page++;
+		if (provider === "bitbucket") {
+			if (response.data.values.length > 0) {
+				results = results.concat(response.data.values);
+				page++;
+			} else {
+				moreData = false;
+			}
 		} else {
-			moreData = false;
+			if (response.data.length > 0) {
+				results = results.concat(response.data);
+				page++;
+			} else {
+				moreData = false;
+			}
 		}
 	}
 
@@ -170,7 +244,8 @@ export async function getGitProviderRepos(gitProvider) {
 
 			const userRepos = await fetchAllPages(
 				"https://api.github.com/user/repos",
-				config
+				config,
+				gitProvider.provider
 			);
 
 			// In order for a user to add or delete a webhook in GitHub, the user must have at least "Admin" access.
@@ -202,7 +277,8 @@ export async function getGitProviderRepos(gitProvider) {
 
 			const userRepos = await fetchAllPages(
 				`https://gitlab.com/api/v4/projects`,
-				config
+				config,
+				gitProvider.provider
 			);
 
 			// In order for a user to add or delete a webhook in GitLab, the user must have at least "Maintainer" (40) access.
@@ -214,6 +290,37 @@ export async function getGitProviderRepos(gitProvider) {
 					fullName: entry.path_with_namespace,
 					private: entry.visibility === "private",
 					url: entry.web_url,
+				}));
+
+			return userReposData;
+		} catch (err) {
+			console.error(err);
+			return [];
+		}
+	} else if (gitProvider.provider === "bitbucket") {
+		try {
+			const config = {
+				headers: {
+					Authorization: `Bearer ${gitProvider.accessToken}`,
+					Accept: "application/json",
+				},
+			};
+
+			const userRepos = await fetchAllPages(
+				`https://api.bitbucket.org/2.0/user/permissions/repositories`,
+				config,
+				gitProvider.provider
+			);
+
+			// In order for a user to add or delete a webhook in Bitbucket, the user must have the admin permission.
+			const userReposData = userRepos
+				.filter((entry) => entry.permission === "admin")
+				.map((entry) => ({
+					repoId: entry.repository.uuid,
+					repo: entry.repository.name,
+					fullName: entry.repository.full_name,
+					private: entry.repository.is_private,
+					url: entry.repository.links.html.href,
 				}));
 
 			return userReposData;
@@ -275,8 +382,8 @@ export async function getGitProviderRepoBranches(params) {
 		}
 	} else if (gitProvider.provider === "gitlab") {
 		try {
-			const { projectId, maxPages = 100 } = params;
-			let url = `https://gitlab.com/api/v4/projects/${projectId}/repository/branches`;
+			const { repoId, maxPages = 100 } = params;
+			let url = `https://gitlab.com/api/v4/projects/${repoId}/repository/branches`;
 			const branches = [];
 			let page = 1;
 
@@ -304,6 +411,40 @@ export async function getGitProviderRepoBranches(params) {
 			return branches;
 		} catch (err) {
 			console.error(err);
+			return [];
+		}
+	} else if (gitProvider.provider === "bitbucket") {
+		try {
+			const { owner, repo, maxPages = 100 } = params;
+			let url = `https://api.bitbucket.org/2.0/repositories/${owner}/${repo}/refs/branches`;
+			console.log(url);
+			const branches = [];
+			let page = 1;
+
+			while (url && page < maxPages) {
+				const response = await axios.get(url, {
+					headers: {
+						Authorization: `Bearer ${gitProvider.accessToken}`,
+						Accept: "application/json",
+					},
+					params: {
+						pagelen: maxPages, // Number of branches per page
+						page: page,
+					},
+				});
+
+				response.data.values.forEach((branch) => {
+					branches.push({ name: branch.name });
+				});
+
+				if (response.data.values.length > 0) {
+					page++;
+				} else break;
+			}
+
+			return branches;
+		} catch (err) {
+			console.error(err.response.data);
 			return [];
 		}
 	}
