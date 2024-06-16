@@ -1,4 +1,4 @@
-name: Create New Agnost Release
+name: Create Release
 
 on:
   workflow_dispatch:
@@ -12,8 +12,8 @@ on:
           - 'patch'
           - 'minor'
           - 'major'
-      engine-core:
-        description: 'Engine Core Release'
+      monitor:
+        description: 'Monitor Release'
         required: false
         default: 'no-change'
         type: choice
@@ -22,68 +22,8 @@ on:
           - 'patch'
           - 'minor'
           - 'major'
-      engine-monitor:
-        description: 'Engine Monitor Release'
-        required: false
-        default: 'no-change'
-        type: choice
-        options:
-          - 'no-change'
-          - 'patch'
-          - 'minor'
-          - 'major'
-      engine-realtime:
-        description: 'Engine Realtime Release'
-        required: false
-        default: 'no-change'
-        type: choice
-        options:
-          - 'no-change'
-          - 'patch'
-          - 'minor'
-          - 'major'
-      engine-scheduler:
-        description: 'Engine Scheduler Release'
-        required: false
-        default: 'no-change'
-        type: choice
-        options:
-          - 'no-change'
-          - 'patch'
-          - 'minor'
-          - 'major'
-      engine-worker:
-        description: 'Engine Worker Release'
-        required: false
-        default: 'no-change'
-        type: choice
-        options:
-          - 'no-change'
-          - 'patch'
-          - 'minor'
-          - 'major'
-      platform-core:
-        description: 'Platform Core Release'
-        required: false
-        default: 'no-change'
-        type: choice
-        options:
-          - 'no-change'
-          - 'patch'
-          - 'minor'
-          - 'major'
-      platform-sync:
-        description: 'Platform Sync Release'
-        required: false
-        default: 'no-change'
-        type: choice
-        options:
-          - 'no-change'
-          - 'patch'
-          - 'minor'
-          - 'major'
-      platform-worker:
-        description: 'Platform Worker Release'
+      platform:
+        description: 'Platform Release'
         required: false
         default: 'no-change'
         type: choice
@@ -102,20 +42,36 @@ on:
           - 'patch'
           - 'minor'
           - 'major'
+      sync:
+        description: 'Sync Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
+      webhook:
+        description: 'Webhook Release'
+        required: false
+        default: 'no-change'
+        type: choice
+        options:
+          - 'no-change'
+          - 'patch'
+          - 'minor'
+          - 'major'
 
 env:
   RELEASE_TYPE: '${{ github.event.inputs.release-type }}'
-  ENGINE_CORE: '${{ github.event.inputs.engine-core }}'
-  ENGINE_MONITOR: '${{ github.event.inputs.engine-monitor }}'
-  ENGINE_REALTIME: '${{ github.event.inputs.engine-realtime }}'
-  ENGINE_SCHEDULER: '${{ github.event.inputs.engine-scheduler }}'
-  ENGINE_WORKER: '${{ github.event.inputs.engine-worker }}'
-  PLATFORM_CORE: '${{ github.event.inputs.platform-core }}'
-  PLATFORM_SYNC: '${{ github.event.inputs.platform-sync }}'
-  PLATFORM_WORKER: '${{ github.event.inputs.platform-worker }}'
+  MONITOR: '${{ github.event.inputs.monitor }}'
+  PLATFORM: '${{ github.event.inputs.platform }}'
   STUDIO: '${{ github.event.inputs.studio }}'
+  SYNC: '${{ github.event.inputs.sync }}'
+  WEBHOOK: '${{ github.event.inputs.webhook }}'
   DOCKER_REGISTRY: 'gcr.io'
-  GCR_PROJECT: 'agnost-community'
+  GCR_PROJECT: 'agnost-gitops'
 
 jobs:
   get_released_apps:

@@ -80,6 +80,20 @@ router.post(
 					}
 				);
 
+				// When we upate the access token we also need to update the tekton trigger bindings
+				// First get the list of containers that are using this git provider
+				const containers = await cntrCtrl.getManyByQuery({
+					repoOrRegistry: "repo",
+					"repo.connected": true,
+					"repo.gitProviderId": existingProvider._id,
+				});
+
+				await updateTriggerTemplateAccessTokens(
+					containers,
+					existingProvider.provider,
+					accessToken
+				);
+
 				delete updatedGitEntry.accessToken;
 				delete updatedGitEntry.refreshToken;
 				res.json(updatedGitEntry);

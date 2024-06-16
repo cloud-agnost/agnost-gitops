@@ -3,15 +3,17 @@ name: Build and Push
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
     paths:
-      - 'engine/**'
+      - 'monitor/**'
       - 'platform/**'
       - 'studio/**'
+      - 'sync/**'
+      - 'webhook/**'
 
 env:
   DOCKER_REGISTRY: 'gcr.io'
-  GCR_PROJECT: 'agnost-community'
+  GCR_PROJECT: 'agnost-gitops'
 
 jobs:
   get_apps:
@@ -27,15 +29,12 @@ jobs:
         id: filter
         with:
           filters: |
-            engine/core: 'engine/core/**'
-            engine/monitor: 'engine/monitor/**'
-            engine/realtime: 'engine/realtime/**'
-            engine/scheduler: 'engine/scheduler/**'
-            engine/worker: 'engine/worker/**'
-            platform/core: 'platform/core/**'
-            platform/sync: 'platform/sync/**'
-            platform/worker: 'platform/worker/**'
+            monitor: 'monitor/**'
+            platform: 'platform/**'
             studio: 'studio/**'
+            sync: 'sync/**'
+            webhook: 'webhook/**'
+
 
   generate_short_sha:
     runs-on: ubuntu-latest
