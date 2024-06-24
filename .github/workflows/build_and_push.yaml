@@ -7,9 +7,9 @@ on:
     paths:
       - 'monitor/**'
       - 'platform/**'
-      - 'studio/**'
       - 'sync/**'
       - 'webhook/**'
+      #- 'studio/**'
 
 env:
   # GAR: Google Artifact Registry
@@ -33,9 +33,9 @@ jobs:
           filters: |
             monitor: 'monitor/**'
             platform: 'platform/**'
-            studio: 'studio/**'
             sync: 'sync/**'
             webhook: 'webhook/**'
+            #studio: 'studio/**'
 
   generate_short_sha:
     runs-on: ubuntu-latest
