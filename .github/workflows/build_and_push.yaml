@@ -12,8 +12,10 @@ on:
       - 'webhook/**'
 
 env:
-  DOCKER_REGISTRY: 'gcr.io'
-  GCR_PROJECT: 'agnost-gitops'
+  # GAR: Google Artifact Registry
+  GAR_LOCATION: 'europe-docker.pkg.dev'
+  GAR_PROJECT: 'agnost-gitops'
+  GAR_NAME: 'images'
 
 jobs:
   get_apps:
@@ -34,7 +36,6 @@ jobs:
             studio: 'studio/**'
             sync: 'sync/**'
             webhook: 'webhook/**'
-
 
   generate_short_sha:
     runs-on: ubuntu-latest
@@ -64,27 +65,22 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
-        name: 'Authenticate to GCP'
-        id: 'auth'
-        uses: google-github-actions/auth@v2
-        with:
-          token_format: 'access_token'
-          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
-      -
-        name: Login to GCR
+        name: Login to Google Artifact Registry
         uses: docker/login-action@v3
         with:
-          registry: '${{ env.DOCKER_REGISTRY }}'
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
+          registry: '${{ env.GAR_LOCATION }}'
+          username: _json_key
+          password: '${{ secrets.GOOGLE_CREDENTIALS }}'
       -
         name: Build and Push
         uses: docker/build-push-action@v5
+        env:
+          DOCKER_REGISTRY: ${{ env.GAR_LOCATION }}/${{ env.GAR_PROJECT }}/${{ env.GAR_NAME }}
         with:
           push: true
           context: ./${{ matrix.application }}
           file: ./${{ matrix.application }}/Dockerfile
           platforms: linux/arm64, linux/amd64
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.GCR_PROJECT }}/${{ matrix.application }}:${{ needs.generate_short_sha.outputs.sha }}
-            ${{ env.DOCKER_REGISTRY }}/${{ env.GCR_PROJECT }}/${{ matrix.application }}:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:${{ needs.generate_short_sha.outputs.sha }}
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:latest
