@@ -1,6 +1,4 @@
-FROM golang:1.21-alpine3.18 AS build
-
-RUN apk add --no-cache git
+FROM golang:1.21 AS build
 
 WORKDIR /workspace
 
