@@ -13,4 +13,3 @@ RUN npm install --omit=dev
 COPY ./ ./
 # This will be the start up command of the docker container, run the development react server
 CMD ["node", "--expose-gc", "server"]
-

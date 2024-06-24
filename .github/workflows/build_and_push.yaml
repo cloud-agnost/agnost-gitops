@@ -54,7 +54,6 @@ jobs:
     strategy:
       matrix:
         application: ${{ fromJSON(needs.get_apps.outputs.applications) }}
-        arch: [linux/arm64, linux/amd64]
     steps:
       -
         name: Checkout
@@ -81,7 +80,7 @@ jobs:
           push: true
           context: ./${{ matrix.application }}
           file: ./${{ matrix.application }}/Dockerfile
-          platforms: ${{ matrix.arch }}
+          platforms: linux/arm64,linux/amd64
           tags: |
             ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:${{ needs.generate_short_sha.outputs.sha }}
             ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:latest
