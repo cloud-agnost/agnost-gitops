@@ -3,7 +3,7 @@ import { Warning, SuccessCheck } from '@/components/icons';
 import { useTable } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
 import { ColumnDefWithClassName } from '@/types';
-import { ContainerEvent } from '@/types/container';
+import { ContainerEvent } from '@/types';
 import { cn } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';

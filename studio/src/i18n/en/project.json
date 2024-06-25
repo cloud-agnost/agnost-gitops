@@ -9,10 +9,18 @@
 	"empty": "You have not created any projects yet!",
 	"search_empty": "No projects matching search criteria",
 	"select": "Select your projects",
+	"readOnly": "Read Only",
+	"read_write": "Read/Write",
 	"create_env": {
 		"title": "Create Blank Environment",
 		"private_desc": "Set this environment as private. Other team members will not be able to view this version, except team members with Admin rights.",
 		"readonly_desc": "Set this environment as private. Other team members will not be able to view this version, except team members with Admin rights."
+	},
+	"edit": {
+		"general": "General",
+		"members": "Members",
+		"invitations": "Pending Invitations",
+		"invite": "Invite"
 	},
 	"settings": {
 		"openEnv": "Open Environment",
@@ -31,9 +39,7 @@
 		"subTitle": "Invite Project Members",
 		"description": "Each project member can have different role assigned to authorize certain actions within the project itself.",
 		"delete": "Delete Invitation",
-		"deleteDesc": "Are you sure you want to delete this invitation? This action cannot be undone. The user will not be able to join the project.",
-		"email_disabled": "You need to configure smtp so that you can send invitations.",
-		"configure": "Configure SMTP"
+		"deleteDesc": "Are you sure you want to delete this invitation? This action cannot be undone. The user will not be able to join the project."
 	},
 	"environment": {
 		"title": "Environments",

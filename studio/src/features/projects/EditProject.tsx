@@ -1,5 +1,5 @@
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
-import { EDIT_APPLICATION_MENU_ITEMS } from '@/constants';
+import { EDIT_PROJECT_MENU_ITEMS } from '@/constants';
 import OrganizationMenuItem from '@/features/organization/navbar/OrganizationMenuItem';
 import useProjectStore from '@/store/project/projectStore';
 import { useQuery } from '@tanstack/react-query';
@@ -47,7 +47,7 @@ export default function EditProject() {
 					<DrawerTitle>{t('project.edit_project')}</DrawerTitle>
 				</DrawerHeader>
 				<nav className='flex border-b'>
-					{EDIT_APPLICATION_MENU_ITEMS.map((item) => {
+					{EDIT_PROJECT_MENU_ITEMS.map((item) => {
 						return (
 							<OrganizationMenuItem
 								key={item.name}

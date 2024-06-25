@@ -8,8 +8,6 @@ import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from './components/Toast';
 import useThemeStore from './store/theme/themeStore';
-import 'ag-grid-community/styles/ag-grid.css'; // Core CSS
-import 'ag-grid-community/styles/ag-theme-alpine.css'; // Theme
 
 const queryClient = new QueryClient();
 

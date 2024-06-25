@@ -8,7 +8,7 @@ import {
 } from '@/components/Form';
 import { Input } from '@/components/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
-import { ContainerType, CreateContainerParams } from '@/types/container';
+import { ContainerType, CreateContainerParams } from '@/types';
 import { Cube } from '@phosphor-icons/react';
 import { startCase } from 'lodash';
 import { useFormContext } from 'react-hook-form';

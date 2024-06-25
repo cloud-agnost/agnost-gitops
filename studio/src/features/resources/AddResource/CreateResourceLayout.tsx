@@ -8,8 +8,9 @@ import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useResourceStore from '@/store/resources/resourceStore';
 import useTypeStore from '@/store/types/typeStore';
 import { ResourceCreateType } from '@/types';
-import { cn, isEmpty } from '@/utils';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
+import { cn } from '@/utils';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
+import _ from 'lodash';
 import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -19,10 +20,10 @@ interface Props {
 	loading: boolean;
 }
 
-export default function CreateResourceLayout({ children, loading }: Props) {
+export default function CreateResourceLayout({ children, loading }: Readonly<Props>) {
 	const { t } = useTranslation();
 	const { resourceConfig, resourceToEdit } = useResourceStore();
-	const { appRoles } = useTypeStore();
+	const { projectRoles } = useTypeStore();
 	const canCreateResource = useAuthorizeOrg('resource.create');
 	const form = useFormContext();
 
@@ -42,7 +43,7 @@ export default function CreateResourceLayout({ children, loading }: Props) {
 
 	return (
 		<div className='space-y-8 overflow-auto'>
-			{isEmpty(resourceToEdit) && (
+			{_.isEmpty(resourceToEdit) && (
 				<>
 					<FormField
 						control={form.control}
@@ -73,7 +74,7 @@ export default function CreateResourceLayout({ children, loading }: Props) {
 							<div className='space-y-2'>
 								<FormLabel>{t('resources.table.allowedRoles')}</FormLabel>
 								<div className='flex items-center space-x-6 space-y-0'>
-									{appRoles.map((role) => (
+									{projectRoles.map((role) => (
 										<FormItem key={role} className='flex flex-row items-center space-x-4 space-y-0'>
 											<FormControl>
 												<Checkbox

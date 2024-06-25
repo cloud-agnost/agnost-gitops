@@ -10,11 +10,12 @@ import {
 } from '@/components/Drawer';
 import { SearchInput } from '@/components/SearchInput';
 import { TableLoading } from '@/components/Table/Table';
-import { useInfiniteScroll, useTable } from '@/hooks';
-import useOrganizationStore from '@/store/organization/organizationStore';
+import { MODULE_PAGE_SIZE } from '@/constants';
+import { useTable } from '@/hooks';
 import useProjectEnvironmentStore from '@/store/project/projectEnvironmentStore';
 import useProjectStore from '@/store/project/projectStore';
 import { Project } from '@/types/project';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useMatch, useParams, useSearchParams } from 'react-router-dom';
@@ -22,8 +23,7 @@ import { ProjectEnvironmentsColumns } from './ProjectEnvironmentsColumns';
 
 export default function ProjectEnvironments() {
 	const { t } = useTranslation();
-	const { selectProject, isEnvOpen, project, projects, closeEnvironmentDrawer } = useProjectStore();
-	const { organization } = useOrganizationStore();
+	const { selectProject, isEnvOpen, projects, closeEnvironmentDrawer } = useProjectStore();
 	const { getProjectEnvironments, environments, lastFetchedPage } = useProjectEnvironmentStore();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const match = useMatch('/organization/:orgId/projects');
@@ -39,17 +39,28 @@ export default function ProjectEnvironments() {
 		closeEnvironmentDrawer(!!match);
 	}
 
-	const { fetchNextPage, isFetchingNextPage, hasNextPage } = useInfiniteScroll({
-		queryFn: getProjectEnvironments,
-		queryKey: 'projectEnvironments',
-		enabled: isEnvOpen,
-		lastFetchedPage,
-		dataLength: environments.length,
-		disableVersionParams: true,
-		params: {
-			orgId: organization._id ?? orgId,
-			projectId: project?._id ?? projectId,
-			name: searchParams.get('q') || '',
+	const { fetchNextPage, isFetchingNextPage, hasNextPage } = useInfiniteQuery({
+		queryFn: ({ pageParam }) =>
+			getProjectEnvironments({
+				orgId,
+				projectId,
+				page: pageParam,
+				size: MODULE_PAGE_SIZE,
+				search: searchParams.get('q') as string,
+				sortBy: searchParams.get('f') as string,
+				sortDir: searchParams.get('d') as string,
+				name: searchParams.get('q') as string,
+			}),
+		initialPageParam: 0,
+		queryKey: ['projectEnvironments'],
+		enabled:
+			(lastFetchedPage === undefined ||
+				Math.ceil(environments.length / MODULE_PAGE_SIZE) < (lastFetchedPage ?? 0)) &&
+			isEnvOpen,
+		getNextPageParam: (lastPage) => {
+			const nextPage =
+				lastPage?.length === MODULE_PAGE_SIZE ? (lastFetchedPage ?? 0) + 1 : undefined;
+			return nextPage;
 		},
 	});
 	return (

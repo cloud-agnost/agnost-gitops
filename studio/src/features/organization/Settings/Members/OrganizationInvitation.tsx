@@ -1,20 +1,16 @@
-import { EmptyState } from '@/components/EmptyState';
 import { Form } from '@/components/Form';
 import { InviteMemberForm, InviteMemberSchema } from '@/components/InviteMemberForm';
 import { Separator } from '@/components/Separator';
 import { useToast } from '@/hooks';
 import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
-import useClusterStore from '@/store/cluster/clusterStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { z } from 'zod';
 
 export default function OrganizationInvitation() {
-	const { canClusterSendEmail } = useClusterStore();
 	const canInvite = useAuthorizeOrg('invite.create');
 	const { toast } = useToast();
 	const { t } = useTranslation();
@@ -56,7 +52,7 @@ export default function OrganizationInvitation() {
 		});
 	};
 
-	return canClusterSendEmail ? (
+	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<InviteMemberForm
@@ -69,15 +65,5 @@ export default function OrganizationInvitation() {
 				<Separator className='my-12' />
 			</form>
 		</Form>
-	) : (
-		<EmptyState title={t('application.invite_member.email_disabled')} type='invitation'>
-			<p className='text-subtle'>{t('application.invite_member.email_disabled')}</p>
-			<Link
-				to={`/organization/${organization?._id}/profile/cluster-management`}
-				className='text-blue-600 hover:underline'
-			>
-				{t('application.invite_member.configure')}
-			</Link>
-		</EmptyState>
 	);
 }

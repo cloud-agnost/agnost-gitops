@@ -5,8 +5,9 @@ import { Input } from '@/components/Input';
 import { Label } from '@/components/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import useTypeStore from '@/store/types/typeStore';
-import { cn, isEmpty } from '@/utils';
+import { cn } from '@/utils';
 import { Plus, Trash } from '@phosphor-icons/react';
+import _ from 'lodash';
 import React, { useEffect, useMemo } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -68,9 +69,8 @@ export default function InviteMemberForm({
 	description,
 	disabled,
 	loading,
-}: InviteMemberFormProps) {
-	const { appRoles, orgRoles, appRoleDesc, orgRoleDesc, projectRoles, projectRoleDesc } =
-		useTypeStore();
+}: Readonly<InviteMemberFormProps>) {
+	const { orgRoles, orgRoleDesc, projectRoles, projectRoleDesc } = useTypeStore();
 
 	const form = useFormContext<z.infer<typeof InviteMemberSchema>>();
 	const { t } = useTranslation();
@@ -80,9 +80,6 @@ export default function InviteMemberForm({
 	});
 
 	const roles = useMemo(() => {
-		if (type === 'app') {
-			return appRoles;
-		}
 		if (type === 'org') {
 			return orgRoles;
 		}
@@ -90,12 +87,9 @@ export default function InviteMemberForm({
 			return projectRoles;
 		}
 		return [];
-	}, [type, appRoles, orgRoles]);
+	}, [type, orgRoles]);
 
 	const desc = useMemo(() => {
-		if (type === 'app') {
-			return appRoleDesc;
-		}
 		if (type === 'org') {
 			return orgRoleDesc;
 		}
@@ -103,7 +97,7 @@ export default function InviteMemberForm({
 			return projectRoleDesc;
 		}
 		return {};
-	}, [type, appRoleDesc, orgRoleDesc, projectRoleDesc]);
+	}, [type, orgRoleDesc, projectRoleDesc]);
 
 	useEffect(() => {
 		if (fields.length === 0) {
@@ -172,9 +166,9 @@ export default function InviteMemberForm({
 							className={cn(
 								'rounded-full',
 								!index && 'self-end',
-								!isEmpty(form.formState.errors) && !index && 'self-center mt-2',
-								!isEmpty(form.formState.errors) &&
-									isEmpty(form.formState.errors.member?.[0]) &&
+								!_.isEmpty(form.formState.errors) && !index && 'self-center mt-2',
+								!_.isEmpty(form.formState.errors) &&
+									_.isEmpty(form.formState.errors.member?.[0]) &&
 									!index &&
 									'self-end',
 							)}

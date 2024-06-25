@@ -5,10 +5,9 @@ import { useTable, useUpdateEffect } from '@/hooks';
 import useProjectStore from '@/store/project/projectStore';
 import { Invitation } from '@/types';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { DataTable } from 'components/DataTable';
+import { DataTable } from '@/components/DataTable';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useParams, useSearchParams } from 'react-router-dom';
-import AppInvitationFilter from '../application/Settings/Invitations/AppInvitationFilter';
 import { ProjectInvitationsColumns } from './Settings/ProjectInvitationsColumns';
 
 export default function ProjectInvitations() {
@@ -58,7 +57,7 @@ export default function ProjectInvitations() {
 				dataLength={invitations.length}
 			>
 				<div className='space-y-4'>
-					<AppInvitationFilter table={table} />
+					{/*//TODO <AppInvitationFilter table={table} /> */}
 					<Loading loading={isFetching && !isFetchingNextPage} />
 					{!(isFetching && !isFetchingNextPage) && <DataTable<Invitation> table={table} />}
 				</div>

@@ -8,7 +8,7 @@ import { BADGE_COLOR_MAP } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { ColumnDefWithClassName } from '@/types';
-import { Container } from '@/types/container';
+import { Container } from '@/types';
 import { translate } from '@/utils';
 import { startCase } from 'lodash';
 import { Link } from 'react-router-dom';

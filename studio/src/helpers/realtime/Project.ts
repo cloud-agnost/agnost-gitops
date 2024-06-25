@@ -1,8 +1,8 @@
 import useAuthStore from "@/store/auth/authStore";
 import useProjectStore from "@/store/project/projectStore";
 import {
-  AppRoles,
   CreateProjectResponse,
+  ProjectRole,
   Project as ProjectType,
   RealtimeActionParams,
 } from "@/types";
@@ -39,14 +39,14 @@ class Project implements RealtimeActions<ProjectType | CreateProjectResponse> {
         if (project._id === data._id) {
           return {
             ...data,
-            role: role as AppRoles,
+            role: role as ProjectRole,
           };
         }
         return project;
       }),
       project: {
         ...data,
-        role: role as AppRoles,
+        role: role as ProjectRole,
       },
       projectTeam: data.team.map((member) => ({
         ...member,

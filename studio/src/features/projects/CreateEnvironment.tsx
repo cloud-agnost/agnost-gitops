@@ -5,7 +5,7 @@ import { APIError, CreateNewEnvironmentRequest } from '@/types';
 import { CreateNewEnvironmentSchema, ProjectEnvironment } from '@/types/project-environment';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from 'components/Drawer';
+import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
 import {
 	Form,
 	FormControl,
@@ -14,9 +14,9 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from 'components/Form';
-import { Input } from 'components/Input';
-import { Switch } from 'components/Switch';
+} from '@/components/Form';
+import { Input } from '@/components/Input';
+import { Switch } from '@/components/Switch';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

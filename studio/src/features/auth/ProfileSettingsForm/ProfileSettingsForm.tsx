@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '@/store/auth/authStore.ts';
-import { CopyInput } from 'components/CopyInput';
+import { CopyInput } from '@/components/CopyInput';
 import { ChangeName } from '@/features/auth/ChangeName';
 import { ChangeEmail } from '@/features/auth/ChangeEmail';
 import { ChangePassword } from '@/features/auth/ChangePassword';

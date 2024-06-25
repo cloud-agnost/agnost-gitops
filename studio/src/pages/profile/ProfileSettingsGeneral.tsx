@@ -1,5 +1,5 @@
+import { SettingsContainer } from '@/components/SettingsContainer';
 import { ProfileSettingsForm } from '@/features/auth/ProfileSettingsForm';
-import { SettingsContainer } from '@/features/version/SettingsContainer';
 import { useTranslation } from 'react-i18next';
 
 export default function ProfileSettingsGeneral() {

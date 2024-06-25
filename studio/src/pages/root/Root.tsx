@@ -1,18 +1,11 @@
-import { ApplicationVersions } from '@/features/application';
-import AppInviteMember from '@/features/application/AppInviteMember';
-import EditApplication from '@/features/application/EditApplication.tsx';
-import { EditorSettings } from '@/features/auth/EditorSettings';
 import ReleaseHistory from '@/features/cluster/ReleaseHistory';
 import CreateEnvironment from '@/features/projects/CreateEnvironment';
 import EditProject from '@/features/projects/EditProject';
 import ProjectEnvironments from '@/features/projects/ProjectEnvironments';
 import ProjectInviteMember from '@/features/projects/ProjectInviteMember';
 import { AddResourceDrawer } from '@/features/resources';
-import { CreateCopyVersionDrawer } from '@/features/version/CreateCopyVersionDrawer';
-import PushVersion from '@/features/version/PushVersion/PushVersion';
 import useAuthStore from '@/store/auth/authStore.ts';
 import useClusterStore from '@/store/cluster/clusterStore.ts';
-import useEnvironmentStore from '@/store/environment/environmentStore';
 import useOrganizationStore from '@/store/organization/organizationStore.ts';
 import { history, joinChannel } from '@/utils';
 import _ from 'lodash';
@@ -34,12 +27,11 @@ export default function Root() {
 	history.location = useLocation();
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
-	const { orgId, versionId, appId } = useParams();
-	const { checkClusterSmtpStatus, checkClusterSetup, checkCICDStatus } = useClusterStore();
+	const { orgId } = useParams();
+	const { checkClusterSetup } = useClusterStore();
 	const { getOrganizationMembers, getOrganizationById, members, organization } =
 		useOrganizationStore();
 	const { getUser, isAuthenticated } = useAuthStore();
-	const { getAppVersionEnvironment, getEnvironmentResources } = useEnvironmentStore();
 
 	useEffect(() => {
 		if (orgId) {
@@ -55,38 +47,10 @@ export default function Root() {
 	}, [orgId]);
 
 	useEffect(() => {
-		const getEnv = async () => {
-			return await getAppVersionEnvironment({
-				appId: appId as string,
-				orgId: orgId as string,
-				versionId: versionId as string,
-			});
-		};
-
-		const getResources = async () => {
-			const env = await getEnv();
-			return await getEnvironmentResources({
-				appId: appId as string,
-				orgId: orgId as string,
-				versionId: versionId as string,
-				envId: env._id,
-			});
-		};
-
-		if (orgId && versionId && appId) {
-			getResources();
-		}
-	}, [versionId]);
-
-	useEffect(() => {
-		checkClusterSmtpStatus();
-		checkCICDStatus();
-		checkClusterSetup({
-			onSuccess: (isCompleted) => {
-				if (!isCompleted) {
-					navigate('/onboarding');
-				}
-			},
+		checkClusterSetup().then((isCompleted) => {
+			if (!isCompleted) {
+				navigate('/register');
+			}
 		});
 	}, []);
 
@@ -101,18 +65,12 @@ export default function Root() {
 	return (
 		<>
 			<Outlet />
-			<ApplicationVersions />
 			<ProjectEnvironments />
-			<EditApplication />
 			<EditProject />
-			<CreateCopyVersionDrawer />
 			<CreateEnvironment />
-			<PushVersion />
 			<AddResourceDrawer />
-			<AppInviteMember />
 			<ProjectInviteMember />
 			<ReleaseHistory />
-			<EditorSettings />
 		</>
 	);
 }

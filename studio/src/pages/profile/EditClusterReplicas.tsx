@@ -12,10 +12,11 @@ import { Input } from '@/components/Input';
 import { useToast } from '@/hooks';
 import useClusterStore from '@/store/cluster/clusterStore';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 import { useTranslation } from 'react-i18next';
+import * as z from 'zod';
 
 const Schema = z.object({
 	replicas: z.coerce.number().int().positive(),
@@ -25,7 +26,6 @@ const Schema = z.object({
 
 export default function EditClusterReplicas() {
 	const { toast } = useToast();
-	const [loading, setLoading] = useState(false);
 	const { t } = useTranslation();
 	const {
 		isEditClusterComponentOpen,
@@ -43,22 +43,26 @@ export default function EditClusterReplicas() {
 		},
 	});
 
+	const { mutate, isPending } = useMutation({
+		mutationFn: async (data: z.infer<typeof Schema>) => {
+			return updateClusterComponent({
+				deploymentName: clusterComponent?.deploymentName,
+				hpaName: clusterComponent?.hpaName,
+				...data,
+			});
+		},
+		onSuccess: () => {
+			form.reset();
+			closeEditClusterComponent();
+			toast({ action: 'success', title: 'Cluster component updated successfully' });
+		},
+		onError: (error) => {
+			toast({ action: 'error', title: error.details });
+		},
+	});
+
 	function onSubmit(data: z.infer<typeof Schema>) {
-		setLoading(true);
-		updateClusterComponent({
-			deploymentName: clusterComponent?.deploymentName,
-			hpaName: clusterComponent?.hpaName,
-			...data,
-			onSuccess: () => {
-				setLoading(false);
-				form.reset();
-				closeEditClusterComponent();
-			},
-			onError: (error) => {
-				setLoading(false);
-				toast({ action: 'error', title: error.details });
-			},
-		});
+		mutate(data);
 	}
 
 	useEffect(() => {
@@ -137,7 +141,7 @@ export default function EditClusterReplicas() {
 						)}
 					/>
 				</div>
-				<Button type='submit' loading={loading} size='lg' className='self-end'>
+				<Button type='submit' loading={isPending} size='lg' className='self-end'>
 					{t('general.save')}
 				</Button>
 			</form>

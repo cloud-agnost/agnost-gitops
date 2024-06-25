@@ -16,9 +16,9 @@ import {
   GitProvider,
   GitRepo,
   UpdateContainerParams,
-} from "@/types/container";
+} from "@/types";
 export default class ContainerService {
-  static url = "/v1/org";
+  static readonly url = "/v1/org";
 
   static async addGitProvider(req: AddGitProviderParams): Promise<GitProvider> {
     return (await axios.post(`/v1/user/git`, req)).data;

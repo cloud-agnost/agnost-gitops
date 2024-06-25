@@ -10,7 +10,7 @@ import {
 import { Knative, Kubernetes } from '@/components/icons';
 import { CONTAINER_TYPES } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
-import { ContainerType } from '@/types/container';
+import { ContainerType } from '@/types';
 import { toDisplayName } from '@/utils';
 import { CaretDown, Cloud, Package, Plus, Timer } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';

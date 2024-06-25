@@ -4,7 +4,6 @@ import { InfoModal } from '@/components/InfoModal';
 import { SelectionDropdown } from '@/components/SelectionDropdown';
 import { OrganizationCreateModal } from '@/features/organization';
 import { useToast } from '@/hooks';
-import useApplicationStore from '@/store/app/applicationStore';
 import useAuthStore from '@/store/auth/authStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { APIError, Organization } from '@/types';
@@ -15,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import './organization.scss';
-import { resetAfterVersionChange } from '@/utils';
+import useProjectStore from '@/store/project/projectStore';
 export function OrganizationDropdown() {
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
@@ -28,17 +27,19 @@ export function OrganizationDropdown() {
 		leaveOrganization,
 		getAllOrganizationByUser,
 	} = useOrganizationStore();
+	const { getProjects } = useProjectStore();
 	const navigate = useNavigate();
-	const { getAppsByOrgId } = useApplicationStore();
+
 	const { toast } = useToast();
 
 	const { mutate: leaveOrgMutate, isPending } = useMutation({
 		mutationFn: leaveOrganization,
 		onSuccess: () => {
 			toast({
-				title: t('organization.leave.success.title', {
-					name: organization?.name,
-				}) as string,
+				title:
+					t('organization.leave.success.title', {
+						name: organization?.name,
+					}) ?? '',
 				action: 'success',
 			});
 			setOpenModal(false);
@@ -58,13 +59,13 @@ export function OrganizationDropdown() {
 	}
 
 	function onSelect(org: Organization) {
-		getAppsByOrgId(org._id);
+		getProjects(org._id);
 		navigate(`/organization/${org?._id}`);
 		selectOrganization(org);
 	}
 
 	function navigateOrg() {
-		resetAfterVersionChange();
+		//TODO resetAfterProjectChange();
 		navigate(`/organization/${organization?._id}`);
 	}
 

@@ -6,11 +6,11 @@ import { useToast } from '@/hooks';
 import useResourceStore from '@/store/resources/resourceStore';
 import useTypeStore from '@/store/types/typeStore';
 import { CreateResourceSchema, ResourceInstances } from '@/types';
-import { isEmpty } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'components/Select';
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
+import _ from 'lodash';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -28,33 +28,36 @@ export default function CreateResource() {
 	const { createNewResource, toggleCreateResourceModal, closeEditResourceModal, resourceToEdit } =
 		useResourceStore();
 	const { resourceVersions } = useTypeStore();
-	const [loading, setLoading] = useState(false);
 	const { toast } = useToast();
 	const { orgId } = useParams() as Record<string, string>;
+
+	const { mutate, isPending } = useMutation({
+		mutationFn: createNewResource,
+		onSuccess: () => {
+			form.reset();
+			if (_.isEmpty(resourceToEdit)) {
+				toggleCreateResourceModal();
+			} else {
+				closeEditResourceModal();
+			}
+		},
+		onError: (error: { details: string }) => {
+			toast({
+				title: error.details,
+				action: 'error',
+			});
+		},
+	});
 	const onSubmit = (data: z.infer<typeof CreateResourceSchema>) => {
-		setLoading(true);
-		createNewResource({
+		mutate({
 			...data,
 			orgId,
-			onSuccess: () => {
-				form.reset();
-				if (isEmpty(resourceToEdit)) toggleCreateResourceModal();
-				else closeEditResourceModal();
-				setLoading(false);
-			},
-			onError: (error) => {
-				setLoading(false);
-				toast({
-					title: error?.details,
-					action: 'error',
-				});
-			},
 		});
 	};
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<CreateResourceLayout loading={loading}>
+				<CreateResourceLayout loading={isPending}>
 					<FormField
 						control={form.control}
 						name='config.size'

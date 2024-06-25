@@ -13,7 +13,7 @@ import { Separator } from '@/components/Separator';
 import { Switch } from '@/components/Switch';
 import useContainerStore from '@/store/container/containerStore';
 import useProjectEnvironmentStore from '@/store/project/projectEnvironmentStore';
-import { ContainerType, CreateContainerParams } from '@/types/container';
+import { ContainerType, CreateContainerParams } from '@/types';
 import { ArrowDown, ShareNetwork, Trash } from '@phosphor-icons/react';
 import _ from 'lodash';
 import { useFormContext } from 'react-hook-form';

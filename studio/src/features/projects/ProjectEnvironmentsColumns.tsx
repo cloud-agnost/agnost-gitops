@@ -43,7 +43,7 @@ export const ProjectEnvironmentsColumns: ColumnDef<ProjectEnvironment>[] = [
 	},
 	{
 		id: 'permissions',
-		header: translate('version.read_write'),
+		header: translate('project.read_write'),
 		accessorKey: 'readOnly',
 		size: 100,
 		cell: ({ row }) => {
@@ -56,7 +56,7 @@ export const ProjectEnvironmentsColumns: ColumnDef<ProjectEnvironment>[] = [
 						<LockSimpleOpen size={20} className='text-elements-green' />
 					)}
 					<span className='font-sfCompact text-sm'>
-						{readOnly ? translate('version.readOnly') : translate('version.read_write')}
+						{readOnly ? translate('project.readOnly') : translate('project.read_write')}
 					</span>
 				</div>
 			);

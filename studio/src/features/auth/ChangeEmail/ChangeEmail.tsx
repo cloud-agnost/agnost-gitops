@@ -10,16 +10,16 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from 'components/Form';
-import { Input } from 'components/Input';
+} from '@/components/Form';
+import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import './changeEmail.scss';
 import { useTranslation } from 'react-i18next';
 import { translate } from '@/utils';
 import { useState } from 'react';
-import { PasswordInput } from 'components/PasswordInput';
+import { PasswordInput } from '@/components/PasswordInput';
 import { APIError } from '@/types';
-import { Alert, AlertDescription, AlertTitle } from 'components/Alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/Alert';
 import { useToast } from '@/hooks';
 
 const FormSchema = z.object({

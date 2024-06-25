@@ -1,16 +1,15 @@
 import { Button } from '@/components/Button';
 import { DataTable } from '@/components/DataTable';
 import { Loading } from '@/components/Loading';
+import { RoleDropdown } from '@/components/RoleDropdown';
 import { SearchInput } from '@/components/SearchInput';
+import { SelectedRowButton } from '@/components/Table';
 import { useTable } from '@/hooks';
 import useAuthorizeProject from '@/hooks/useAuthorizeProject';
 import { toast } from '@/hooks/useToast';
-import useClusterStore from '@/store/cluster/clusterStore';
 import useProjectStore from '@/store/project/projectStore';
 import { Project, ProjectMember } from '@/types/project';
 import { useMutation } from '@tanstack/react-query';
-import { RoleDropdown } from 'components/RoleDropdown';
-import { SelectedRowButton } from 'components/Table';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -31,7 +30,6 @@ export default function ProjectMembers({ loading }: { loading: boolean }) {
 		data: filteredMembers,
 		columns: ProjectMembersColumns,
 	});
-	const { canClusterSendEmail } = useClusterStore();
 	const canMultiDelete = useAuthorizeProject('team.delete');
 	const { t } = useTranslation();
 	const { orgId } = useParams() as Record<string, string>;
@@ -78,14 +76,13 @@ export default function ProjectMembers({ loading }: { loading: boolean }) {
 						/>
 					)}
 					<RoleDropdown
-						type={'app'}
+						type='project'
 						onChange={(roles) => table?.getColumn('role')?.setFilterValue(roles)}
 					/>
-					{canClusterSendEmail && (
-						<Button variant='primary' onClick={() => openInviteMemberModal(project as Project)}>
-							{t('application.edit.invite')}
-						</Button>
-					)}
+
+					<Button variant='primary' onClick={() => openInviteMemberModal(project as Project)}>
+						{t('application.edit.invite')}
+					</Button>
 				</div>
 			</div>
 			{loading ? <Loading loading={loading} /> : <DataTable<ProjectMember> table={table} />}

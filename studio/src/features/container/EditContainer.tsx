@@ -9,7 +9,7 @@ import {
 } from '@/components/Drawer';
 import { Form } from '@/components/Form';
 import useContainerStore from '@/store/container/containerStore';
-import { ContainerSchema, ContainerType, CreateContainerParams } from '@/types/container';
+import { ContainerSchema, ContainerType, CreateContainerParams } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

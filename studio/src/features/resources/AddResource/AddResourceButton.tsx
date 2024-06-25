@@ -4,7 +4,6 @@ import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useResourceStore from '@/store/resources/resourceStore';
 import useTypeStore from '@/store/types/typeStore';
 import { ResourceCreateType, ResourceType } from '@/types';
-import { capitalize } from '@/utils';
 import { CaretDown, Plus } from '@phosphor-icons/react';
 import {
 	DropdownMenu,
@@ -18,7 +17,8 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-} from 'components/Dropdown';
+} from '@/components/Dropdown';
+import _ from 'lodash';
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 export default function AddResourceButton() {
@@ -65,7 +65,7 @@ export default function AddResourceButton() {
 									).map((resourceType) => (
 										<Fragment key={resourceType}>
 											<DropdownMenuLabel className='py-[6px] col-span-2 text-subtle leading-6 text-[11px] font-medium'>
-												{capitalize(resourceType)}
+												{_.capitalize(resourceType)}
 											</DropdownMenuLabel>
 											{instanceTypes[resourceType as keyof typeof instanceTypes].map(
 												(

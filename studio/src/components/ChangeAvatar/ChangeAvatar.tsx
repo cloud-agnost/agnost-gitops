@@ -1,7 +1,7 @@
 import { APIError } from '@/types';
 import { CircleNotch, Trash, PencilSimple } from '@phosphor-icons/react';
-import { Alert, AlertDescription, AlertTitle } from 'components/Alert';
-import { Avatar, AvatarFallback, AvatarImage } from 'components/Avatar';
+import { Alert, AlertDescription, AlertTitle } from '@/components/Alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { ChangeEvent, useId, useRef } from 'react';
 import './changeAvatar.scss';

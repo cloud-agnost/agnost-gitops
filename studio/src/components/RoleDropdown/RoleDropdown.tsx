@@ -6,20 +6,20 @@ import {
 	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
-} from 'components/Dropdown';
+} from '@/components/Dropdown';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 interface RoleDropdownProps {
-	type: 'app' | 'org';
+	type: 'project' | 'org';
 
 	onChange: (roles: string[]) => void;
 	value?: string[];
 }
-function RoleDropdown({ type, value, onChange }: RoleDropdownProps) {
+function RoleDropdown({ type, value, onChange }: Readonly<RoleDropdownProps>) {
 	const { t } = useTranslation();
 	const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-	const { appRoles, orgRoles } = useTypeStore();
-	const roles = type === 'app' ? appRoles : orgRoles;
+	const { orgRoles, projectRoles } = useTypeStore();
+	const roles = type === 'project' ? projectRoles : orgRoles;
 
 	useEffect(() => {
 		if (value) {

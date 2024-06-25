@@ -1,9 +1,10 @@
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { ConnectResourceSchema } from '@/types';
-import { cn, isEmpty } from '@/utils';
+import { cn } from '@/utils';
 import { Plus, Trash } from '@phosphor-icons/react';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
+import _ from 'lodash';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
@@ -75,8 +76,8 @@ export default function ConnectOptions() {
 						className={cn(
 							'rounded-full',
 							!index && 'self-end',
-							!isEmpty(errors) && !index && 'self-center mt-2',
-							!isEmpty(errors) && isEmpty(errors.access?.options?.[0]) && !index && 'self-end',
+							!_.isEmpty(errors) && !index && 'self-center mt-2',
+							!_.isEmpty(errors) && _.isEmpty(errors.access?.options?.[0]) && !index && 'self-end',
 						)}
 						onClick={() => {
 							remove(index);

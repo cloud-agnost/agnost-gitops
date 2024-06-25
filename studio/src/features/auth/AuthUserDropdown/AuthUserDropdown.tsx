@@ -1,22 +1,14 @@
-import { resetAllStores } from '@/helpers';
-import useApplicationStore from '@/store/app/applicationStore';
 import useAuthStore from '@/store/auth/authStore.ts';
-import useEnvironmentStore from '@/store/environment/environmentStore';
+import useContainerStore from '@/store/container/containerStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
+import useProjectEnvironmentStore from '@/store/project/projectEnvironmentStore';
+import useProjectStore from '@/store/project/projectStore';
 import useResourceStore from '@/store/resources/resourceStore';
 import useThemeStore from '@/store/theme/themeStore.ts';
-import useVersionStore from '@/store/version/versionStore';
 import { cn, leaveChannel } from '@/utils';
-import {
-	CodeBlock,
-	GearSix,
-	Laptop,
-	LineSegments,
-	MoonStars,
-	SignOut,
-	SunDim,
-} from '@phosphor-icons/react';
-import { AuthUserAvatar } from 'components/AuthUserAvatar';
+import { GearSix, Laptop, LineSegments, MoonStars, SignOut, SunDim } from '@phosphor-icons/react';
+import { useMutation } from '@tanstack/react-query';
+import { AuthUserAvatar } from '@/components/AuthUserAvatar';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -29,21 +21,21 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-} from 'components/Dropdown';
+} from '@/components/Dropdown';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-
+import { useToast } from '@/hooks';
 export default function AuthUserDropdown() {
-	const { user, logout, toggleEditorSettingsDrawer } = useAuthStore();
+	const { user, logout } = useAuthStore();
 	const { orgId } = useParams() as { orgId: string };
 	const { t } = useTranslation();
 	const { setTheme, getTheme } = useThemeStore();
 	const navigate = useNavigate();
-	const { version } = useVersionStore();
 	const { organizations } = useOrganizationStore();
-	const { application, applications } = useApplicationStore();
-	const { environment, resources: envResources } = useEnvironmentStore();
 	const { resources } = useResourceStore();
+	const { environments } = useProjectEnvironmentStore();
+	const { projects } = useProjectStore();
+	const { containers } = useContainerStore();
 	const THEMES = [
 		{
 			id: 'light',
@@ -61,32 +53,40 @@ export default function AuthUserDropdown() {
 			icon: <Laptop className='text-lg' />,
 		},
 	];
+	const { toast } = useToast();
+	const { mutate } = useMutation({
+		mutationFn: logout,
+		onSuccess: () => {
+			leaveChannel(orgId);
+
+			resources?.forEach((resource) => {
+				leaveChannel(resource._id);
+			});
+			organizations?.forEach((org) => {
+				leaveChannel(org._id);
+			});
+			environments?.forEach((env) => {
+				leaveChannel(env._id);
+			});
+			projects?.forEach((project) => {
+				leaveChannel(project._id);
+			});
+			containers?.forEach((container) => {
+				leaveChannel(container._id);
+			});
+
+			leaveChannel('cluster');
+			leaveChannel(user?._id ?? '');
+			//TODO resetAllStores();
+			navigate('/login');
+		},
+		onError: (error) => {
+			toast({ action: 'error', title: error.details });
+		},
+	});
 
 	function logoutHandler() {
-		logout({
-			onSuccess: () => {
-				leaveChannel(orgId);
-				leaveChannel(version?._id ?? '');
-				leaveChannel(application?._id ?? '');
-				leaveChannel(environment?._id ?? '');
-				resources?.forEach((resource) => {
-					leaveChannel(resource._id);
-				});
-				organizations?.forEach((org) => {
-					leaveChannel(org._id);
-				});
-				applications?.forEach((app) => {
-					leaveChannel(app._id);
-				});
-				envResources?.forEach((envResource) => {
-					leaveChannel(envResource._id);
-				});
-				leaveChannel('cluster');
-				leaveChannel(user?._id ?? '');
-				resetAllStores();
-				navigate('/login');
-			},
-		});
+		mutate();
 	}
 	return (
 		<DropdownMenu>
@@ -148,11 +148,6 @@ export default function AuthUserDropdown() {
 							</DropdownMenuSubContent>
 						</DropdownMenuPortal>
 					</DropdownMenuSub>
-
-					<DropdownMenuItem className='gap-2' onClick={toggleEditorSettingsDrawer}>
-						<CodeBlock className='text-icon-base text-lg' />
-						{t('profileSettings.editor_settings')}
-					</DropdownMenuItem>
 				</DropdownMenuItemContainer>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem onClick={logoutHandler}>

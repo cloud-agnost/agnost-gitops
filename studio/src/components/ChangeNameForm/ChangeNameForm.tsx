@@ -1,6 +1,6 @@
 import { Button } from '@/components/Button';
 import { APIError, ChangeNameFormSchema } from '@/types';
-import { Alert, AlertDescription, AlertTitle } from 'components/Alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/Alert';
 import {
 	FormControl,
 	FormDescription,
@@ -8,8 +8,8 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from 'components/Form';
-import { Input } from 'components/Input';
+} from '@/components/Form';
+import { Input } from '@/components/Input';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';

@@ -3,12 +3,12 @@ import {
 	OrganizationInvitationTable,
 	OrganizationMembersTable,
 } from '@/features/organization';
-import { SettingsContainer } from '@/features/version/SettingsContainer';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from 'components/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/Tabs';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import '../organization.scss';
+import { SettingsContainer } from '@/components/SettingsContainer';
 export default function OrganizationSettingsMembers() {
 	const { t } = useTranslation();
 	const [searchParams, setSearchParams] = useSearchParams();

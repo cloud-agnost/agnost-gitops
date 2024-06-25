@@ -5,82 +5,93 @@ import { TableConfirmation } from '@/components/Table';
 import { toast } from '@/hooks/useToast';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
-import { ColumnDefWithClassName, Invitation } from '@/types';
+import { APIError, ColumnDefWithClassName, Invitation } from '@/types';
 import { getProjectPermission, translate } from '@/utils';
-import { RoleSelect } from 'components/RoleDropdown';
+import { RoleSelect } from '@/components/RoleDropdown';
+import { QueryClient } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 const { updateInvitationUserRole, resendInvitation, deleteInvitation } = useProjectStore.getState();
 
 function getPermission(type: string) {
 	return getProjectPermission(`invite.${type}`);
 }
+
 function updateInvitationUserRoleHandler(token: string, role: string) {
 	const orgId = useOrganizationStore.getState().organization._id;
-	const projectId = useProjectStore.getState().project?._id as string;
-	updateInvitationUserRole({
-		orgId,
-		projectId,
-		token,
-		role,
-		onSuccess: () => {
-			toast({
-				title: translate('general.invitation.update', { role }) as string,
-				action: 'success',
-			});
-		},
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+	const projectId = useProjectStore.getState().project?._id;
+
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: updateInvitationUserRole,
+			onSuccess: () => {
+				toast({
+					title: translate('general.invitation.update', { role }),
+					action: 'success',
+				});
+			},
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+		})
+		.execute({ orgId, projectId, token, role });
 }
+
 function resendInvitationHandler(token: string, email: string) {
 	const orgId = useOrganizationStore.getState().organization._id;
-	const projectId = useProjectStore.getState().project?._id as string;
-	resendInvitation({
-		token,
-		projectId,
-		orgId,
-		onSuccess: () => {
-			toast({
-				title: translate('general.invitation.resent_success', {
-					email,
-				}),
-				action: 'success',
-			});
-		},
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+	const projectId = useProjectStore.getState().project?._id;
+
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: resendInvitation,
+			onSuccess: () => {
+				toast({
+					title: translate('general.invitation.resent_success', {
+						email,
+					}),
+					action: 'success',
+				});
+			},
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+		})
+		.execute({ orgId, projectId, token });
 }
 
 async function deleteInvitationHandler(token: string) {
 	const orgId = useOrganizationStore.getState().organization._id;
-	const projectId = useProjectStore.getState().project?._id as string;
-	return deleteInvitation({
-		token,
-		projectId,
-		orgId,
-		onSuccess: () => {
-			toast({
-				title: translate('general.invitation.delete'),
-				action: 'success',
-			});
-		},
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+	const projectId = useProjectStore.getState().project?._id;
+
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: deleteInvitation,
+			onSuccess: () => {
+				toast({
+					title: translate('general.invitation.delete'),
+					action: 'success',
+				});
+			},
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+		})
+		.execute({ orgId, projectId, token });
 }
+
 export const ProjectInvitationsColumns: ColumnDefWithClassName<Invitation>[] = [
 	{
 		id: 'select',
@@ -126,7 +137,7 @@ export const ProjectInvitationsColumns: ColumnDefWithClassName<Invitation>[] = [
 			return (
 				<RoleSelect
 					role={role}
-					type={'app'}
+					type='project'
 					onSelect={(newRole) => updateInvitationUserRoleHandler(token, newRole)}
 					disabled={!getPermission('update')}
 				/>

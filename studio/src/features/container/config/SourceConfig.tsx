@@ -11,7 +11,7 @@ import { Input } from '@/components/Input';
 import { Docker, Github } from '@/components/icons';
 import { useToast, useUpdateEffect } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
-import { CreateContainerParams, StateOption } from '@/types/container';
+import { CreateContainerParams, StateOption } from '@/types';
 import { Code, Folder, GitBranch } from '@phosphor-icons/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import _ from 'lodash';

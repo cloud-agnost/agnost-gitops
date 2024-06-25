@@ -16,7 +16,7 @@ import {
 	SelectValue,
 } from '@/components/Select/Select';
 import { Switch } from '@/components/Switch';
-import { CreateContainerParams } from '@/types/container';
+import { CreateContainerParams } from '@/types';
 import { Package } from '@phosphor-icons/react';
 import { startCase } from 'lodash';
 import { useFormContext } from 'react-hook-form';

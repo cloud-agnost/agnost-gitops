@@ -10,8 +10,8 @@ import { ConnectKafkaWithSASL, ConnectKafkaWithSSL } from '@/features/resources'
 import { Button } from '@/components/Button';
 import { Plus, Trash } from '@phosphor-icons/react';
 import { cn } from '@/utils';
-import { isEmpty } from '@/utils';
 import { useEffect } from 'react';
+import { isEmpty } from 'lodash';
 export default function ConnectKafka() {
 	const form = useFormContext<z.infer<typeof ConnectResourceSchema>>();
 	const { fields, append, remove } = useFieldArray({

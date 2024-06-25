@@ -1,6 +1,6 @@
 import { Input } from '@/components/Input';
 import { ConnectResourceSchema } from '@/types';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';

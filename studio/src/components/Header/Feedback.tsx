@@ -4,7 +4,7 @@ import useAuthStore from '@/store/auth/authStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Lightbulb } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
-import { Form, FormControl, FormField, FormItem, FormMessage } from 'components/Form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/Form';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';

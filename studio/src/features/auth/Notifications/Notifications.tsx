@@ -4,7 +4,7 @@ import { NotificationItem } from '@/features/auth/Notifications/index.ts';
 import useAuthStore from '@/store/auth/authStore.ts';
 import { useState } from 'react';
 import { APIError } from '@/types';
-import { Alert, AlertDescription, AlertTitle } from 'components/Alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/Alert';
 
 export default function Notifications() {
 	const [loading, setLoading] = useState(false);

@@ -4,45 +4,55 @@ import { ResendButton } from '@/components/ResendButton';
 import { TableConfirmation } from '@/components/Table';
 import { toast } from '@/hooks/useToast';
 import useOrganizationStore from '@/store/organization/organizationStore';
-import { Invitation } from '@/types';
+import { APIError, Invitation } from '@/types';
 import { getOrgPermission, translate } from '@/utils';
+import { QueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
-import { RoleSelect } from 'components/RoleDropdown';
+import { RoleSelect } from '@/components/RoleDropdown';
 
+const queryClient = new QueryClient();
+
+const { deleteInvitation, resendInvitation } = useOrganizationStore.getState();
 async function onDelete(token: string) {
-	return useOrganizationStore.getState().deleteInvitation({
-		token,
-		onSuccess: () => {
-			toast({
-				title: 'Invitation deleted',
-				action: 'success',
-			});
-		},
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: deleteInvitation,
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+			onSuccess: () => {
+				toast({
+					title: 'Invitation deleted',
+					action: 'success',
+				});
+			},
+		})
+		.execute({ token });
 }
 
 function onResend(token: string) {
-	useOrganizationStore.getState?.().resendInvitation({
-		token,
-		onSuccess: () => {
-			toast({
-				title: 'Invitation has been resent to the user.',
-				action: 'success',
-			});
-		},
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: resendInvitation,
+			onSuccess: () => {
+				toast({
+					title: 'Invitation has been resent to the user.',
+					action: 'success',
+				});
+			},
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+		})
+		.execute({ token });
 }
 
 export const OrganizationInvitationsColumns: ColumnDef<Invitation>[] = [
@@ -89,19 +99,17 @@ export const OrganizationInvitationsColumns: ColumnDef<Invitation>[] = [
 			const { token, role } = row.original;
 			const canUpdate = getOrgPermission('invite.update');
 			return (
-				<>
-					<RoleSelect
-						role={role}
-						disabled={!canUpdate}
-						type='org'
-						onSelect={(val) => {
-							useOrganizationStore.getState?.().updateInvitationUserRole({
-								token,
-								role: val,
-							});
-						}}
-					/>
-				</>
+				<RoleSelect
+					role={role}
+					disabled={!canUpdate}
+					type='org'
+					onSelect={(val) => {
+						useOrganizationStore.getState?.().updateInvitationUserRole({
+							token,
+							role: val,
+						});
+					}}
+				/>
 			);
 		},
 	},

@@ -6,7 +6,7 @@ import { BADGE_COLOR_MAP } from '@/constants';
 import { useTable, useUpdateEffect } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
 import { ColumnDefWithClassName } from '@/types';
-import { ContainerPipeline } from '@/types/container';
+import { ContainerPipeline } from '@/types';
 import { cn, getRelativeTime, secondsToRelativeTime } from '@/utils';
 import { GitBranch, GitCommit } from '@phosphor-icons/react';
 import { File } from '@phosphor-icons/react/dist/ssr';

@@ -1,5 +1,5 @@
+import { SettingsContainer } from '@/components/SettingsContainer';
 import { Notifications } from '@/features/auth/Notifications';
-import { SettingsContainer } from '@/features/version/SettingsContainer';
 import { useTranslation } from 'react-i18next';
 
 export default function ProfileSettingsNotifications() {

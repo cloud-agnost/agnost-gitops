@@ -7,7 +7,7 @@ import { BADGE_COLOR_MAP } from '@/constants';
 import { useTable } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
 import { ColumnDefWithClassName } from '@/types';
-import { ContainerPod, PodCondition } from '@/types/container';
+import { ContainerPod, PodCondition } from '@/types';
 import { DATE_TIME_FORMAT, cn, formatDate, getRelativeTime } from '@/utils';
 import { Info } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';

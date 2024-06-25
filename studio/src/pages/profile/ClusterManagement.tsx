@@ -1,20 +1,18 @@
 import { CopyInput } from '@/components/CopyInput';
+import { SettingsContainer } from '@/components/SettingsContainer';
 import { SettingsFormItem } from '@/components/SettingsFormItem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/Tabs';
-import { SettingsContainer } from '@/features/version/SettingsContainer';
 import useClusterStore from '@/store/cluster/clusterStore';
 import { useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useTranslation } from 'react-i18next';
-import ClusterAddons from './ClusterAddons';
 import ClusterResources from './ClusterComponents';
-import ClusterSmtpForm from './ClusterSmtpForm';
-import CustomDomains from './CustomDomains';
+import CustomDomains from '../../features/cluster/CustomDomain/CustomDomains';
 import TransferClusterOwnership from './TransferClusterOwnership';
 
 export default function ProfileSettingsClusterManagement() {
 	const { t } = useTranslation();
-	const TabItems = ['General', 'Cluster Resources', 'SMTP', 'Custom Domains', 'Addons'];
+	const TabItems = ['General', 'Cluster Resources', 'Custom Domains'];
 	const { getClusterInfo, checkDomainStatus, clusterDomainError, cluster } = useClusterStore();
 
 	useQuery({
@@ -68,14 +66,8 @@ export default function ProfileSettingsClusterManagement() {
 				<TabsContent value='Cluster Resources' className='h-[calc(100%-4rem)]'>
 					<ClusterResources />
 				</TabsContent>
-				<TabsContent value='SMTP' className='overflow-y-auto  h-[calc(100%-4rem)]'>
-					<ClusterSmtpForm />
-				</TabsContent>
 				<TabsContent value='Custom Domains' className='overflow-y-auto  h-[calc(100%-4rem)]'>
 					<CustomDomains />
-				</TabsContent>
-				<TabsContent value='Addons' className='overflow-y-auto  h-[calc(100%-4rem)]'>
-					<ClusterAddons />
 				</TabsContent>
 			</Tabs>
 		</SettingsContainer>

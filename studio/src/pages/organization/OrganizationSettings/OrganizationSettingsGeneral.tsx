@@ -1,4 +1,5 @@
 import { CopyInput } from '@/components/CopyInput';
+import { SettingsContainer } from '@/components/SettingsContainer';
 import { SettingsFormItem } from '@/components/SettingsFormItem';
 import {
 	ChangeOrganizationAvatar,
@@ -6,7 +7,6 @@ import {
 	DeleteOrganization,
 	TransferOrganization,
 } from '@/features/organization';
-import { SettingsContainer } from '@/features/version/SettingsContainer';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { useTranslation } from 'react-i18next';
 export default function OrganizationSettingsGeneral() {
@@ -45,7 +45,7 @@ export default function OrganizationSettingsGeneral() {
 			<div className='divide-y'>
 				{ORGANIZATION_GENERAL_SETTINGS.map((item, index) => (
 					<SettingsFormItem
-						key={index}
+						key={item.title}
 						title={item.title}
 						description={item.description}
 						className='space-y-4 py-6'

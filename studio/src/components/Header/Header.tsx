@@ -1,17 +1,10 @@
 import { Agnost } from '@/components/icons';
 import { MENU_ITEMS } from '@/constants';
-import { ApplicationSelectDropdown } from '@/features/application';
 import { AuthUserDropdown } from '@/features/auth/AuthUserDropdown';
 import { ReleaseDropdown } from '@/features/cluster';
 import { OrganizationDropdown } from '@/features/organization/OrganizationDropdown';
 import ProjectEnvironmentDropdown from '@/features/projects/ProjectEnvironmentDropdown';
 import ProjectSelectDropdown from '@/features/projects/ProjectSelectDropdown';
-import { DeploymentStatusCard } from '@/features/version/DeploymentStatusCard';
-import { NotificationDropdown } from '@/features/version/Notification';
-import { VersionDropdown } from '@/features/version/VersionDropdown';
-import { useAuthorizeVersion } from '@/hooks';
-import useVersionStore from '@/store/version/versionStore';
-import { MagnifyingGlass } from '@phosphor-icons/react';
 import _ from 'lodash';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../Button';
@@ -20,9 +13,9 @@ import Feedback from './Feedback';
 import './header.scss';
 
 export function Header() {
-	const { versionId, appId, orgId, projectId, envId } = useParams();
-	const { toggleSearchCommandMenu } = useVersionStore();
-	const canViewNotf = useAuthorizeVersion('viewLogs');
+	const { orgId, projectId, envId } = useParams();
+	//Todo
+	// const canViewNotf = true;
 	return (
 		<header className='header-menu'>
 			<div className='header-menu-left'>
@@ -50,18 +43,6 @@ export function Header() {
 							<ProjectEnvironmentDropdown />
 						</>
 					)}
-					{appId && (
-						<>
-							<Separator orientation='vertical' className='h-8 transform rotate-12' />
-							<ApplicationSelectDropdown />
-						</>
-					)}
-					{versionId && (
-						<>
-							<Separator orientation='vertical' className='h-8 transform rotate-12' />
-							<VersionDropdown />
-						</>
-					)}
 				</div>
 			</div>
 			<div className='header-menu-right'>
@@ -87,17 +68,9 @@ export function Header() {
 					className='h-8 transform rotate-12 invisible 2xl:visible'
 				/>
 				<div className='header-menu-right-actions'>
-					<Button variant='icon' size='sm' rounded onClick={toggleSearchCommandMenu}>
-						<MagnifyingGlass size={18} />
-					</Button>
 					<ReleaseDropdown />
-					{versionId && (
-						<>
-							<DeploymentStatusCard />
-							{canViewNotf && <NotificationDropdown />}
-						</>
-					)}
-
+					//TODO NotificationDropdown
+					{/* {envId && canViewNotf && <NotificationDropdown />} */}
 					<div className='header-menu-right-actions-user ml-2'>
 						<AuthUserDropdown />
 					</div>

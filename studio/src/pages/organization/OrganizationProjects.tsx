@@ -1,26 +1,16 @@
 import { ConfirmationModal } from '@/components/ConfirmationModal';
-import { EmptyState } from '@/components/EmptyState';
 import { InfoModal } from '@/components/InfoModal';
-import { Loading } from '@/components/Loading';
-import { ApplicationCard } from '@/features/application';
-import ApplicationTable from '@/features/application/ApplicationTable/ApplicationTable';
-import CreateProject from '@/features/projects/CreateProject';
-import ProjectActions from '@/features/projects/ProjectActions';
-import { useSearch } from '@/hooks';
+import { useToast } from '@/hooks';
 import useProjectStore from '@/store/project/projectStore';
 import { APIError } from '@/types';
-import { Project } from '@/types/project';
-import { cn } from '@/utils';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Trans, useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { useToast } from '@/hooks';
 export default function OrganizationProjects() {
 	const { toast } = useToast();
 	const {
-		projects,
-		getProjects,
+		// projects,
+		// getProjects,
 		deleteProject,
 		toDeleteProject,
 		closeDeleteModal,
@@ -28,21 +18,21 @@ export default function OrganizationProjects() {
 		closeLeaveModal,
 		isLeaveModalOpen,
 		leaveProjectTeam,
-		onProjectClick,
-		loading,
+		// onProjectClick,
+		// loading,
 	} = useProjectStore();
-	const [isCard, setIsCard] = useState(true);
+	// const [isCard, setIsCard] = useState(true);
 
 	const { orgId } = useParams() as Record<string, string>;
 	const { t } = useTranslation();
-	const filteredProjects = useSearch(projects);
+	// const filteredProjects = useSearch(projects);
 
-	const { isFetching } = useQuery({
-		queryKey: ['projects', orgId],
-		queryFn: () => getProjects(orgId),
-		enabled: projects[0]?.orgId !== orgId,
-		refetchOnWindowFocus: false,
-	});
+	// const { isFetching } = useQuery({
+	// 	queryKey: ['projects', orgId],
+	// 	queryFn: () => getProjects(orgId),
+	// 	enabled: projects[0]?.orgId !== orgId,
+	// 	refetchOnWindowFocus: false,
+	// });
 
 	const {
 		mutateAsync: deleteMutate,
@@ -66,7 +56,8 @@ export default function OrganizationProjects() {
 	});
 	return (
 		<>
-			<div
+			{/* //TODO App components  */}
+			{/* <div
 				className={cn(
 					'scroll p-8',
 					!projects.length && 'flex items-center justify-center relative',
@@ -106,7 +97,7 @@ export default function OrganizationProjects() {
 						<CreateProject />
 					</EmptyState>
 				)}
-			</div>
+			</div> */}
 			<ConfirmationModal
 				loading={deleteLoading}
 				error={deleteError}

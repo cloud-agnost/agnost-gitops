@@ -17,7 +17,7 @@ import {
   GitProvider,
   GitRepo,
   UpdateContainerParams,
-} from "@/types/container";
+} from "@/types";
 import { joinChannel, leaveChannel } from "@/utils";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";

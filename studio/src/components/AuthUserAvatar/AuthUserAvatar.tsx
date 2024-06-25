@@ -1,5 +1,5 @@
 import useAuthStore from '@/store/auth/authStore.ts';
-import { Avatar, AvatarFallback, AvatarImage, AvatarProps } from 'components/Avatar';
+import { Avatar, AvatarFallback, AvatarImage, AvatarProps } from '@/components/Avatar';
 
 export default function AuthUserAvatar(props: AvatarProps) {
 	const { user } = useAuthStore();

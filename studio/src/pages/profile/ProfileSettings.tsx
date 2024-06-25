@@ -1,7 +1,6 @@
 import { MENU_ITEMS_FOR_PROFILE_SETTINGS } from '@/constants';
-import { SettingsNavbar } from '@/features/version/SettingsNavbar';
 import { Layout } from '@/layouts/Layout';
-import { SettingsLayout } from '@/layouts/SettingsLayout';
+import { SettingsLayout, SettingsNavbar } from '@/layouts/SettingsLayout';
 import { RequireAuth } from '@/router';
 import useAuthStore from '@/store/auth/authStore';
 import { useMemo } from 'react';

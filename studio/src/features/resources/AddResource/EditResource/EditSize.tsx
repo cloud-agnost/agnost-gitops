@@ -4,7 +4,6 @@ import { Input } from '@/components/Input';
 import { useToast } from '@/hooks';
 import useResourceStore from '@/store/resources/resourceStore';
 import { APIError, CreateResourceSchema, ResourceUpdateType } from '@/types';
-import { isEmpty } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import {
@@ -14,7 +13,8 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from 'components/Form';
+} from '@/components/Form';
+import { isEmpty } from 'lodash';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

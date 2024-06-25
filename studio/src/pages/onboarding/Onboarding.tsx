@@ -1,25 +1,9 @@
-import { OnboardingLayout } from '@/layouts/OnboardingLayout';
-import useOnboardingStore from '@/store/onboarding/onboardingStore.ts';
-import { Outlet, useNavigate } from 'react-router-dom';
-import './onboarding.scss';
+import { Outlet } from 'react-router-dom';
 
 export default function Onboarding() {
-	const { getPrevPath, goToPrevStep } = useOnboardingStore();
-	const navigate = useNavigate();
-
-	function goBack() {
-		const prev = getPrevPath();
-		if (prev) {
-			goToPrevStep();
-			navigate(prev);
-		}
-	}
-
 	return (
-		<OnboardingLayout>
-			<div className='onboarding-page'>
-				<Outlet context={{ goBack }} />
-			</div>
-		</OnboardingLayout>
+		<div className='container px-4 relative h-[100dvh] flex-col items-center justify-center grid lg:max-w-none lg:px-0'>
+			<Outlet />
+		</div>
 	);
 }

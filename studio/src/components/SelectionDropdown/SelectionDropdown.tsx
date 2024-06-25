@@ -8,7 +8,7 @@ import {
 	CommandSeparator,
 } from '@/components/Command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/Popover';
-import { Application, Organization } from '@/types';
+import { Organization } from '@/types';
 import { Project } from '@/types/project';
 import { cn } from '@/utils';
 import { CaretUpDown, Check } from '@phosphor-icons/react';
@@ -16,11 +16,11 @@ import { MouseEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '../Avatar';
 interface SelectionLabelProps {
-	selectedData: Organization | Application | Project;
+	selectedData: Organization | Project;
 	onClick?: () => void;
 }
 
-interface SelectionDropdownProps<T extends Organization | Application | Project> {
+interface SelectionDropdownProps<T extends Organization | Project> {
 	selectedData: T;
 	data: T[];
 	onSelect: (data: T) => void;
@@ -28,7 +28,7 @@ interface SelectionDropdownProps<T extends Organization | Application | Project>
 	children: React.ReactNode;
 }
 
-export default function SelectionDropdown<T extends Organization | Application | Project>({
+export default function SelectionDropdown<T extends Organization | Project>({
 	selectedData,
 	data,
 	onSelect,

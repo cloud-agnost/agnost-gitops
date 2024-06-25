@@ -7,9 +7,14 @@ import { TableConfirmation } from '@/components/Table';
 import { toast } from '@/hooks/useToast';
 import useAuthStore from '@/store/auth/authStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
-import { OrganizationMember } from '@/types';
+import { APIError, OrganizationMember } from '@/types';
 import { getOrgPermission, translate } from '@/utils';
+import { QueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
+
+const queryClient = new QueryClient();
+const { removeMemberFromOrganization } = useOrganizationStore.getState();
+
 function updateRole(userId: string, role: string) {
 	useOrganizationStore.getState().changeMemberRole({
 		userId,
@@ -18,16 +23,24 @@ function updateRole(userId: string, role: string) {
 }
 
 async function deleteHandler(member: OrganizationMember) {
-	const { removeMemberFromOrganization } = useOrganizationStore.getState();
-	return removeMemberFromOrganization({
-		userId: member.member._id,
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: removeMemberFromOrganization,
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+			onSuccess: () => {
+				toast({
+					title: 'Member removed successfully',
+					action: 'success',
+				});
+			},
+		})
+		.execute({ userId: member.member._id });
 }
 
 export const OrganizationMembersColumns: ColumnDef<OrganizationMember>[] = [

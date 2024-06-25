@@ -11,3 +11,4 @@ RUN npm install
 COPY ./ ./
 # This will be the start up command of the docker container
 CMD [ "npm", "run", "dev" ]
+

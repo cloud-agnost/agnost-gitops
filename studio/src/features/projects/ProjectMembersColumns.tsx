@@ -10,43 +10,58 @@ import useProjectStore from '@/store/project/projectStore';
 import { ProjectMember } from '@/types/project';
 import { getProjectPermission, translate } from '@/utils';
 import { ColumnDef } from '@tanstack/react-table';
-import { RoleSelect } from 'components/RoleDropdown';
+import { RoleSelect } from '@/components/RoleDropdown';
+import { QueryClient } from '@tanstack/react-query';
+import { APIError } from '@/types';
+
+const queryClient = new QueryClient();
+
+const { removeProjectMember, changeProjectTeamRole } = useProjectStore.getState();
 
 async function removeMember(userId: string, projectId: string) {
 	const orgId = useOrganizationStore.getState().organization._id;
 
-	return useProjectStore.getState?.().removeProjectMember({
-		userId,
-		orgId,
-		projectId,
-		onSuccess: () => {
-			toast({
-				title: translate('general.member.delete'),
-				action: 'success',
-			});
-		},
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: removeProjectMember,
+			onSuccess: () => {
+				toast({
+					title: translate('general.member.delete'),
+					action: 'success',
+				});
+			},
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+		})
+		.execute({ userId, projectId, orgId });
 }
+
 function updateMemberRole(userId: string, role: string, projectId: string) {
 	const orgId = useOrganizationStore.getState().organization._id;
-	useProjectStore.getState?.().changeProjectTeamRole({
-		userId,
-		role,
-		projectId,
-		orgId,
-		onError: ({ details }) => {
-			toast({
-				title: details,
-				action: 'error',
-			});
-		},
-	});
+
+	return queryClient
+		.getMutationCache()
+		.build(queryClient, {
+			mutationFn: changeProjectTeamRole,
+			onSuccess: () => {
+				toast({
+					title: translate('general.role.update'),
+					action: 'success',
+				});
+			},
+			onError: (error: APIError) => {
+				toast({
+					title: error.details,
+					action: 'error',
+				});
+			},
+		})
+		.execute({ userId, role, projectId, orgId });
 }
 export const ProjectMembersColumns: ColumnDef<ProjectMember>[] = [
 	{

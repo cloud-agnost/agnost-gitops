@@ -7,7 +7,7 @@ import {
 	FormMessage,
 } from '@/components/Form';
 import { Input } from '@/components/Input';
-import { CreateContainerParams } from '@/types/container';
+import { CreateContainerParams } from '@/types';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 

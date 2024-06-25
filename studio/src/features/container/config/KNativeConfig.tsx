@@ -14,7 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/Select/Select';
-import { CreateContainerParams } from '@/types/container';
+import { CreateContainerParams } from '@/types';
 import { Package } from '@phosphor-icons/react';
 import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';

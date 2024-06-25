@@ -9,17 +9,17 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from 'components/Form';
+} from '@/components/Form';
 import { Button } from '@/components/Button';
 
 import './changePassword.scss';
 import { useTranslation } from 'react-i18next';
 import { translate } from '@/utils';
 import { useState } from 'react';
-import { PasswordInput } from 'components/PasswordInput';
+import { PasswordInput } from '@/components/PasswordInput';
 import useAuthStore from '@/store/auth/authStore.ts';
 import { APIError } from '@/types';
-import { Alert, AlertDescription, AlertTitle } from 'components/Alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/Alert';
 import { useToast } from '@/hooks';
 
 const FormSchema = z.object({

@@ -19,7 +19,7 @@ import { Input } from '@/components/Input';
 import { useToast } from '@/hooks';
 import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useProjectStore from '@/store/project/projectStore';
-import { APIError, CreateApplicationSchema } from '@/types';
+import { APIError } from '@/types';
 import { CreateProjectRequest, CreateProjectSchema } from '@/types/project';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from '@phosphor-icons/react';
@@ -27,7 +27,6 @@ import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import * as z from 'zod';
 
 export default function CreateProject({ className }: { className?: string }) {
 	const { createProject } = useProjectStore();
@@ -54,7 +53,8 @@ export default function CreateProject({ className }: { className?: string }) {
 			closeModal();
 		},
 	});
-	async function onSubmit(data: z.infer<typeof CreateApplicationSchema>) {
+	//TODO add schema
+	async function onSubmit(data: any) {
 		mutateAsync({
 			...data,
 			orgId,

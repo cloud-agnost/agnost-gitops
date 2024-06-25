@@ -2,7 +2,7 @@ import { Input } from '@/components/Input';
 import { PasswordInput } from '@/components/PasswordInput';
 import { AccessDbSchema, ConnectResourceSchema, ResourceInstances } from '@/types';
 import { cn } from '@/utils';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';

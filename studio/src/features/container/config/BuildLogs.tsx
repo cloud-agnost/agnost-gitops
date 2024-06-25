@@ -1,7 +1,7 @@
 import { Button } from '@/components/Button';
 import { LogViewer } from '@/components/LogViewer';
 import useContainerStore from '@/store/container/containerStore';
-import { ContainerPipelineLogStatus, ContainerPipelineLogs } from '@/types/container';
+import { ContainerPipelineLogStatus, ContainerPipelineLogs } from '@/types';
 import { cn } from '@/utils';
 import {
 	ArrowLeft,

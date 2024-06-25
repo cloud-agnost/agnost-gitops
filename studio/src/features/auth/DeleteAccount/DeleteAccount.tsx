@@ -1,9 +1,7 @@
 import { Button } from '@/components/Button';
-
-import { resetAllStores } from '@/helpers';
 import useAuthStore from '@/store/auth/authStore.ts';
 import { useMutation } from '@tanstack/react-query';
-import { ConfirmationModal } from 'components/ConfirmationModal';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +20,8 @@ export default function DeleteAccount() {
 		mutationFn: deleteAccount,
 		onSuccess: () => {
 			navigate('/login');
-			resetAllStores();
+
+			//TODO resetAllStores();
 		},
 	});
 	function closeModal() {

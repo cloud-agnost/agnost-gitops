@@ -13,7 +13,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuItemContainer,
 	DropdownMenuTrigger,
-} from 'components/Dropdown';
+} from '@/components/Dropdown';
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 export default function ProjectEnvironmentDropdown() {

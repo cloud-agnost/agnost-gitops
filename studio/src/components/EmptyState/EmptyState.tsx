@@ -1,40 +1,17 @@
-import { useTabIcon } from '@/hooks';
-import { TabTypes } from '@/types';
 import { cn } from '@/utils';
-import { AppWindow, Bell, Envelope, HardDrive, Key, Users } from '@phosphor-icons/react';
+import {
+	AppWindow,
+	Bell,
+	Envelope,
+	HardDrive,
+	Key,
+	ShippingContainer,
+	Users,
+} from '@phosphor-icons/react';
 import { ProjectorScreenChart } from '@phosphor-icons/react/dist/ssr';
 import React, { ElementType } from 'react';
 
-export type Modules =
-	| 'org'
-	| 'app'
-	| 'invitation'
-	| 'resource'
-	| 'project'
-	| TabTypes.Endpoint
-	| TabTypes.MessageQueue
-	| TabTypes.File
-	| TabTypes.Database
-	| TabTypes.Model
-	| TabTypes.Task
-	| TabTypes.Field
-	| TabTypes.Bucket
-	| TabTypes.Storage
-	| TabTypes.Middleware
-	| TabTypes.Function
-	| TabTypes.Cache
-	| TabTypes.Notifications
-	| TabTypes.CustomDomains
-	| TabTypes.APIKeys
-	| TabTypes.Settings
-	| TabTypes.Authentication
-	| TabTypes.Environment
-	| TabTypes.EnvironmentVariables
-	| TabTypes.NPMPackages
-	| TabTypes.Realtime
-	| TabTypes.RateLimits
-	| TabTypes.Navigator
-	| TabTypes.Container;
+export type Modules = 'org' | 'app' | 'invitation' | 'resource' | 'project' | 'container';
 
 interface EmptyStateProps {
 	title: string;
@@ -52,14 +29,14 @@ export default function EmptyState({ type, title, className, children }: EmptySt
 		org: Users,
 		notification: Bell,
 		project: ProjectorScreenChart,
+		container: ShippingContainer,
 	};
-	const getTabIcon = useTabIcon('w-16 h-16');
 	const Icon = ICON_MAP[type];
 
 	return (
 		<div className={cn('flex flex-col items-center justify-center gap-4 h-[95%]', className)}>
 			<div className='border-2 border-border p-4 rounded-full bg-border'>
-				{Icon ? <Icon className='w-8 h-8 text-default' /> : getTabIcon(type as TabTypes)}
+				{<Icon className='w-8 h-8 text-default' />}
 			</div>
 			<h2 className='text-default text-xs font-normal leading-6 font-sfCompact'>{title}</h2>
 			{children}

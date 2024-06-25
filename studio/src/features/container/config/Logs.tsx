@@ -3,7 +3,7 @@ import { LogViewer } from '@/components/LogViewer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import { BADGE_COLOR_MAP } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
-import { ContainerPod } from '@/types/container';
+import { ContainerPod } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';

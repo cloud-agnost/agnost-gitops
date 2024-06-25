@@ -5,19 +5,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/Input';
 import { PasswordInput } from '@/components/PasswordInput';
 import { AuthLayout } from '@/layouts/AuthLayout';
+import { GuestOnly } from '@/router';
 import { AuthService } from '@/services';
 import useAuthStore from '@/store/auth/authStore.ts';
-import useClusterStore from '@/store/cluster/clusterStore';
 import { APIError } from '@/types';
 import { translate } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as z from 'zod';
 import './auth.scss';
-import { GuestOnly } from '@/router';
 
 const FormSchema = z.object({
 	email: z
@@ -36,10 +36,7 @@ const FormSchema = z.object({
 
 export default function Login() {
 	const { t } = useTranslation();
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<APIError | null>(null);
 	const { login } = useAuthStore();
-	const { canClusterSendEmail } = useClusterStore();
 	const navigate = useNavigate();
 	const { state } = useLocation();
 
@@ -49,24 +46,22 @@ export default function Login() {
 		resolver: zodResolver(FormSchema),
 	});
 
+	const { isPending, mutate, error, reset } = useMutation({
+		mutationFn: login,
+		onSuccess: () => {
+			navigate(REDIRECT_URL);
+		},
+	});
+
 	async function onSubmit({ email, password }: z.infer<typeof FormSchema>) {
-		setLoading(true);
-		login({
+		mutate({
 			email,
 			password,
-			onSuccess: () => {
-				navigate(REDIRECT_URL);
-				setLoading(false);
-			},
-			onError: (error) => {
-				setError(error as APIError);
-				setLoading(false);
-			},
 		});
 	}
 
 	if (error?.code === 'pending_email_confirmation') {
-		return <NotVerified clearError={() => setError(null)} email={form.getValues().email} />;
+		return <NotVerified clearError={reset} email={form.getValues().email} />;
 	}
 
 	return (
@@ -121,28 +116,26 @@ export default function Login() {
 							/>
 
 							<div className='flex justify-end space-y-8'>
-								<Button loading={loading} size='full' type='submit'>
+								<Button loading={isPending} size='full' type='submit'>
 									{t('login.login')}
 								</Button>
 							</div>
 						</form>
 					</Form>
-					{canClusterSendEmail && (
-						<div className='flex justify-between text-sm text-default leading-6 font-albert'>
-							<Link
-								className='hover:underline no-underline underline-offset-2 hover:text-disabled-reverse'
-								to='/forgot-password'
-							>
-								{t('login.forgot_password')}
-							</Link>
-							<Link
-								className='hover:underline no-underline underline-offset-2 hover:text-disabled-reverse'
-								to='/complete-account-setup'
-							>
-								{t('login.complete_account_setup')}
-							</Link>
-						</div>
-					)}
+					<div className='flex justify-between text-sm text-default leading-6 font-albert'>
+						<Link
+							className='hover:underline no-underline underline-offset-2 hover:text-disabled-reverse'
+							to='/forgot-password'
+						>
+							{t('login.forgot_password')}
+						</Link>
+						<Link
+							className='hover:underline no-underline underline-offset-2 hover:text-disabled-reverse'
+							to='/complete-account-setup'
+						>
+							{t('login.complete_account_setup')}
+						</Link>
+					</div>
 				</div>
 			</GuestOnly>
 		</AuthLayout>

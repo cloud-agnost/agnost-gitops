@@ -1,4 +1,4 @@
-import { Switch } from 'components/Switch';
+import { Switch } from '@/components/Switch';
 import { useTranslation } from 'react-i18next';
 
 interface NotificationItemProps {

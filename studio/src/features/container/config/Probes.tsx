@@ -10,7 +10,7 @@ import { Input } from '@/components/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import { Switch } from '@/components/Switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/Tooltip';
-import { ContainerType, CreateContainerParams } from '@/types/container';
+import { ContainerType, CreateContainerParams } from '@/types';
 import { Info, Pulse } from '@phosphor-icons/react';
 import { Fragment, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';

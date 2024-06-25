@@ -2,7 +2,7 @@ import { Button } from '@/components/Button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
 import { Input } from '@/components/Input';
 import { PasswordInput } from '@/components/PasswordInput';
-import { CreateContainerParams } from '@/types/container';
+import { CreateContainerParams } from '@/types';
 import { cn } from '@/utils';
 import { Plus, Trash } from '@phosphor-icons/react';
 import { isEmpty } from 'lodash';

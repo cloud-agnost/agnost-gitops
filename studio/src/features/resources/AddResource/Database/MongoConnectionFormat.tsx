@@ -1,7 +1,7 @@
 import { RadioGroup, RadioGroupItem } from '@/components/RadioGroup';
 import { MONGODB_CONNECTION_FORMATS } from '@/constants';
 import { ConnectResourceSchema, MongoDBConnFormat } from '@/types';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
 import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

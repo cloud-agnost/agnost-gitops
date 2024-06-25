@@ -1,55 +1,40 @@
 import { ChangeAvatar } from '@/components/ChangeAvatar';
 import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useOrganizationStore from '@/store/organization/organizationStore';
-import { APIError } from '@/types';
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 
 export default function ChangeOrganizationAvatar() {
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<APIError | null>(null);
 	const canUpdate = useAuthorizeOrg('update');
 	const { organization, changeOrganizationAvatar, removeOrganizationAvatar } =
 		useOrganizationStore();
-	async function onChangeHandler(file: File) {
-		setLoading(true);
-		changeOrganizationAvatar({
-			picture: file,
-			organizationId: organization?._id as string,
-			onSuccess: () => {
-				setLoading(false);
-			},
-			onError: (error: APIError) => {
-				setError(error);
-				setLoading(false);
-			},
-		});
-	}
 
-	async function onClickHandler() {
-		setError(null);
-		setLoading(true);
-		removeOrganizationAvatar({
-			onSuccess: () => {
-				setLoading(false);
-			},
-			onError: (error: APIError) => {
-				setError(error);
-				setLoading(false);
-			},
-		});
-	}
+	const {
+		mutate: changeAvatar,
+		isPending: changeLoading,
+		error: changeError,
+	} = useMutation({
+		mutationFn: changeOrganizationAvatar,
+	});
+	const {
+		mutate: remove,
+		isPending: removeLoading,
+		error: removeError,
+	} = useMutation({
+		mutationFn: removeOrganizationAvatar,
+	});
+
 	return (
 		<ChangeAvatar
 			item={{
-				name: organization?.name as string,
-				color: organization?.color as string,
-				pictureUrl: organization?.pictureUrl as string,
-				_id: organization?._id as string,
+				name: organization?.name,
+				color: organization?.color,
+				pictureUrl: organization?.pictureUrl,
+				_id: organization?._id,
 			}}
-			onChange={onChangeHandler}
-			removeAvatar={onClickHandler}
-			error={error}
-			loading={loading}
+			onChange={changeAvatar}
+			removeAvatar={remove}
+			error={changeError ?? removeError}
+			loading={changeLoading || removeLoading}
 			disabled={!canUpdate}
 		/>
 	);

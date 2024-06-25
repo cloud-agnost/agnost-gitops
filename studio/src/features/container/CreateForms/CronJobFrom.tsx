@@ -8,19 +8,17 @@ import {
 } from '@/components/Form';
 import { Input } from '@/components/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
-import CronExamples from '@/features/task/CronExamples';
-import useTypeStore from '@/store/types/typeStore';
-import { CreateContainerParams } from '@/types/container';
-import { IdentificationCard } from '@phosphor-icons/react';
 import { Switch } from '@/components/Switch';
+import useTypeStore from '@/store/types/typeStore';
+import { CreateContainerParams } from '@/types';
+import { IdentificationCard } from '@phosphor-icons/react';
 import { startCase } from 'lodash';
+import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import MultiSelect from 'react-select';
 import { PodConfiguration, SourceConfig, StorageConfig } from '../config';
 import ContainerFormTitle from '../config/ContainerFormLayout';
-import { useEffect } from 'react';
-import { CRON_EXAMPLES } from '@/constants';
 
 export default function CronJobFrom() {
 	const { t } = useTranslation();
@@ -99,12 +97,13 @@ export default function CronJobFrom() {
 					/>
 				</div>
 				<div className='grid grid-cols-[2fr_1fr] gap-4'>
-					<FormField
+					{/* //TODO <FormField
 						control={form.control}
 						name='cronJobConfig.schedule'
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>{t('container.cronjob.schedule')}</FormLabel>
+								
 								<CronExamples
 									selectCron={(cron: string) => form.setValue('cronJobConfig.schedule', cron)}
 								>
@@ -119,7 +118,7 @@ export default function CronJobFrom() {
 								<FormMessage />
 							</FormItem>
 						)}
-					/>
+					/> */}
 					<FormField
 						control={form.control}
 						name='cronJobConfig.timeZone'

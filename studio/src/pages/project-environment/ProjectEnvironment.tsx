@@ -1,4 +1,3 @@
-import useApplicationStore from '@/store/app/applicationStore';
 import useProjectEnvironmentStore from '@/store/project/projectEnvironmentStore';
 import useProjectStore from '@/store/project/projectStore';
 import { joinChannel } from '@/utils';
@@ -8,7 +7,6 @@ import { Outlet, useParams } from 'react-router-dom';
 
 export default function ProjectEnvironment() {
 	const { projectId, orgId, envId } = useParams() as Record<string, string>;
-	const {} = useApplicationStore();
 	const { project, getProjectById } = useProjectStore();
 	const { getProjectEnvironmentById } = useProjectEnvironmentStore();
 

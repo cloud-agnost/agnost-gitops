@@ -3,7 +3,7 @@ import { PasswordInput } from '@/components/PasswordInput';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import { RABBITMQ_CONNECTION_SCHEMES } from '@/constants';
 import { ConnectResourceSchema } from '@/types';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';

@@ -1,6 +1,6 @@
 import { Switch } from '@/components/Switch';
 import { ConnectResourceSchema, ResourceInstances } from '@/types';
-import { FormControl, FormField, FormItem, FormLabel } from 'components/Form';
+import { FormControl, FormField, FormItem, FormLabel } from '@/components/Form';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';

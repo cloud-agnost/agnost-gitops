@@ -11,10 +11,9 @@ import {
 	ResourceType,
 	ResourceUpdateType,
 } from '@/types';
-import { isEmpty } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from 'components/Form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -22,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks';
 import useTypeStore from '@/store/types/typeStore';
 import { useParams } from 'react-router-dom';
+import { isEmpty } from 'lodash';
 
 export default function EditVersionAndReplica() {
 	const {

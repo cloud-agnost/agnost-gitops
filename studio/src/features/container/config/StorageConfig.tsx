@@ -10,7 +10,7 @@ import { Input } from '@/components/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import { Switch } from '@/components/Switch';
 import useContainerStore from '@/store/container/containerStore';
-import { ContainerType, CreateContainerParams, StateOption } from '@/types/container';
+import { ContainerType, CreateContainerParams, StateOption } from '@/types';
 import { Database } from '@phosphor-icons/react';
 import _, { startCase } from 'lodash';
 import { useFormContext } from 'react-hook-form';

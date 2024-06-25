@@ -92,16 +92,7 @@ export default function CompleteAccountSetupVerifyEmail() {
 	const isVerified = searchParams.has('isVerified');
 	const token = searchParams.get('token');
 	const type = searchParams.get('type');
-	const {
-		completeAccountSetup,
-		finalizeAccountSetup,
-		email,
-		user,
-		isAuthenticated,
-		appAcceptInvite,
-		orgAcceptInvite,
-		projectAcceptInvite,
-	} = useAuthStore();
+	const { isAuthenticated, orgAcceptInvite, projectAcceptInvite } = useAuthStore();
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
 	});
@@ -115,23 +106,10 @@ export default function CompleteAccountSetupVerifyEmail() {
 		mutationFn: handleAcceptInvitation,
 		onError: (err: APIError) => setError(err),
 	});
-	const { mutate: finalizeAccountSetupMutate, isPending: finalizeLoading } = useMutation({
-		mutationFn: finalizeAccountSetup,
-		onError: (err: APIError) => setError(err),
-		onSuccess: () => navigate('/organization'),
-	});
-	const { mutate: completeAccountSetupMutate, isPending: completeLoading } = useMutation({
-		mutationFn: completeAccountSetup,
-		onError: (err: APIError) => setError(err),
-		onSuccess: () => navigate('/organization'),
-	});
 
 	function handleAcceptInvitation(token: string) {
 		if (type === 'org') {
 			return orgAcceptInvite(token);
-		}
-		if (type === 'app') {
-			return appAcceptInvite(token);
 		}
 		return projectAcceptInvite(token);
 	}
@@ -143,23 +121,9 @@ export default function CompleteAccountSetupVerifyEmail() {
 					role: data?.role,
 				})
 			: t('login.complete_account_setup_desc');
-	async function onSubmit(data: z.infer<typeof FormSchema>) {
-		if (!token) {
-			finalizeAccountSetupMutate({
-				email: email as string,
-				verificationCode: data.verificationCode,
-				name: data.name,
-				password: data.password,
-			});
-		} else {
-			completeAccountSetupMutate({
-				email: user?.loginProfiles[0].email,
-				token,
-				name: data.name,
-				password: data.password,
-				inviteType: searchParams.get('type'),
-			});
-		}
+	async function onSubmit() {
+		//data: z.infer<typeof FormSchema>
+		//TODO: handle org/project accept invite
 	}
 
 	useEffect(() => {
@@ -247,7 +211,7 @@ export default function CompleteAccountSetupVerifyEmail() {
 							/>
 
 							<div className='flex justify-end'>
-								<Button loading={finalizeLoading || completeLoading} size='lg' type='submit'>
+								<Button size='lg' type='submit'>
 									{t('login.complete_setup')}
 								</Button>
 							</div>
