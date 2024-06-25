@@ -2,8 +2,6 @@ import config from "config";
 import mongoose from "mongoose";
 import { body, query } from "express-validator";
 import helper from "../util/helper.js";
-import userCtrl from "../controllers/user.js";
-import orgMemberCtrl from "../controllers/organizationMember.js";
 import { orgRoles, invitationStatus } from "../config/constants.js";
 
 /**
@@ -20,10 +18,10 @@ export const OrgInvitationModel = mongoose.model(
 			index: true,
 			immutable: true,
 		},
-		email: {
+		name: {
 			type: String,
 			index: true,
-			required: true,
+			required: false,
 			immutable: true,
 		},
 		token: {
@@ -97,31 +95,7 @@ export const applyRules = (type) => {
 				query("uiBaseURL")
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty"),
-				body("*.email")
-					.trim()
-					.notEmpty()
-					.withMessage("Required field, cannot be left empty")
-					.bail()
-					.isEmail()
-					.withMessage("Not a valid email address")
-					.bail()
-					.normalizeEmail({ gmail_remove_dots: false })
-					.custom(async (value, { req }) => {
-						// Check whether a user with the provided email is already a member of the organization
-						let user = await userCtrl.getOneByQuery({
-							email: value,
-						});
-
-						if (user) {
-							let member = await orgMemberCtrl.getOneByQuery(
-								{ orgId: req.org._id, userId: user._id },
-								{ cacheKey: `${req.org._id}.${user._id}` }
-							);
-							if (member)
-								throw new Error("User is already a member of the organization");
-						}
-						return true;
-					}),
+				body("*.name").trim().optional(),
 				body("*.role")
 					.trim()
 					.notEmpty()

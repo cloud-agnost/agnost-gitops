@@ -450,52 +450,6 @@ router.put(
 );
 
 /*
-@route      /v1/user/org-invite
-@method     GET
-@desc       Get pending organization invitations of user
-@access     private
-*/
-router.get("/org-invite", authSession, async (req, res) => {
-	try {
-		const { user } = req;
-		let invites = await orgInvitationCtrl.getManyByQuery(
-			{
-				email: user.email,
-				status: "Pending",
-			},
-			{ lookup: "orgId" }
-		);
-
-		res.json(invites);
-	} catch (error) {
-		helper.handleError(req, res, error);
-	}
-});
-
-/*
-@route      /v1/user/project-invite
-@method     GET
-@desc       Get pending project invitations of user
-@access     private
-*/
-router.get("/project-invite", authSession, async (req, res) => {
-	try {
-		const { user } = req;
-		let invites = await prjInvitationCtrl.getManyByQuery(
-			{
-				email: user.email,
-				status: "Pending",
-			},
-			{ lookup: "projectId" }
-		);
-
-		res.json(invites);
-	} catch (error) {
-		helper.handleError(req, res, error);
-	}
-});
-
-/*
 @route      /v1/user/org-invite-accept?token&provider&accessToken&refreshToken
 @method     POST
 @desc       Accept organization invitation for a new user or a signed out user
@@ -510,7 +464,7 @@ router.post(
 		// Start new database transaction session
 		const session = await userCtrl.startSession();
 		try {
-			const { token, accessToken, refreshToken } = req.query;
+			const { token, accessToken, refreshToken, expiresAt } = req.query;
 			const { gitUser } = req.body;
 
 			let invite = await orgInvitationCtrl.getOneByQuery(
@@ -594,6 +548,7 @@ router.post(
 						refreshToken: refreshToken
 							? helper.encryptText(refreshToken)
 							: null,
+						expiresAt: expiresAt,
 						username: gitUser.username,
 						email: gitUser.email,
 						avatar: gitUser.avatar,
@@ -770,7 +725,7 @@ router.post(
 		// Start new database transaction session
 		const session = await userCtrl.startSession();
 		try {
-			const { token, accessToken, refreshToken } = req.query;
+			const { token, accessToken, refreshToken, expiresAt } = req.query;
 			const { gitUser } = req.body;
 
 			let invite = await prjInvitationCtrl.getOneByQuery(
@@ -871,6 +826,7 @@ router.post(
 						refreshToken: refreshToken
 							? helper.encryptText(refreshToken)
 							: null,
+						expiresAt: expiresAt,
 						username: gitUser.username,
 						email: gitUser.email,
 						avatar: gitUser.avatar,

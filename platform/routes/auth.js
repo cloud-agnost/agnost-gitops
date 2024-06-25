@@ -41,7 +41,8 @@ router.post(
 		const session = await userCtrl.startSession();
 		try {
 			let userId = helper.generateId();
-			const { provider, accessToken, refreshToken, gitUser } = req.body;
+			const { provider, accessToken, refreshToken, expiresAt, gitUser } =
+				req.body;
 
 			// Save user to the database
 			const userObj = await userCtrl.create(
@@ -72,6 +73,7 @@ router.post(
 					provider: provider,
 					accessToken: helper.encryptText(accessToken),
 					refreshToken: refreshToken ? helper.encryptText(refreshToken) : null,
+					expiresAt: expiresAt,
 					username: gitUser.username,
 					email: gitUser.email,
 					avatar: gitUser.avatar,

@@ -1,7 +1,6 @@
 import config from "config";
 import mongoose from "mongoose";
 import { body, query } from "express-validator";
-import prjCtrl from "../controllers/project.js";
 import helper from "../util/helper.js";
 import {
 	projectRoles,
@@ -29,10 +28,10 @@ export const ProjectInvitationModel = mongoose.model(
 			index: true,
 			immutable: true,
 		},
-		email: {
+		name: {
 			type: String,
 			index: true,
-			required: true,
+			required: false,
 			immutable: true,
 		},
 		token: {
@@ -113,33 +112,7 @@ export const applyRules = (type) => {
 				query("uiBaseURL")
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty"),
-				body("*.email")
-					.trim()
-					.notEmpty()
-					.withMessage("Required field, cannot be left empty")
-					.bail()
-					.isEmail()
-					.withMessage("Not a valid email address")
-					.bail()
-					.normalizeEmail({ gmail_remove_dots: false })
-					.custom(async (value, { req }) => {
-						// Check whether the user is already a member of the project
-						let projectWithTeam = await prjCtrl.getOneById(req.project._id, {
-							lookup: {
-								path: "team.userId",
-							},
-						});
-
-						// Check whether the user is already a member of the project team or not
-						let projectMember = projectWithTeam.team.find(
-							(entry) => entry.userId.email === value
-						);
-
-						if (projectMember)
-							throw new Error("User is already a member of the project");
-
-						return true;
-					}),
+				body("*.name").trim().optional(),
 				body("*.role")
 					.trim()
 					.notEmpty()

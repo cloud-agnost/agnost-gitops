@@ -1,6 +1,4 @@
 import express from "express";
-import orgMemberCtrl from "../controllers/organizationMember.js";
-import userCtrl from "../controllers/user.js";
 import orgInvitationCtrl from "../controllers/organizationInvitation.js";
 import auditCtrl from "../controllers/audit.js";
 import { applyRules } from "../schemas/organizationInvitation.js";
@@ -9,7 +7,6 @@ import { checkContentType } from "../middlewares/contentType.js";
 import { validateOrg } from "../middlewares/validateOrg.js";
 import { authorizeOrgAction } from "../middlewares/authorizeOrgAction.js";
 import { validate } from "../middlewares/validate.js";
-import { sendMessage as sendNotification } from "../init/sync.js";
 import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
@@ -19,7 +16,7 @@ const router = express.Router({ mergeParams: true });
 /*
 @route      /v1/org/:orgId/invite?&uiBaseURL=http://...
 @method     POST
-@desc       Invites user(s) to the organization
+@desc       Creates invitation tokens to the organization
 @access     private
 */
 router.post(
@@ -41,7 +38,7 @@ router.post(
 				let token = helper.generateSlug("tkn", 36);
 				invitations.push({
 					orgId: org._id,
-					email: entry.email,
+					name: entry.name,
 					token: token,
 					role: entry.role,
 					link: `${uiBaseURL}/studio/redirect-handle?token=${token}&type=org-invite`,
@@ -54,44 +51,12 @@ router.post(
 
 			res.json(result);
 
-			// If there are already user accounts with provided emails then send them realtime notifications
-			let matchingUsers = await userCtrl.getManyByQuery({
-				email: { $in: invitations.map((entry) => entry.email) },
-				status: "Active",
-			});
-
-			// Send realtime notifications to invited users with accounts
-			matchingUsers.forEach((matchingUser) => {
-				// Find the invitation entry matching the user's emails
-				let invite = invitations.find(
-					(entry) => entry.email === matchingUser.email
-				);
-
-				sendNotification(matchingUser._id, {
-					actor: {
-						userId: user._id,
-						name: user.name,
-						pictureUrl: user.pictureUrl,
-						color: user.color,
-						email: user.email,
-					},
-					action: "invite",
-					object: "org.invite",
-					description: `Invited you to join organization '${org.name}' with '${invite.role}' permissions`,
-					timestamp: Date.now(),
-					data: {
-						token: invite.token,
-					},
-					identifiers: { orgId: org._id },
-				});
-			});
-
 			// Log action
 			auditCtrl.log(
 				user,
 				"org.invite",
 				"create",
-				`Invited users to organization '${org.name}'`,
+				`Created invitations to organization '${org.name}'`,
 				result,
 				{ orgId: org._id }
 			);
@@ -119,7 +84,6 @@ router.put(
 		try {
 			const { role } = req.body;
 			const { token } = req.query;
-			const { user, org } = req;
 
 			let invite = await orgInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
@@ -146,42 +110,6 @@ router.put(
 			);
 
 			res.json(updatedInvite);
-
-			// If there is alreay a user account with provided email then send them realtime notifications
-			let matchingUser = await userCtrl.getOneByQuery({
-				email: invite.email,
-				status: "Active",
-			});
-
-			if (matchingUser) {
-				sendNotification(matchingUser._id, {
-					actor: {
-						userId: user._id,
-						name: user.name,
-						pictureUrl: user.pictureUrl,
-						color: user.color,
-						email: user.email,
-					},
-					action: "invite",
-					object: "org.invite",
-					description: `Invited you to join organization '${org.name}' with '${role}' permissions`,
-					timestamp: Date.now(),
-					data: {
-						token: invite.token,
-					},
-					identifiers: { orgId: org._id },
-				});
-			}
-
-			// Log action
-			auditCtrl.log(
-				user,
-				"org.invite",
-				"update",
-				`Updated invitation role of '${invite.email}' from '${invite.role}' to '${role}'`,
-				updatedInvite,
-				{ orgId: org._id }
-			);
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}
@@ -205,7 +133,6 @@ router.delete(
 	async (req, res) => {
 		try {
 			const { token } = req.query;
-			const { user, org } = req;
 
 			let invite = await orgInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
@@ -220,16 +147,6 @@ router.delete(
 			await orgInvitationCtrl.deleteOneById(invite._id);
 
 			res.json();
-
-			// Log action
-			auditCtrl.log(
-				user,
-				"org.invite",
-				"delete",
-				`Deleted organization invitation to '${invite.email}'`,
-				invite,
-				{ orgId: org._id }
-			);
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}
@@ -276,7 +193,7 @@ router.delete(
 );
 
 /*
-@route      /v1/org/:orgId/invite?page=0&size=10&status=&email=&role=&start=&end&sortBy=email&sortDir=asc
+@route      /v1/org/:orgId/invite?page=0&size=10&status=&name=&role=&start=&end&sortBy=name&sortDir=asc
 @method     GET
 @desc       Get organization invitations
 @access     private
@@ -290,13 +207,13 @@ router.get(
 	validate,
 	async (req, res) => {
 		try {
-			const { page, size, status, email, role, start, end, sortBy, sortDir } =
+			const { page, size, status, name, role, start, end, sortBy, sortDir } =
 				req.query;
 
 			let query = { orgId: req.org._id };
-			if (email && email !== "null")
-				query.email = {
-					$regex: helper.escapeStringRegexp(email),
+			if (name && name !== "null")
+				query.name = {
+					$regex: helper.escapeStringRegexp(name),
 					$options: "i",
 				};
 
@@ -326,64 +243,6 @@ router.get(
 			});
 
 			res.json(invites);
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
-@route      /v1/org/:orgId/invite/list-eligible?page=0&size=10&email=&sortBy=email&sortDir=asc
-@method     GET
-@desc       Get eligible cluster members to invite to the organization
-@access     private
-*/
-router.get(
-	"/list-eligible",
-	authSession,
-	validateOrg,
-	authorizeOrgAction("org.invite.view"),
-	applyRules("get-invites"),
-	validate,
-	async (req, res) => {
-		try {
-			const { user, org } = req;
-			const { page, size, search, sortBy, sortDir } = req.query;
-
-			// Get current organization team
-			let orgTeam = await orgMemberCtrl.getManyByQuery({ orgId: org._id });
-			// We just need to get the cluster members that are not already a team member of the organization
-			orgTeam = orgTeam.map((entry) => helper.objectId(entry.userId));
-			// The current user is also not eligible for invitation
-			orgTeam.push(helper.objectId(user._id));
-
-			let query = { _id: { $nin: orgTeam }, status: "Active" };
-			if (search && search !== "null") {
-				query.$or = [
-					{
-						name: { $regex: helper.escapeStringRegexp(search), $options: "i" },
-					},
-					{
-						email: {
-							$regex: helper.escapeStringRegexp(search),
-							$options: "i",
-						},
-					},
-				];
-			}
-
-			let sort = {};
-			if (sortBy && sortDir) {
-				sort[sortBy] = sortDir;
-			} else sort = { name: "asc" };
-
-			let users = await userCtrl.getManyByQuery(query, {
-				sort,
-				skip: size * page,
-				limit: size,
-			});
-
-			res.json(users);
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}

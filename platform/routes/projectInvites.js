@@ -1,5 +1,4 @@
 import express from "express";
-import userCtrl from "../controllers/user.js";
 import auditCtrl from "../controllers/audit.js";
 import prjInvitationCtrl from "../controllers/projectInvitation.js";
 import { authSession } from "../middlewares/authSession.js";
@@ -9,7 +8,6 @@ import { validateProject } from "../middlewares/validateProject.js";
 import { authorizeProjectAction } from "../middlewares/authorizeProjectAction.js";
 import { applyRules } from "../schemas/projectInvitation.js";
 import { validate } from "../middlewares/validate.js";
-import { sendMessage as sendNotification } from "../init/sync.js";
 import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
@@ -19,7 +17,7 @@ const router = express.Router({ mergeParams: true });
 /*
 @route      /v1/org/:orgId/project/:projectId/invite?uiBaseURL=http://...
 @method     POST
-@desc       Invites user(s) to the project
+@desc       Creates invitations to the project
 @access     private
 */
 router.post(
@@ -43,7 +41,7 @@ router.post(
 				invitations.push({
 					orgId: org._id,
 					projectId: project._id,
-					email: entry.email,
+					name: entry.name,
 					token: token,
 					role: entry.role,
 					orgRole: "Member",
@@ -57,43 +55,12 @@ router.post(
 
 			res.json(result);
 
-			// If there are alreay user accounts with provided emails then send them realtime notifications
-			let matchingUsers = await userCtrl.getManyByQuery({
-				email: { $in: invitations.map((entry) => entry.email) },
-				status: "Active",
-			});
-
-			// Send realtime notifications to invited users with accounts
-			matchingUsers.forEach((matchingUser) => {
-				// Find the invidation entry matching the user's emails
-				let invite = invitations.find(
-					(entry) => entry.email === matchingUser.email
-				);
-
-				sendNotification(matchingUser._id, {
-					actor: {
-						userId: user._id,
-						name: user.name,
-						pictureUrl: user.pictureUrl,
-						color: user.color,
-					},
-					action: "invite",
-					object: "org.project.invite",
-					description: `Invited you to join project '${project.name}' in organization '${org.name}' with '${invite.role}' permissions`,
-					timestamp: Date.now(),
-					data: {
-						token: invite.token,
-					},
-					identifiers: { orgId: org._id, projectId: project._id },
-				});
-			});
-
 			// Log action
 			auditCtrl.log(
 				user,
 				"org.project.invite",
 				"create",
-				`Invited users to project '${project.name}' in organization '${org.name}'`,
+				`Created invitations to project '${project.name}' in organization '${org.name}'`,
 				result,
 				{ orgId: org._id, projectId: project._id }
 			);
@@ -122,7 +89,6 @@ router.put(
 		try {
 			const { role } = req.body;
 			const { token } = req.query;
-			const { user, org, project } = req;
 
 			let invite = await prjInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
@@ -149,41 +115,6 @@ router.put(
 			);
 
 			res.json(updatedInvite);
-
-			// If there are alreay a user account with provided email then send them realtime notifications
-			let matchingUser = await userCtrl.getOneByQuery({
-				email: invite.email,
-				status: "Active",
-			});
-
-			if (matchingUser) {
-				sendNotification(matchingUser._id, {
-					actor: {
-						userId: user._id,
-						name: user.name,
-						pictureUrl: user.pictureUrl,
-						color: user.color,
-					},
-					action: "invite",
-					object: "org.project.invite",
-					description: `Invited you to join project '${project.name}' in organization '${org.name}' with '${role}' permissions`,
-					timestamp: Date.now(),
-					data: {
-						token: invite.token,
-					},
-					identifiers: { orgId: org._id, projectId: project._id },
-				});
-			}
-
-			// Log action
-			auditCtrl.log(
-				user,
-				"org.project.invite",
-				"update",
-				`Updated project invitation role of '${invite.email}' from '${invite.role}' to '${role}'`,
-				updatedInvite,
-				{ orgId: org._id, projectId: project._id }
-			);
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}
@@ -208,7 +139,6 @@ router.delete(
 	async (req, res) => {
 		try {
 			const { token } = req.query;
-			const { user, org, project } = req;
 
 			let invite = await prjInvitationCtrl.getOneByQuery({ token });
 			if (!invite) {
@@ -223,16 +153,6 @@ router.delete(
 			await prjInvitationCtrl.deleteOneById(invite._id);
 
 			res.json();
-
-			// Log action
-			auditCtrl.log(
-				user,
-				"org.project.invite",
-				"delete",
-				`Deleted project invitation to '${invite.email}'`,
-				invite,
-				{ orgId: org._id, projectId: project._id }
-			);
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}
@@ -280,7 +200,7 @@ router.delete(
 );
 
 /*
-@route      /v1/org/:orgId/project/:projectId/invite?page=0&size=10&status=&email=&role=&start=&end&sortBy=email&sortDir=asc
+@route      /v1/org/:orgId/project/:projectId/invite?page=0&size=10&status=&name=&role=&start=&end&sortBy=name&sortDir=asc
 @method     GET
 @desc       Get project invitations
 @access     private
@@ -296,13 +216,13 @@ router.get(
 	async (req, res) => {
 		try {
 			const { org, project } = req;
-			const { page, size, status, email, role, start, end, sortBy, sortDir } =
+			const { page, size, status, name, role, start, end, sortBy, sortDir } =
 				req.query;
 
 			let query = { orgId: org._id, projectId: project._id };
-			if (email && email !== "null")
-				query.email = {
-					$regex: helper.escapeStringRegexp(email),
+			if (name && name !== "null")
+				query.name = {
+					$regex: helper.escapeStringRegexp(name),
 					$options: "i",
 				};
 
@@ -332,65 +252,6 @@ router.get(
 			});
 
 			res.json(invites);
-		} catch (error) {
-			helper.handleError(req, res, error);
-		}
-	}
-);
-
-/*
-@route      /v1/org/:orgId/project/:projectId/invite/list-eligible?page=0&size=10&email=&sortBy=email&sortDir=asc
-@method     GET
-@desc       Get eligible cluster members to invite to the project
-@access     private
-*/
-router.get(
-	"/list-eligible",
-	authSession,
-	validateOrg,
-	validateProject,
-	authorizeProjectAction("project.team.view"),
-	applyRules("list-eligible"),
-	validate,
-	async (req, res) => {
-		try {
-			const { user, project } = req;
-			const { page, size, search, sortBy, sortDir } = req.query;
-
-			// We just need to get the project members that are not already a team member of the project
-			let projectTeam = project.team.map((entry) =>
-				helper.objectId(entry.userId)
-			);
-			// The current user is also not eligible for invitation
-			projectTeam.push(helper.objectId(user._id));
-
-			let query = { _id: { $nin: projectTeam }, status: "Active" };
-			if (search && search !== "null") {
-				query.$or = [
-					{
-						name: { $regex: helper.escapeStringRegexp(search), $options: "i" },
-					},
-					{
-						email: {
-							$regex: helper.escapeStringRegexp(search),
-							$options: "i",
-						},
-					},
-				];
-			}
-
-			let sort = {};
-			if (sortBy && sortDir) {
-				sort[sortBy] = sortDir;
-			} else sort = { name: "asc" };
-
-			let users = await userCtrl.getManyByQuery(query, {
-				sort,
-				skip: size * page,
-				limit: size,
-			});
-
-			res.json(users);
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}
