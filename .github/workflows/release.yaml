@@ -250,4 +250,3 @@ jobs:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           prerelease: false
           tag: ${{ env.RELEASE_NUMBER }}
-          artifacts: releases/${{ env.RELEASE_NUMBER }}.json
