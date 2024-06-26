@@ -183,7 +183,7 @@ jobs:
             git diff
             git status
             git add releases/
-            git commit -am "Updated package.json and release files"
+            git commit -am "Updated package.json and release files [skip ci]"
             git push
           else
               echo "No changes, skipping..."
@@ -245,10 +245,9 @@ jobs:
         uses: actions/checkout@v4
       -
         name: Release
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: "ncipollo/release-action@v1"
         with:
-          repo_token: "${{ secrets.REPO_ACCESS_TOKEN }}"
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
           prerelease: false
-          automatic_release_tag: ${{ env.RELEASE_NUMBER }}
-          files: |
-            releases/${{ env.RELEASE_NUMBER }}.json
+          tag: ${{ env.RELEASE_NUMBER }}
+          artifacts: releases/${{ env.RELEASE_NUMBER }}.json
