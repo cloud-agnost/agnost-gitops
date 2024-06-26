@@ -13,9 +13,6 @@ applications = json.loads(sys.argv[1])
 values_data = yaml.load(open(values_yaml).read())
 
 for app in applications:
-    if app['application'] == 'engine/core':
-        ## engine-core is not part of the helm chart
-        continue
     if '/' in app['application']:
         app_type, app_name = app['application'].split('/')
         values_data[app_type][app_name]['tag'] = app['version']

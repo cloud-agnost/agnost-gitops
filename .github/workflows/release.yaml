@@ -70,8 +70,11 @@ env:
   STUDIO: '${{ github.event.inputs.studio }}'
   SYNC: '${{ github.event.inputs.sync }}'
   WEBHOOK: '${{ github.event.inputs.webhook }}'
-  DOCKER_REGISTRY: 'gcr.io'
-  GCR_PROJECT: 'agnost-gitops'
+  # GAR: Google Artifact Registry
+  GAR_LOCATION: 'europe-docker.pkg.dev'
+  GAR_PROJECT: 'agnost-gitops'
+  GAR_NAME: 'images'
+  CHARTS_REPO: 'cloud-agnost/agnost-gitops-charts'
 
 jobs:
   get_released_apps:
@@ -130,30 +133,25 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
-        name: 'Authenticate to GCP'
-        id: 'auth'
-        uses: google-github-actions/auth@v2
-        with:
-          token_format: 'access_token'
-          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
-      -
-        name: Login to GCR
+        name: Login to Google Artifact Registry
         uses: docker/login-action@v3
         with:
-          registry: '${{ env.DOCKER_REGISTRY }}'
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
+          registry: '${{ env.GAR_LOCATION }}'
+          username: _json_key
+          password: '${{ secrets.GOOGLE_CREDENTIALS }}'
       -
         name: Build and Push
         uses: docker/build-push-action@v5
+        env:
+          DOCKER_REGISTRY: ${{ env.GAR_LOCATION }}/${{ env.GAR_PROJECT }}/${{ env.GAR_NAME }}
         with:
           push: true
           context: ./${{ matrix.application }}
           file: ./${{ matrix.application }}/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64,linux/amd64
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.GCR_PROJECT }}/${{ matrix.application }}:${{ matrix.version }}
-            ${{ env.DOCKER_REGISTRY }}/${{ env.GCR_PROJECT }}/${{ matrix.application }}:latest-release
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:${{ needs.generate_short_sha.outputs.sha }}
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:latest
 
   update-release-info:
     runs-on: ubuntu-latest
@@ -204,7 +202,7 @@ jobs:
         name: Checkout Charts
         uses: actions/checkout@v4
         with:
-          repository: cloud-agnost/charts
+          repository: ${{ env.CHARTS_REPO }}
           path: charts
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
       -

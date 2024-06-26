@@ -5,8 +5,7 @@ import os
 release_number = os.environ['RELEASE_NUMBER']
 release_file = os.path.join('releases', release_number + '.json')
 latest_file = os.path.join('releases', 'latest.json')
-applications = ['engine/core', 'engine/monitor', 'engine/realtime', 'engine/scheduler', 'engine/worker',
-                'platform/core', 'platform/sync', 'platform/worker', 'studio']
+applications = ['monitor', 'platform', 'sync', 'webhook', 'studio']
 
 new_release_dict = {}
 modules_dict = {}
