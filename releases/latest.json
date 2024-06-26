@@ -1,0 +1,10 @@
+{
+  "release": "v1.0.0",
+  "modules": {
+     "platform": "v1.0.0",
+     "monitor": "v1.0.0",
+     "webhook": "v1.0.0",
+     "sync": "v1.0.0",
+     "studio": "v1.0.0"
+  }
+}

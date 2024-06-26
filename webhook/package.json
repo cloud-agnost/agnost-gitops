@@ -1,0 +1,5 @@
+{
+   "name": "webhook",
+   "version": "v1.0.0",
+   "description": "ACME issuer webhook solver"
+}
