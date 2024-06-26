@@ -150,7 +150,7 @@ jobs:
           file: ./${{ matrix.application }}/Dockerfile
           platforms: linux/arm64,linux/amd64
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:${{ needs.generate_short_sha.outputs.sha }}
+            ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:${{ matrix.version }}
             ${{ env.DOCKER_REGISTRY }}/${{ matrix.application }}:latest
 
   update-release-info:
