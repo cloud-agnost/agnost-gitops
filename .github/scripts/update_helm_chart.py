@@ -13,11 +13,10 @@ applications = json.loads(sys.argv[1])
 values_data = yaml.load(open(values_yaml).read())
 
 for app in applications:
-    if '/' in app['application']:
-        app_type, app_name = app['application'].split('/')
-        values_data[app_type][app_name]['tag'] = app['version']
+    app_name = app['application']
+    if app_name == 'webhook':
+        values_data['agnost-webhook']['image']['tag'] = app['version']
     else:
-        app_name = app['application']
         values_data[app_name]['tag'] = app['version']
 
 with open(values_yaml, 'w') as outfile:
