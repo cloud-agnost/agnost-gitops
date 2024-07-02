@@ -37,6 +37,7 @@ export const templates = [
 					],
 					disabledFields: ["networking.containerPort", "storageConfig.enabled"],
 					defaultValues: {
+						repoOrRegistry: "registry",
 						"registry.imageUrl": "docker.io/mongo:7.0.7",
 						"networking.containerPort": 27017,
 						"networking.tcpProxy.enabled": false,
@@ -110,6 +111,7 @@ export const templates = [
 					],
 					disabledFields: ["networking.containerPort", "storageConfig.enabled"],
 					defaultValues: {
+						repoOrRegistry: "registry",
 						"registry.imageUrl": "docker.io/postgres:16",
 						"networking.containerPort": 5432,
 						"networking.tcpProxy.enabled": false,
@@ -181,6 +183,7 @@ export const templates = [
 					],
 					disabledFields: ["networking.containerPort", "storageConfig.enabled"],
 					defaultValues: {
+						repoOrRegistry: "registry",
 						"registry.imageUrl": "docker.io/mysql:8.4",
 						"networking.containerPort": 3306,
 						"networking.tcpProxy.enabled": false,
@@ -252,6 +255,7 @@ export const templates = [
 					],
 					disabledFields: ["networking.containerPort", "storageConfig.enabled"],
 					defaultValues: {
+						repoOrRegistry: "registry",
 						"registry.imageUrl": "docker.io/mariadb:11.2",
 						"networking.containerPort": 3306,
 						"networking.tcpProxy.enabled": false,
@@ -328,6 +332,7 @@ export const templates = [
 					],
 					disabledFields: ["networking.containerPort", "storageConfig.enabled"],
 					defaultValues: {
+						repoOrRegistry: "registry",
 						"registry.imageUrl": "docker.io/redis:7.2.5",
 						"networking.containerPort": 6379,
 						"networking.tcpProxy.enabled": false,
@@ -387,6 +392,7 @@ export const templates = [
 					],
 					disabledFields: ["networking.containerPort"],
 					defaultValues: {
+						repoOrRegistry: "registry",
 						"registry.imageUrl": "docker.io/memcached:1.6.28",
 						"networking.containerPort": 11211,
 						"networking.tcpProxy.enabled": false,
@@ -451,6 +457,7 @@ export const templates = [
 					],
 					disabledFields: ["networking.containerPort", "storageConfig.enabled"],
 					defaultValues: {
+						repoOrRegistry: "registry",
 						"registry.imageUrl":
 							"quay.io/minio/minio:RELEASE.2024-05-10T01-41-38Z",
 						"networking.containerPort": 9000,
