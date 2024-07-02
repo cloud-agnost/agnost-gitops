@@ -25,13 +25,3 @@
 		@apply text-default text-sm;
 	}
 }
-
-.members {
-	@apply mt-8;
-	&-header {
-		@apply flex justify-between items-center mb-8;
-	}
-	&-filter {
-		@apply flex justify-end gap-4 flex-1;
-	}
-}

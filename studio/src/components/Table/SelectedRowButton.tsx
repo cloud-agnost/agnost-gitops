@@ -32,7 +32,7 @@ function SelectedRowButton({ onDelete, count, className, disabled, onReset }: Pr
 						</Button>
 					)}
 
-					<span className='font-sfCompact link text-xs'>
+					<span className=' link text-xs'>
 						{t('general.selected', {
 							count,
 						})}

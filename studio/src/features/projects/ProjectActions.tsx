@@ -22,7 +22,7 @@ export default function ProjectActions({ isCard, setIsCard }: AProjectActionsPro
 				{projects.length} {t('project.projects')}
 			</h1>
 			<div className='flex items-center justify-center gap-6'>
-				<SearchInput placeholder='Search apps' value={searchParams.get('q') as string} />
+				<SearchInput placeholder='Search Project' value={searchParams.get('q') as string} />
 				<ButtonGroup>
 					<Button
 						size='sm'

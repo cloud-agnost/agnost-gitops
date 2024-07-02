@@ -1,6 +1,6 @@
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
 import { useTranslation } from 'react-i18next';
-import OrganizationInvitation from './OrganizationInvitation';
+import OrganizationInvitation from './InviteOrganization';
 interface OrganizationInvitationDrawerProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;

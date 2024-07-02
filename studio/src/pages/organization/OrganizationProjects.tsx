@@ -1,16 +1,25 @@
 import { ConfirmationModal } from '@/components/ConfirmationModal';
+import { DataTable } from '@/components/DataTable';
+import { EmptyState } from '@/components/EmptyState';
 import { InfoModal } from '@/components/InfoModal';
-import { useToast } from '@/hooks';
+import { Loading } from '@/components/Loading';
+import CreateProject from '@/features/projects/CreateProject';
+import ProjectActions from '@/features/projects/ProjectActions';
+import ProjectCard from '@/features/projects/ProjectCard';
+import { ProjectColumns } from '@/features/projects/ProjectColumns';
+import { useSearch, useTable, useToast } from '@/hooks';
 import useProjectStore from '@/store/project/projectStore';
 import { APIError } from '@/types';
-import { useMutation } from '@tanstack/react-query';
+import { cn } from '@/utils';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 export default function OrganizationProjects() {
 	const { toast } = useToast();
 	const {
-		// projects,
-		// getProjects,
+		projects,
+		getProjects,
 		deleteProject,
 		toDeleteProject,
 		closeDeleteModal,
@@ -18,21 +27,21 @@ export default function OrganizationProjects() {
 		closeLeaveModal,
 		isLeaveModalOpen,
 		leaveProjectTeam,
-		// onProjectClick,
-		// loading,
+		onProjectClick,
+		loading,
 	} = useProjectStore();
-	// const [isCard, setIsCard] = useState(true);
+	const [isCard, setIsCard] = useState(true);
 
 	const { orgId } = useParams() as Record<string, string>;
 	const { t } = useTranslation();
-	// const filteredProjects = useSearch(projects);
+	const filteredProjects = useSearch(projects);
 
-	// const { isFetching } = useQuery({
-	// 	queryKey: ['projects', orgId],
-	// 	queryFn: () => getProjects(orgId),
-	// 	enabled: projects[0]?.orgId !== orgId,
-	// 	refetchOnWindowFocus: false,
-	// });
+	const { isFetching } = useQuery({
+		queryKey: ['projects', orgId],
+		queryFn: () => getProjects(orgId),
+		enabled: projects[0]?.orgId !== orgId,
+		refetchOnWindowFocus: false,
+	});
 
 	const {
 		mutateAsync: deleteMutate,
@@ -54,10 +63,14 @@ export default function OrganizationProjects() {
 			});
 		},
 	});
+
+	const table = useTable({
+		data: filteredProjects,
+		columns: ProjectColumns,
+	});
 	return (
 		<>
-			{/* //TODO App components  */}
-			{/* <div
+			<div
 				className={cn(
 					'scroll p-8',
 					!projects.length && 'flex items-center justify-center relative',
@@ -73,18 +86,19 @@ export default function OrganizationProjects() {
 									!projects.length && 'h-3/4 justify-center',
 								)}
 							>
-								{filteredProjects.map((project: Project) => (
-									<ApplicationCard<Project>
+								{filteredProjects.map((project) => (
+									<ProjectCard
 										key={project._id}
 										data={project}
 										onClick={onProjectClick}
 										loading={loading}
-										type={'project'}
 									/>
 								))}
 							</div>
 						) : (
-							<ApplicationTable apps={filteredProjects} />
+							<div className='my-8'>
+								<DataTable table={table} />
+							</div>
 						)}
 					</>
 				)}
@@ -97,7 +111,7 @@ export default function OrganizationProjects() {
 						<CreateProject />
 					</EmptyState>
 				)}
-			</div> */}
+			</div>
 			<ConfirmationModal
 				loading={deleteLoading}
 				error={deleteError}

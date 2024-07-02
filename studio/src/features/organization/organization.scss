@@ -21,14 +21,3 @@
 		}
 	}
 }
-.members {
-	&-filter {
-		@apply font-sfCompact font-normal flex justify-between items-center;
-		&-icon {
-			@apply text-icon-base mr-2;
-		}
-		&-resend {
-			@apply text-icon-base mr-2 w-4 h-4;
-		}
-	}
-}

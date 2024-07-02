@@ -11,9 +11,6 @@
 		--navigation-tab-menu-height: 32px;
 		--org-menu-height: 71px;
 
-		--font-sans: 'Rubik', sans-serif;
-		--font-albert: 'Albert Sans', sans-serif;
-		--font-sf: 'SF Compact Display', sans-serif;
 		--font-mono: 'Space Mono', monospace;
 
 		--radius: 0.5rem;
@@ -208,10 +205,8 @@
 	}
 
 	body {
-		@apply bg-base font-sfCompact text-default;
-		font-feature-settings:
-			'rlig' 1,
-			'calt' 1;
+		@apply bg-base  text-default;
+		font-feature-settings: 'rlig' 1, 'calt' 1;
 	}
 	.loading {
 		@apply animate-spin mr-1;
@@ -529,10 +524,10 @@ html .light ::-webkit-scrollbar-track {
 		@apply px-2 #{!important};
 	}
 	&__input {
-		@apply text-default font-sfCompact #{!important};
+		@apply text-default  #{!important};
 	}
 	&__placeholder {
-		@apply text-subtle text-sm font-sfCompact px-2 #{!important};
+		@apply text-subtle text-sm  px-2 #{!important};
 	}
 	&__menu {
 		@apply rounded-md border bg-wrapper-background-light  #{!important};

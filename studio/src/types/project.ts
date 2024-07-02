@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProjectEnvironment } from "./project-environment";
+import { Environment } from "./environment";
 import { NameSchema } from "./schema";
 import { UpdateRoleRequest } from "./type";
 
@@ -11,7 +11,7 @@ export enum ProjectRole {
 
 export interface CreateProjectResponse {
   project: Project;
-  environment: ProjectEnvironment;
+  environment: Environment;
 }
 
 export interface Project {

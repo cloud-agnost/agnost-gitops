@@ -14,7 +14,7 @@ class ProjectTeam implements RealtimeActions<Project> {
         projects: state.projects.filter((project) => project._id !== data._id),
         project: {} as Project,
       }));
-      history.navigate?.(`/organization/${data.orgId}/apps`);
+      history.navigate?.(`/organization/${data.orgId}/projects`);
     } else {
       useProjectStore.setState((prev) => ({
         ...prev,

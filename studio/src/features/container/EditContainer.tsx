@@ -46,7 +46,7 @@ export default function EditContainer() {
 		localStorage.removeItem('createDeployment');
 		createContainerHandler({
 			...data,
-			containerId: container?._id,
+			containerId: container?._id ?? '',
 		});
 	};
 
@@ -143,7 +143,7 @@ export default function EditContainer() {
 								{form.formState.isDirty && (
 									<>
 										<Warning className='size-5' />
-										<p className='text-sm font-sfCompact'>{t('container.unsaved_changes')}</p>
+										<p className='text-sm '>{t('container.unsaved_changes')}</p>
 									</>
 								)}
 							</div>

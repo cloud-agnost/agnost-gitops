@@ -28,9 +28,9 @@ export default function ProjectSelectDropdown() {
 			onSelect={(prj) => onSelect(prj as Project)}
 			onClick={() => openEditProjectDrawer(project as Project)}
 		>
-			<CommandItem>
+			<div className='px-2 py-1.5 hover:bg-lighter'>
 				<CreateProject className='!w-full' />
-			</CommandItem>
+			</div>
 		</SelectionDropdown>
 	);
 }

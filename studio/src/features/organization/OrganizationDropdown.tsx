@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import './organization.scss';
 import useProjectStore from '@/store/project/projectStore';
+import OrganizationSettings from './OrganizationSettings';
+import InviteOrganization from './Settings/Members/InviteOrganization';
 export function OrganizationDropdown() {
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
@@ -60,13 +62,13 @@ export function OrganizationDropdown() {
 
 	function onSelect(org: Organization) {
 		getProjects(org._id);
-		navigate(`/organization/${org?._id}`);
+		navigate(`/organization/${org?._id}/projects`);
 		selectOrganization(org);
 	}
 
 	function navigateOrg() {
 		//TODO resetAfterProjectChange();
-		navigate(`/organization/${organization?._id}`);
+		navigate(`/organization/${organization?._id}/projects`);
 	}
 
 	useEffect(() => {
@@ -74,7 +76,6 @@ export function OrganizationDropdown() {
 			getAllOrganizationByUser();
 		}
 	}, []);
-
 	return (
 		<>
 			<SelectionDropdown<Organization>
@@ -83,10 +84,9 @@ export function OrganizationDropdown() {
 				onSelect={(org) => onSelect(org as Organization)}
 				onClick={navigateOrg}
 			>
-				<CommandItem
-					className='flex !justify-center'
-					disabled={organization?.ownerUserId === user?._id}
-				>
+				<OrganizationSettings />
+				<InviteOrganization dropdown />
+				<div className='px-2 py-1.5 hover:bg-lighter'>
 					<Button
 						disabled={organization?.ownerUserId === user?._id}
 						className='w-full font-normal'
@@ -95,11 +95,11 @@ export function OrganizationDropdown() {
 					>
 						{t('organization.leave.main')}
 					</Button>
-				</CommandItem>
-				<CommandItem className='hover:bg-[unset]' disabled={!user?.isClusterOwner}>
+				</div>
+				<div className='px-2 py-1.5 hover:bg-lighter'>
 					<Button
-						className='font-normal'
 						disabled={!user?.isClusterOwner}
+						className='font-normal'
 						size='full'
 						variant='primary'
 						onClick={() => setOpenCreateModal(true)}
@@ -107,7 +107,7 @@ export function OrganizationDropdown() {
 						<Plus size={16} className='mr-2' />
 						{t('organization.create')}
 					</Button>
-				</CommandItem>
+				</div>
 			</SelectionDropdown>
 
 			<InfoModal

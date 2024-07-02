@@ -11,6 +11,9 @@
 	"select": "Select your projects",
 	"readOnly": "Read Only",
 	"read_write": "Read/Write",
+	"role": "Role",
+	"createdAt": "Created At",
+	"team": "Project Team",
 	"create_env": {
 		"title": "Create Blank Environment",
 		"private_desc": "Set this environment as private. Other team members will not be able to view this version, except team members with Admin rights.",

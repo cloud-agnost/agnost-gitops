@@ -1,6 +1,7 @@
 import { axios } from "@/helpers";
 import {
   ClusterSetupResponse,
+  LoginParams,
   OnboardingData,
   User,
   UserDataToRegister,
@@ -10,12 +11,12 @@ export default class AuthService {
   static url = "/v1/auth";
 
   static async initializeClusterSetup(data: UserDataToRegister): Promise<User> {
-    return (await axios.post(`${this.url}/init-cluster-setup`, data)).data;
+    return (await axios.post(`${this.url}/setup/start`, data)).data;
   }
   static async finalizeClusterSetup(
     req: OnboardingData
   ): Promise<ClusterSetupResponse> {
-    return (await axios.post(`${this.url}/finalize-cluster-setup`, req)).data;
+    return (await axios.post(`${this.url}/setup/end`, req)).data;
   }
 
   static async resendEmailVerificationCode(email: string) {
@@ -36,13 +37,8 @@ export default class AuthService {
     return (await axios.post(`${this.url}/complete-setup`, data)).data;
   }
 
-  static async login(email: string, password: string): Promise<User> {
-    return (
-      await axios.post(`${this.url}/login`, {
-        email,
-        password,
-      })
-    ).data;
+  static async login(req: LoginParams): Promise<User> {
+    return (await axios.post(`${this.url}/login`, req)).data;
   }
 
   static async validateEmail(email: string, code: number) {

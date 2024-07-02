@@ -2,6 +2,7 @@ import { axios } from "@/helpers";
 import useOrganizationStore from "@/store/organization/organizationStore";
 import {
   ChangeOrganizationAvatarRequest,
+  GetAuditLogsRequest,
   GetInvitationRequest,
   GetOrganizationMembersRequest,
   Invitation,
@@ -76,7 +77,7 @@ export default class OrganizationService {
     const role = arrayToQueryString(roles ?? [], "role");
     return (
       await axios.get(
-        `${this.url}/${organizationId}/member${
+        `${this.url}/${organizationId}/team${
           excludeSelf ? "/exclude-current" : ""
         }?${role}`,
         {
@@ -174,7 +175,7 @@ export default class OrganizationService {
       await axios.delete(
         `${this.url}/${
           useOrganizationStore.getState().organization?._id
-        }/member/${userId}`,
+        }/team/${userId}`,
         {
           data: {},
         }
@@ -186,7 +187,7 @@ export default class OrganizationService {
       await axios.post(
         `${this.url}/${
           useOrganizationStore.getState().organization?._id
-        }/member/delete-multi`,
+        }/team/delete-multi`,
         {
           userIds,
         }
@@ -218,7 +219,7 @@ export default class OrganizationService {
       await axios.put(
         `${this.url}/${
           useOrganizationStore.getState().organization?._id
-        }/member/${userId}`,
+        }/team/${userId}`,
         {
           role,
         }
@@ -228,5 +229,13 @@ export default class OrganizationService {
 
   static async getAllOrganizationRoleDefinitions(): Promise<OrgPermissions> {
     return (await axios.get(`${this.url}/roles`)).data;
+  }
+
+  static async getAuditLogs({ orgId, ...rest }: GetAuditLogsRequest) {
+    return (
+      await axios.get(`/v1/log/org/${orgId}`, {
+        params: rest,
+      })
+    ).data;
   }
 }

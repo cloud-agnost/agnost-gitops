@@ -105,7 +105,7 @@ export const ProjectMembersColumns: ColumnDef<ProjectMember>[] = [
 	},
 	{
 		id: 'name',
-		header: () => <SortButton text={translate('application.table.name')} field='name' />,
+		header: () => <SortButton text={translate('project.name')} field='name' />,
 		accessorKey: 'name',
 		size: 600,
 		cell: ({ row }) => {

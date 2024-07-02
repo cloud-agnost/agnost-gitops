@@ -33,6 +33,6 @@
 			"˜/*": ["./src/assets/*"]
 		}
 	},
-	"include": ["src"],
+	"include": ["src", "src/features/auth/ChangeAvatar/ChangeAvatar.tsx"],
 	"references": [{ "path": "./tsconfig.node.json" }]
 }

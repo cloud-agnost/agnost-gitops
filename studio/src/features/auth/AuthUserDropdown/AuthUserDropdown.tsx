@@ -1,13 +1,3 @@
-import useAuthStore from '@/store/auth/authStore.ts';
-import useContainerStore from '@/store/container/containerStore';
-import useOrganizationStore from '@/store/organization/organizationStore';
-import useProjectEnvironmentStore from '@/store/project/projectEnvironmentStore';
-import useProjectStore from '@/store/project/projectStore';
-import useResourceStore from '@/store/resources/resourceStore';
-import useThemeStore from '@/store/theme/themeStore.ts';
-import { cn, leaveChannel } from '@/utils';
-import { GearSix, Laptop, LineSegments, MoonStars, SignOut, SunDim } from '@phosphor-icons/react';
-import { useMutation } from '@tanstack/react-query';
 import { AuthUserAvatar } from '@/components/AuthUserAvatar';
 import {
 	DropdownMenu,
@@ -22,9 +12,20 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '@/components/Dropdown';
-import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import ClusterManagement from '@/features/profile/ClusterManagement';
 import { useToast } from '@/hooks';
+import useAuthStore from '@/store/auth/authStore.ts';
+import useContainerStore from '@/store/container/containerStore';
+import useEnvironmentStore from '@/store/environment/environmentStore';
+import useOrganizationStore from '@/store/organization/organizationStore';
+import useProjectStore from '@/store/project/projectStore';
+import useThemeStore from '@/store/theme/themeStore.ts';
+import { cn, leaveChannel } from '@/utils';
+import { Laptop, MoonStars, SignOut, SunDim } from '@phosphor-icons/react';
+import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ProfileSettings } from '../ProfileSettings';
 export default function AuthUserDropdown() {
 	const { user, logout } = useAuthStore();
 	const { orgId } = useParams() as { orgId: string };
@@ -32,8 +33,7 @@ export default function AuthUserDropdown() {
 	const { setTheme, getTheme } = useThemeStore();
 	const navigate = useNavigate();
 	const { organizations } = useOrganizationStore();
-	const { resources } = useResourceStore();
-	const { environments } = useProjectEnvironmentStore();
+	const { environments } = useEnvironmentStore();
 	const { projects } = useProjectStore();
 	const { containers } = useContainerStore();
 	const THEMES = [
@@ -59,9 +59,6 @@ export default function AuthUserDropdown() {
 		onSuccess: () => {
 			leaveChannel(orgId);
 
-			resources?.forEach((resource) => {
-				leaveChannel(resource._id);
-			});
 			organizations?.forEach((org) => {
 				leaveChannel(org._id);
 			});
@@ -98,26 +95,14 @@ export default function AuthUserDropdown() {
 					<AuthUserAvatar size='md' />
 					<div className='font-normal text-center -space-y-1'>
 						<div className='text-sm text-default leading-6'>{user?.name}</div>
-						<div className='text-[11px] text-subtle leading-[21px]'>{user?.contactEmail}</div>
+						<div className='text-[11px] text-subtle leading-[21px]'>{user?.email}</div>
 					</div>
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 
 				<DropdownMenuItemContainer>
-					<DropdownMenuItem asChild>
-						<Link className={cn('flex items-center gap-2')} to={'/profile'}>
-							<GearSix className='text-icon-base text-lg' />
-							{t('general.account_settings')}
-						</Link>
-					</DropdownMenuItem>
-					{user?.isClusterOwner && (
-						<DropdownMenuItem asChild>
-							<Link className={cn('flex items-center gap-2')} to={'/profile/cluster-management'}>
-								<LineSegments className='text-icon-base text-lg' />
-								{t('profileSettings.clusters_title')}
-							</Link>
-						</DropdownMenuItem>
-					)}
+					<ProfileSettings />
+					{user?.isClusterOwner && <ClusterManagement />}
 
 					<DropdownMenuSub>
 						<DropdownMenuSubTrigger className='dropdown-item flex items-center gap-2'>

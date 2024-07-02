@@ -4,7 +4,7 @@ import { InviteMemberForm, InviteMemberSchema } from '@/components/InviteMemberF
 import { useToast } from '@/hooks';
 import useAuthorizeProject from '@/hooks/useAuthorizeProject';
 import useProjectStore from '@/store/project/projectStore';
-import { APIError } from '@/types';
+import { APIError, ProjectRole } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -18,7 +18,7 @@ export default function ProjectInviteMember() {
 	const { isInviteMemberModalOpen, closeInviteMemberModal, project, inviteUsersToProject } =
 		useProjectStore();
 	const { toast } = useToast();
-	const { orgId } = useParams();
+	const { orgId } = useParams() as Record<string, string>;
 	const canInvite = useAuthorizeProject('invite.create');
 
 	const form = useForm<z.infer<typeof InviteMemberSchema>>({
@@ -57,7 +57,8 @@ export default function ProjectInviteMember() {
 			members: data.member
 				.filter((item) => item.email !== '' && item.role !== '')
 				.map((member) => ({
-					...member,
+					role: member.role as ProjectRole,
+					email: member.email as string,
 					uiBaseURL: window.location.origin,
 				})),
 			uiBaseURL: window.location.origin,

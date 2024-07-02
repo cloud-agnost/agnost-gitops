@@ -7,7 +7,6 @@ import onboarding from "./onboarding.json";
 import organization from "./organization.json";
 import profileSettings from "./profileSettings.json";
 import project from "./project.json";
-import resources from "./resources.json";
 
 export {
   cluster,
@@ -19,5 +18,4 @@ export {
   organization,
   profileSettings,
   project,
-  resources,
 };

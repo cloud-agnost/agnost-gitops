@@ -1,8 +1,8 @@
 import { Button } from '@/components/Button';
 import { useToast } from '@/hooks';
-import useProjectEnvironmentStore from '@/store/project/projectEnvironmentStore';
+import useEnvironmentStore from '@/store/environment/environmentStore';
 import { APIError, CreateNewEnvironmentRequest } from '@/types';
-import { CreateNewEnvironmentSchema, ProjectEnvironment } from '@/types/project-environment';
+import { CreateNewEnvironmentSchema, Environment } from '@/types/environment';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
@@ -25,7 +25,7 @@ export default function CreateEnvironment() {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const { isCreateEnvironmentDrawerOpen, createEnvironment, toggleCreateEnvironmentDrawer } =
-		useProjectEnvironmentStore();
+		useEnvironmentStore();
 	const { projectId, orgId } = useParams() as Record<string, string>;
 	const form = useForm<CreateNewEnvironmentRequest>({
 		resolver: zodResolver(CreateNewEnvironmentSchema),
@@ -37,7 +37,7 @@ export default function CreateEnvironment() {
 	const { toast } = useToast();
 	const { mutate: createEnvironmentHandler, isPending } = useMutation({
 		mutationFn: createEnvironment,
-		onSuccess: (data: ProjectEnvironment) => {
+		onSuccess: (data: Environment) => {
 			onClose();
 			navigate(`/organization/${orgId}/projects/${projectId}/env/${data._id}`);
 		},

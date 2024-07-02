@@ -46,7 +46,7 @@ export default function Error({ children }: { children: React.ReactNode }) {
 				body: JSON.stringify({
 					...data,
 					username: user.name,
-					email: user.contactEmail,
+					email: user.email,
 					stack: error?.stack,
 				}),
 			});
@@ -73,10 +73,8 @@ export default function Error({ children }: { children: React.ReactNode }) {
 			<div className='flex flex-col items-center space-y-2'>
 				<ErrorPage className='w-16 h-16' />
 				<h2 className='text-default text-sm font-semibold'>{t('general.internalServerError')}</h2>
-				<p className='text-xs text-subtle font-sfCompact'>{t('general.errorPageDescription')}</p>
-				<p className='text-xs text-subtle font-sfCompact'>
-					{t('general.internalServerErrorDescription')}
-				</p>
+				<p className='text-xs text-subtle '>{t('general.errorPageDescription')}</p>
+				<p className='text-xs text-subtle '>{t('general.internalServerErrorDescription')}</p>
 			</div>
 
 			<div className='flex items-center'>

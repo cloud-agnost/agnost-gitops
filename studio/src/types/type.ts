@@ -1,5 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { OrgRoles } from ".";
+import { Organization, OrgRoles, Project } from ".";
+
+export type LoginParams = UserDataToRegister;
+
 export interface APIError {
   error: string;
   details: string;
@@ -35,38 +38,34 @@ export type User = {
   iid: string;
   name: string;
   color: string;
-  contactEmail: string;
-  "2fa": boolean;
+  email: string;
   pictureUrl: string | null;
   canCreateOrg: boolean;
   isClusterOwner: boolean;
-  loginProfiles: {
-    provider: string;
-    id: string;
-    email: string;
-    emailVerified: boolean;
-    _id: string;
-  }[];
   notifications: string[];
   status: string;
   _id: string;
   createdAt: string;
   updatedAt: string;
+  provider: "github" | "gitlab" | "bitbucket";
+  providerUserId: string;
+  lastLoginAt: string;
   at: string;
   rt: string;
 };
 
 export interface UserDataToRegister {
-  name: string;
-  email: string;
-  password: string;
+  provider: "github" | "gitlab" | "bitbucket";
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: string;
+  token?: string;
 }
 
 export interface OnboardingData {
   orgName: string;
   projectName: string;
-  envName: string;
-  uiBaseURL: string;
+  environmentName: string;
 }
 
 export interface UpdateNotificationData {
@@ -119,6 +118,13 @@ export interface Invitation {
   token: string;
   role: string;
   status: "Pending" | "Active";
+  link: string;
+  host: {
+    name: string;
+    pictureUrl: string;
+    color: string;
+    email: string;
+  };
   createdAt: string;
   orgRole?: OrgRoles;
   appId?: string;
@@ -165,10 +171,7 @@ export type RealtimeActionTypes =
 export type RealtimeObjectTypes =
   | "user"
   | "org"
-  | "org.resource"
   | "cluster"
-  | "resource"
-  | "org.resource.log"
   | "org.project"
   | "org.project.environment"
   | "org.project.environment.container"
@@ -179,7 +182,6 @@ export interface RealtimeIdentifiers {
   orgId?: string;
   appId?: string;
   userId?: string;
-  resourceId?: string;
   environmentId?: string;
   projectId?: string;
   containerId?: string;
@@ -233,3 +235,40 @@ export type NotificationActions =
   | "delete"
   | "deploy"
   | "redeploy";
+
+export interface OrgAcceptInviteResponse {
+  org: Organization;
+  user: User;
+  role: OrgRoles;
+}
+export interface ProjectAcceptInviteResponse {
+  project: Project;
+  user: User;
+  role: OrgRoles;
+}
+
+export interface GetAuditLogsRequest extends BaseGetRequest {
+  orgId: string;
+  projectId?: string;
+  envId?: string;
+  actor?: string[];
+  action?: NotificationActions[];
+}
+export interface Notification {
+  _id: string;
+  object: string;
+  orgId: string;
+  projectId: string;
+  action: string;
+  actor: Actor;
+  description: string;
+  createdAt: string;
+}
+
+export interface Actor {
+  userId: string;
+  name: string;
+  pictureUrl: string;
+  color: string;
+  email: string;
+}

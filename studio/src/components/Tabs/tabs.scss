@@ -23,7 +23,7 @@
 }
 
 .tab-trigger {
-	@apply inline-flex whitespace-nowrap font-sfCompact rounded-full text-[13px] leading-6 items-center justify-center py-1 px-4 lg:px-6 font-normal transition-all disabled:pointer-events-none disabled:opacity-50;
+	@apply inline-flex whitespace-nowrap  rounded-full text-[13px] leading-6 items-center justify-center py-1 px-4 lg:px-6 font-normal transition-all disabled:pointer-events-none disabled:opacity-50;
 
 	&[data-state='active'] {
 		@apply bg-button-primary text-default-reverse dark:text-default;

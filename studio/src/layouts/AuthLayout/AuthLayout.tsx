@@ -1,33 +1,38 @@
-import { Carousel } from '@/components/Carousel';
-import { Logo } from '@/components/Logo';
-import { SLIDER_IMAGES } from '@/constants';
-import { ReactNode } from 'react';
-import './AuthLayout.scss';
+import { Alert, AlertDescription, AlertTitle } from '@/components/Alert';
+import { Agnost } from '@/components/icons';
+import Providers from '@/features/auth/Providers/Providers';
+import { APIError } from '@/types';
 import { cn } from '@/utils';
 
 type AuthLayoutProps = {
-	children: ReactNode;
+	error?: APIError;
 	className?: string;
+	title: string;
+	subtitle: string;
 };
 
-export default function AuthLayout({ children, className }: AuthLayoutProps) {
+export default function AuthLayout({ className, error, title, subtitle }: AuthLayoutProps) {
 	return (
-		<div className='auth-layout'>
-			<div className='auth-layout-left relative'>
-				<Logo className='auth-layout-app-logo' />
-				<div className='flex flex-col justify-center items-center h-[90%]'>
-					<Carousel
-						showArrows={false}
-						items={SLIDER_IMAGES.map(({ image, key }) => {
-							return {
-								element: <img src={image} alt={key} key={image} />,
-								key,
-							};
-						})}
-					/>
+		<div
+			className={cn(
+				'h-screen m-auto dark:bg-base flex flex-col items-center justify-center',
+				className,
+			)}
+		>
+			<Agnost className='size-24' />
+			<div className='space-y-8'>
+				<div className='space-y-2 text-center'>
+					<h1 className='text-3xl font-bold'>{title}</h1>
+					<p className='text-muted-foreground'>{subtitle}</p>
 				</div>
+				{error?.error && (
+					<Alert className='!max-w-full' variant='error'>
+						<AlertTitle>{error.error}</AlertTitle>
+						<AlertDescription>{error.details}</AlertDescription>
+					</Alert>
+				)}
+				<Providers />
 			</div>
-			<div className={cn('auth-layout-right', className)}>{children}</div>
 		</div>
 	);
 }

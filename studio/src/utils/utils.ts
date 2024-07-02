@@ -1,5 +1,4 @@
 import {
-	FIELD_MAPPER,
 	ORG_CHANGE_EXCEPTIONS
 } from '@/constants';
 import { STATE_LIST } from '@/constants/stateList';
@@ -128,11 +127,17 @@ export function describeCronExpression(cronExpression: string) {
 	}
 }
 
+
 export function sortByField<T extends { updatedBy?: string; updatedAt: string; type: string }>(
 	arr: T[] | undefined,
 	field: keyof T,
 	direction: 'asc' | 'desc' = 'asc',
 ): T[] {
+	 const FIELD_MAPPER: Record<string, string> = {
+  createdat: "datetime",
+  updatedat: "datetime",
+  parent: "reference",
+};
 	return _.orderBy(
 		arr?.map((d) => ({
 			...d,

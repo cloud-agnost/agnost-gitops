@@ -1,5 +1,10 @@
 import { axios } from "@/helpers";
-import { BaseGetRequest, UpdateNotificationData, User } from "@/types/type.ts";
+import {
+  BaseGetRequest,
+  UpdateNotificationData,
+  User,
+  UserDataToRegister,
+} from "@/types/type.ts";
 export default class UserService {
   static url = "/v1/user";
 
@@ -36,18 +41,43 @@ export default class UserService {
       })
     ).data;
   }
-  static async orgAcceptInvite(token: string) {
+  static async orgAcceptInviteWithSession(token: string) {
     return (
-      await axios.post(`${this.url}/org-invite-accept?token=${token}`, {
+      await axios.post(`${this.url}/org-invite-accept-session?token=${token}`, {
         token,
       })
     ).data;
   }
-  static async projectAcceptInvite(token: string) {
+  static async orgAcceptInvite(req: UserDataToRegister) {
     return (
-      await axios.post(`${this.url}/project-invite-accept?token=${token}`, {
-        token,
-      })
+      await axios.post(
+        `${this.url}/org-invite-accept`,
+        {},
+        {
+          params: req,
+        }
+      )
+    ).data;
+  }
+  static async projectAcceptInvite(req: UserDataToRegister) {
+    return (
+      await axios.post(
+        `${this.url}/project-invite-accept`,
+        {},
+        {
+          params: req,
+        }
+      )
+    ).data;
+  }
+  static async projectAcceptInviteWithSession(token: string) {
+    return (
+      await axios.post(
+        `${this.url}/project-invite-accept-session?token=${token}`,
+        {
+          token,
+        }
+      )
     ).data;
   }
 

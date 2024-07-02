@@ -1,18 +1,19 @@
+import { Button } from '@/components/Button';
 import { Checkbox } from '@/components/Checkbox';
 import { DateText } from '@/components/DateText';
-import { ResendButton } from '@/components/ResendButton';
+import { RoleSelect } from '@/components/RoleDropdown';
 import { TableConfirmation } from '@/components/Table';
 import { toast } from '@/hooks/useToast';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { APIError, Invitation } from '@/types';
-import { getOrgPermission, translate } from '@/utils';
+import { copyToClipboard, getOrgPermission, translate } from '@/utils';
+import { Copy } from '@phosphor-icons/react';
 import { QueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
-import { RoleSelect } from '@/components/RoleDropdown';
 
 const queryClient = new QueryClient();
 
-const { deleteInvitation, resendInvitation } = useOrganizationStore.getState();
+const { deleteInvitation } = useOrganizationStore.getState();
 async function onDelete(token: string) {
 	return queryClient
 		.getMutationCache()
@@ -28,27 +29,6 @@ async function onDelete(token: string) {
 				toast({
 					title: 'Invitation deleted',
 					action: 'success',
-				});
-			},
-		})
-		.execute({ token });
-}
-
-function onResend(token: string) {
-	return queryClient
-		.getMutationCache()
-		.build(queryClient, {
-			mutationFn: resendInvitation,
-			onSuccess: () => {
-				toast({
-					title: 'Invitation has been resent to the user.',
-					action: 'success',
-				});
-			},
-			onError: (error: APIError) => {
-				toast({
-					title: error.details,
-					action: 'error',
 				});
 			},
 		})
@@ -119,10 +99,16 @@ export const OrganizationInvitationsColumns: ColumnDef<Invitation>[] = [
 		cell: ({ row }) => {
 			const { token } = row.original;
 			const canDelete = getOrgPermission('invite.delete');
-			const canResend = getOrgPermission('invite.resend');
 			return (
 				<div className='flex items-center justify-end'>
-					<ResendButton onResend={() => onResend(token)} disabled={!canResend} />
+					<Button
+						onClick={() => copyToClipboard(row.original.link)}
+						variant='icon'
+						size='sm'
+						rounded
+					>
+						<Copy size={14} />
+					</Button>
 					<TableConfirmation
 						title={translate('organization.settings.members.invite.delete')}
 						description={translate('organization.settings.members.invite.deleteDesc')}

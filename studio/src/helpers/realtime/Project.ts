@@ -26,7 +26,7 @@ class Project implements RealtimeActions<ProjectType | CreateProjectResponse> {
       user?._id !== actor?._id &&
       window.location.pathname.includes(identifiers.projectId as string)
     ) {
-      history.navigate?.(`/organization/${identifiers.orgId}/apps`);
+      history.navigate?.(`/organization/${identifiers.orgId}/projects`);
     }
   }
 

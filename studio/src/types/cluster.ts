@@ -1,4 +1,4 @@
-import ProjectEnvironment from "@/helpers/realtime/ProjectEnvironment";
+import Environment from "@/helpers/realtime/Environment";
 import { Organization } from "./organization";
 import { Project } from "./project";
 
@@ -42,7 +42,7 @@ export interface UpdateClusterComponentParams {
 export interface ClusterSetupResponse {
   org: Organization;
   project: Project;
-  env: ProjectEnvironment;
+  environment: Environment;
 }
 
 export interface ModuleVersions {

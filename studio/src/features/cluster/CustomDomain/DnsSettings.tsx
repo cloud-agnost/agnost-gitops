@@ -12,7 +12,7 @@ export default function DnsSettings() {
 			<Description title={t('cluster.dns_settings')}>
 				{t('cluster.dns_settings_description')}
 			</Description>
-			<div className='text-default font-sfCompact space-y-4'>
+			<div className='text-default  space-y-4'>
 				<div className='flex justify-between'>
 					<p className='flex-1'>{t('general.name')}</p>
 					<p className='flex-1'>{t('general.type')}</p>

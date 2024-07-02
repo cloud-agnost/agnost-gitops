@@ -199,7 +199,7 @@ export default function InviteMemberForm({
 				<div className='flex items-center justify-end gap-4'>
 					{actions}
 					<Button variant='primary' loading={loading} disabled={disabled} type='submit'>
-						{t('application.edit.invite')}
+						{t('project.edit.invite')}
 					</Button>
 				</div>
 			</div>

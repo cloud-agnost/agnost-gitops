@@ -32,7 +32,7 @@ export default function Feedback() {
 				body: JSON.stringify({
 					...data,
 					username: user.name,
-					email: user.contactEmail,
+					email: user.email,
 				}),
 			});
 		},
@@ -62,7 +62,7 @@ export default function Feedback() {
 					className='header-menu-right-nav-item !text-subtle hover:!text-default'
 				>
 					<Lightbulb size={14} className='mr-1' />
-					<span className='header-menu-right-nav-item-title font-sfCompact'>Feedback</span>
+					<span className='header-menu-right-nav-item-title '>Feedback</span>
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent align='start' className='p-4'>

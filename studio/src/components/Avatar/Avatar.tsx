@@ -65,7 +65,7 @@ const AvatarImage = React.forwardRef<
 	React.ElementRef<typeof AvatarPrimitive.Image>,
 	AvatarImageProps
 >(({ className, ...props }, ref) => {
-	const source = props.src ? `${BASE_URL_WITH_API}/${props.src}` : undefined;
+	const source = !props.src?.includes('https') ? `${BASE_URL_WITH_API}/${props.src}` : props.src;
 	return (
 		<AvatarPrimitive.Image
 			ref={ref}

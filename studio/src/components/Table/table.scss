@@ -29,7 +29,7 @@
 	}
 	&-head {
 		@apply h-10 px-4 text-left align-middle font-medium relative bg-subtle;
-		@apply text-subtle [&:has([role=checkbox])]:pr-0 font-sfCompact text-xs first:rounded-tl-lg last:rounded-tr-lg;
+		@apply text-subtle [&:has([role=checkbox])]:pr-0  text-xs first:rounded-tl-lg last:rounded-tr-lg;
 		&.sortable {
 			@apply hover:bg-lighter;
 		}

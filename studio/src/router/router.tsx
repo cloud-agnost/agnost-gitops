@@ -7,7 +7,7 @@ import useClusterStore from '@/store/cluster/clusterStore.ts';
 import loadable from '@loadable/component';
 import type { ReactNode } from 'react';
 import { Navigate, createBrowserRouter, useLocation } from 'react-router-dom';
-import authLoaders from './loader/AuthLoader';
+import AuthLoader from './loader/AuthLoader';
 import homeLoaders from './loader/HomeLoader';
 import onboardingLoaders from './loader/OnboardingLoader';
 export function Fallback(): JSX.Element {
@@ -27,50 +27,6 @@ const Login = loadable(() => componentLoader(() => import('../pages/auth/Login')
 	fallback: <Fallback />,
 	resolveComponent: (mod: any) => mod.default,
 });
-
-const ForgotPassword = loadable(
-	() => componentLoader(() => import('../pages/auth/ForgotPassword')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-const ChangePasswordWithTokenLoadable = loadable(
-	() => componentLoader(() => import('../pages/auth/ChangePasswordWithToken')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const ConfirmChangeEmailLoadable = loadable(
-	() => componentLoader(() => import('../pages/auth/ConfirmChangeEmail')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const VerifyEmail = loadable(() => componentLoader(() => import('../pages/auth/VerifyEmail')), {
-	fallback: <Fallback />,
-	resolveComponent: (mod: any) => mod.default,
-});
-
-const CompleteAccountSetup = loadable(
-	() => componentLoader(() => import('../pages/auth/CompleteAccountSetup')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const CompleteAccountSetupVerifyEmailLoadable = loadable(
-	() => componentLoader(() => import('../pages/auth/CompleteAccountSetupVerifyEmail')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
 
 const Organization = loadable(
 	() => componentLoader(() => import('../pages/organization/Organization')),
@@ -104,85 +60,15 @@ const OrganizationProjects = loadable(
 	},
 );
 
-const OrganizationResources = loadable(
-	() => componentLoader(() => import('../pages/organization/OrganizationResources')),
+const Environment = loadable(
+	() => componentLoader(() => import('../pages/environment/Environment')),
 	{
 		fallback: <Fallback />,
 		resolveComponent: (mod: any) => mod.default,
 	},
 );
-
-const OrganizationSettings = loadable(
-	() => componentLoader(() => import('../pages/organization/OrganizationSettings')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-const OrganizationSettingsGeneral = loadable(
-	() =>
-		componentLoader(
-			() => import('../pages/organization/OrganizationSettings/OrganizationSettingsGeneral'),
-		),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const OrganizationSettingsMembers = loadable(
-	() =>
-		componentLoader(
-			() => import('../pages/organization/OrganizationSettings/OrganizationSettingsMembers'),
-		),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const ProjectEnvironment = loadable(
-	() => componentLoader(() => import('../pages/project-environment/ProjectEnvironment')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-const ProjectEnvironmentDetail = loadable(
-	() => componentLoader(() => import('../pages/project-environment/ProjectEnvironmentContainers')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-// profileSettings
-const ProfileSettings = loadable(
-	() => componentLoader(() => import('../pages/profile/ProfileSettings')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const ProfileSettingsGeneral = loadable(
-	() => componentLoader(() => import('../pages/profile/ProfileSettingsGeneral')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const ProfileSettingsNotifications = loadable(
-	() => componentLoader(() => import('../pages/profile/ProfileSettingsNotifications')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
-
-const ClusterManagement = loadable(
-	() => componentLoader(() => import('../pages/profile/ClusterManagement')),
+const EnvironmentDetail = loadable(
+	() => componentLoader(() => import('../pages/environment/EnvironmentContainers')),
 	{
 		fallback: <Fallback />,
 		resolveComponent: (mod: any) => mod.default,
@@ -198,16 +84,13 @@ const OnboardingLoadable = loadable(
 	},
 );
 
-const AccountInformationLoadable = loadable(
-	() => componentLoader(() => import('../pages/onboarding/AccountInformation')),
-	{
-		fallback: <Fallback />,
-		resolveComponent: (mod: any) => mod.default,
-	},
-);
+const Register = loadable(() => componentLoader(() => import('../pages/onboarding/Register')), {
+	fallback: <Fallback />,
+	resolveComponent: (mod: any) => mod.default,
+});
 
 const CreateProject = loadable(
-	() => componentLoader(() => import('../pages/onboarding/CreateProject')),
+	() => componentLoader(() => import('../pages/onboarding/AccountSetup')),
 	{
 		fallback: <Fallback />,
 		resolveComponent: (mod: any) => mod.default,
@@ -217,6 +100,28 @@ const CreateProject = loadable(
 // others
 const RedirectHandleLoadable = loadable(
 	() => componentLoader(() => import('../pages/redirect-handle/RedirectHandle')),
+	{
+		fallback: <Fallback />,
+		resolveComponent: (mod: any) => mod.default,
+	},
+);
+const OrgAcceptInvitation = loadable(
+	() => componentLoader(() => import('../pages/auth/OrgAcceptInvitation')),
+	{
+		fallback: <Fallback />,
+		resolveComponent: (mod: any) => mod.default,
+	},
+);
+const ProjectAcceptInvitation = loadable(
+	() => componentLoader(() => import('../pages/auth/ProjectAcceptInvitation')),
+	{
+		fallback: <Fallback />,
+		resolveComponent: (mod: any) => mod.default,
+	},
+);
+
+const Notifications = loadable(
+	() => componentLoader(() => import('../pages/organization/OrganizationNotifications')),
 	{
 		fallback: <Fallback />,
 		resolveComponent: (mod: any) => mod.default,
@@ -246,57 +151,8 @@ const router = createBrowserRouter(
 				},
 				{
 					path: '/login',
+					loader: AuthLoader.loginLoader,
 					element: <Login />,
-				},
-				{
-					path: '/forgot-password',
-					element: <ForgotPassword />,
-				},
-				{
-					path: '/confirm-change-email',
-					element: <ConfirmChangeEmailLoadable />,
-					loader: authLoaders.confirmChangeEmailLoader,
-				},
-				{
-					path: '/change-password',
-					element: <ChangePasswordWithTokenLoadable />,
-					loader: authLoaders.changePasswordWithTokenLoader,
-				},
-				{
-					path: '/verify-email',
-					element: <VerifyEmail />,
-				},
-				{
-					path: '/complete-account-setup',
-					element: <CompleteAccountSetup />,
-				},
-				{
-					path: '/complete-account-setup/verify-email',
-					element: <CompleteAccountSetupVerifyEmailLoadable />,
-				},
-				{
-					path: 'profile',
-					element: <ProfileSettings />,
-					children: [
-						{
-							index: true,
-							path: '',
-							element: <ProfileSettingsGeneral />,
-						},
-						{
-							path: 'cluster-management',
-							element: <ClusterManagement />,
-							loader: homeLoaders.clusterManagementLoader,
-						},
-						{
-							path: 'notifications',
-							element: <ProfileSettingsNotifications />,
-						},
-						{
-							path: 'cluster-management',
-							element: <ClusterManagement />,
-						},
-					],
 				},
 				{
 					path: '/organization',
@@ -320,34 +176,19 @@ const router = createBrowserRouter(
 										},
 										{
 											path: ':projectId/env/:envId',
-											element: <ProjectEnvironment />,
+											element: <Environment />,
 											children: [
 												{
 													path: '',
-													element: <ProjectEnvironmentDetail />,
+													element: <EnvironmentDetail />,
 												},
 											],
 										},
 									],
 								},
 								{
-									path: 'resources',
-									element: <OrganizationResources />,
-								},
-								{
-									path: 'settings',
-									element: <OrganizationSettings />,
-									children: [
-										{
-											index: true,
-											path: '',
-											element: <OrganizationSettingsGeneral />,
-										},
-										{
-											path: 'members',
-											element: <OrganizationSettingsMembers />,
-										},
-									],
+									path: 'notifications',
+									element: <Notifications />,
 								},
 							],
 						},
@@ -364,14 +205,26 @@ const router = createBrowserRouter(
 			children: [
 				{
 					path: '',
-					element: <AccountInformationLoadable />,
-					loader: onboardingLoaders.accountInformationLoader,
+					element: <Register />,
+					loader: AuthLoader.registerLoader,
 				},
 				{
-					path: 'project',
+					path: 'setup',
 					element: <CreateProject />,
 				},
 			],
+		},
+		{
+			path: '/org-accept',
+			element: <OrgAcceptInvitation />,
+			loader: AuthLoader.orgAcceptInvitation,
+			errorElement: <ErrorBoundary />,
+		},
+		{
+			path: '/project-accept',
+			element: <ProjectAcceptInvitation />,
+			loader: AuthLoader.projectAcceptInvite,
+			errorElement: <ErrorBoundary />,
 		},
 		{
 			path: '/redirect-handle',

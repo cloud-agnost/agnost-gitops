@@ -135,9 +135,6 @@ module.exports = {
 				xs: 'calc(var(--radius) - 6px)',
 			},
 			fontFamily: {
-				sans: ['var(--font-sans)', ...fontFamily.sans],
-				albert: ['var(--font-albert)'],
-				sfCompact: ['var(--font-sf)', ...fontFamily.sans],
 				mono: ['var(--font-mono)', ...fontFamily.mono],
 			},
 			fontSize: {

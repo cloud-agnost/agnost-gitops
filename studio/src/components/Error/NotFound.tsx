@@ -10,8 +10,8 @@ export default function NotFound({ children }: { children?: React.ReactNode }) {
 			<div className='flex flex-col items-center space-y-2'>
 				<Svg404 className='w-16 h-16' />
 				<h2 className='text-default text-sm font-semibold'>{t('general.pageNotFound')}</h2>
-				<p className='text-xs text-subtle font-sfCompact'>{t('general.errorPageDescription')}</p>
-				<p className='text-xs text-subtle font-sfCompact'>{t('general.pageNotFoundDescription')}</p>
+				<p className='text-xs text-subtle '>{t('general.errorPageDescription')}</p>
+				<p className='text-xs text-subtle '>{t('general.pageNotFoundDescription')}</p>
 			</div>
 
 			{children ?? (

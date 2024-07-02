@@ -38,7 +38,7 @@
 	"dns_settings_description": "If this is the first time your are adding a custom domain to your cluster, please add the following record to your DNS settings.",
 	"ttl": "TTL",
 	"domains": "Domains",
-	"add_domain": "Add Domain",
+	"add_domain": "Set Domain",
 	"domains_description": "Enter custom domain yourdomain.com or sub-domain subdomain.yourdomain.com.",
 	"domain_added": "Domain added successfully.",
 	"delete_domain_success": "Domain deleted successfully.",

@@ -1,14 +1,14 @@
-import ProjectEnvironmentService from "@/services/ProjectEnvironmentService";
+import EnvironmentService from "@/services/EnvironmentService";
 import ProjectService from "@/services/ProjectService";
 import {
   APIError,
   ChangeProjectNameRequest,
   CreateProjectRequest,
+  Environment,
   GetInvitationRequest,
   Invitation,
   InvitationRequest,
   Project,
-  ProjectEnvironment,
   ProjectInviteRequest,
   ProjectMember,
   ProjectRole,
@@ -25,15 +25,15 @@ import { joinChannel, leaveChannel } from "@/utils";
 import { create } from "zustand";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import useAuthStore from "../auth/authStore";
+import useEnvironmentStore from "../environment/environmentStore";
 import useOrganizationStore from "../organization/organizationStore";
-import useProjectEnvironmentStore from "./projectEnvironmentStore";
 
 interface ProjectState {
   projectAuthorization: ProjectRoleDefinition;
   projects: Project[];
   project: Project;
   toDeleteProject: Project | undefined;
-  projectEnvironments: ProjectEnvironment[];
+  Environments: Environment[];
   isDeleteModalOpen: boolean;
   isLeaveModalOpen: boolean;
   isInviteMemberModalOpen: boolean;
@@ -88,7 +88,7 @@ const initialState: ProjectState = {
   projectAuthorization: {} as ProjectRoleDefinition,
   projects: [],
   project: {} as Project,
-  projectEnvironments: [],
+  Environments: [],
   isDeleteModalOpen: false,
   toDeleteProject: undefined,
   isLeaveModalOpen: false,
@@ -374,17 +374,15 @@ const useProjectStore = create<ProjectState & Actions>()(
         const { selectProject, openEnvironmentDrawer } = get();
         selectProject(project);
         set({ loading: true });
-        const { selectEnvironment } = useProjectEnvironmentStore.getState();
+        const { selectEnvironment } = useEnvironmentStore.getState();
         const orgId = useOrganizationStore.getState().organization
           ?._id as string;
-        const environments = await ProjectEnvironmentService.getProjectEnvironments(
-          {
-            orgId,
-            projectId: project?._id as string,
-            page: 0,
-            size: 2,
-          }
-        );
+        const environments = await EnvironmentService.getEnvironments({
+          orgId,
+          projectId: project?._id as string,
+          page: 0,
+          size: 2,
+        });
 
         if (environments.length === 1) {
           selectEnvironment(environments[0]);

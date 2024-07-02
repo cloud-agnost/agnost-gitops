@@ -1,7 +1,7 @@
 {
-	"welcome": "Welcome to Agnost Community Cluster",
+	"welcome": "Welcome to Agnost",
 	"account_info": "Account Information",
-	"welcome_desc": "Through this onboarding flow, we will help you set up your cluster and create your organization and first project. Please follow the instructions to complete your cluster set up and start building your apps.",
+	"welcome_desc": "Through this onboarding flow, we will help you set up your cluster and create your organization and first project.",
 	"next": "Next",
 	"previous": "Previous",
 	"skip_and_finish": "Skip & Finish",

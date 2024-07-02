@@ -46,6 +46,6 @@
 	}
 
 	&-description {
-		@apply text-xs text-subtle [&_p]:leading-relaxed font-sfCompact;
+		@apply text-xs text-subtle [&_p]:leading-relaxed;
 	}
 }

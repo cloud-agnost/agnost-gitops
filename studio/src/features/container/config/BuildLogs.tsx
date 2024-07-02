@@ -64,7 +64,7 @@ export default function BuildLogs() {
 					{t('container.pipeline.back')}
 				</Button>
 			</div>
-			<h2 className='font-sfCompact'>{selectedPipeline?.name}</h2>
+			<h2 className=''>{selectedPipeline?.name}</h2>
 			<div className='flex items-center gap-4'>
 				{pipelineLogs?.map((log, index) => (
 					<div key={log.step} className='flex items-center justify-start gap-2'>
@@ -89,7 +89,7 @@ export default function BuildLogs() {
 			<LogViewer logs={logs} className='flex-1' />
 			<p
 				className={cn(
-					'font-sfCompact text-xs',
+					' text-xs',
 					selectedLog?.status === 'success' && 'text-elements-green',
 					selectedLog?.status === 'error' && 'text-elements-red',
 				)}

@@ -25,7 +25,7 @@ export default function OrganizationSelect() {
 
 	function handleClickOrganization(org: Organization) {
 		selectOrganization(org);
-		navigate(`/organization/${org?._id}`);
+		navigate(`/organization/${org?._id}/projects`);
 	}
 
 	const { isFetching } = useQuery({

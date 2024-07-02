@@ -29,7 +29,7 @@ export default function DomainList() {
 			className='flex items-center justify-between space-x-2 bg-wrapper-background-base p-3 rounded group'
 			key={domain}
 		>
-			<p className='text-default font-sfCompact'>{domain}</p>
+			<p className='text-default '>{domain}</p>
 			<TableConfirmation
 				align='end'
 				title={t('cluster.domain.delete')}

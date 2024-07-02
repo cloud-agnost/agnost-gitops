@@ -78,7 +78,7 @@ export default function DataTable<TData>({
 							{row.getVisibleCells().map((cell, index) => (
 								<TableCell
 									key={cell.id}
-									className={cn('font-sfCompact', columns[index].className)}
+									className={cn('', columns[index].className)}
 									style={{
 										width: cell.column.getSize(),
 									}}

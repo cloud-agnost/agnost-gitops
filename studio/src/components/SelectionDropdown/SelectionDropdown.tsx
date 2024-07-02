@@ -15,6 +15,7 @@ import { CaretUpDown, Check } from '@phosphor-icons/react';
 import { MouseEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '../Avatar';
+import { SearchInput } from '../SearchInput';
 interface SelectionLabelProps {
 	selectedData: Organization | Project;
 	onClick?: () => void;
@@ -56,40 +57,31 @@ export default function SelectionDropdown<T extends Organization | Project>({
 					</Button>
 				</PopoverTrigger>
 			</div>
-			<PopoverContent align='end' className='p-0'>
-				<Command shouldFilter={false}>
-					{data.length > 5 && (
-						<CommandInput
-							placeholder={t('organization.select') as string}
-							value={search}
-							onValueChange={setSearch}
-						/>
-					)}
-					<CommandEmpty>{t('organization.empty')}</CommandEmpty>
-					<CommandGroup className='max-h-[300px] overflow-y-auto'>
-						<div className='space-y-2'>
-							{filteredData.map((d) => (
-								<CommandItem key={d._id} value={d._id} onSelect={() => handleSelect(d)}>
-									<SelectionLabel selectedData={d} />
-									<Check
-										size={16}
-										className={cn(
-											'text-icon-base',
-											selectedData?._id === d?._id ? 'opacity-100 ' : 'opacity-0',
-										)}
-										weight='bold'
-									/>
-								</CommandItem>
-							))}
-						</div>
-					</CommandGroup>
-					<CommandSeparator />
-					{children && (
-						<CommandGroup className='[&>.command-item]:rounded-none hover:bg-inherit'>
-							{children}
-						</CommandGroup>
-					)}
-				</Command>
+			<PopoverContent align='end' className='bg-subtle w-[250px]'>
+				{data.length > 5 && (
+					<SearchInput
+						placeholder={t('organization.select') as string}
+						value={search}
+						onSearch={setSearch}
+					/>
+				)}
+				{filteredData.map((d) => (
+					<div className='px-2 py-1.5 hover:bg-lighter' key={d._id}>
+						<Button variant='blank' onClick={() => handleSelect(d)} size='full'>
+							<SelectionLabel selectedData={d} />
+							<Check
+								size={16}
+								className={cn(
+									'text-icon-base',
+									selectedData?._id === d?._id ? 'opacity-100 ' : 'opacity-0',
+								)}
+								weight='bold'
+							/>
+						</Button>
+					</div>
+				))}
+				{children && <div>{children}</div>}
+				{/* <CommandEmpty>{t('organization.empty')}</CommandEmpty> */}
 			</PopoverContent>
 		</Popover>
 	);
@@ -114,7 +106,7 @@ function SelectionLabel({ selectedData, onClick }: SelectionLabelProps) {
 				<AvatarImage src={selectedData?.pictureUrl} alt={selectedData?.name} />
 				<AvatarFallback name={selectedData?.name} color={selectedData?.color as string} />
 			</Avatar>
-			<div className='text-left flex-1 font-sfCompact h-full flex flex-col justify-center'>
+			<div className='text-left flex-1  h-full flex flex-col justify-center'>
 				<div className='text-xs leading-none text-default whitespace-nowrap truncate max-w-[80%]'>
 					{selectedData?.name}
 				</div>

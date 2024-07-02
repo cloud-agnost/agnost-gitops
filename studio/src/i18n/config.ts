@@ -10,7 +10,6 @@ import {
   organization,
   profileSettings,
   project,
-  resources as rs,
 } from "./en";
 
 export const resources = {
@@ -22,7 +21,6 @@ export const resources = {
       organization,
       profileSettings,
       onboarding,
-      resources: rs,
       cluster,
       project,
       container,

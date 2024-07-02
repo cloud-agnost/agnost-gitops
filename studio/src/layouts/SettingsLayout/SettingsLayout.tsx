@@ -3,8 +3,8 @@ import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 interface VersionLayoutProps {
 	children: ReactNode;
-	navbar: ReactNode;
 	className?: string;
+	navbar?: ReactNode;
 }
 export default function SettingsLayout({ children, navbar, className }: VersionLayoutProps) {
 	const { pathname } = useLocation();

@@ -12,7 +12,7 @@ import { Input } from '@/components/Input';
 import { Separator } from '@/components/Separator';
 import { Switch } from '@/components/Switch';
 import useContainerStore from '@/store/container/containerStore';
-import useProjectEnvironmentStore from '@/store/project/projectEnvironmentStore';
+import useEnvironmentStore from '@/store/environment/environmentStore';
 import { ContainerType, CreateContainerParams } from '@/types';
 import { ArrowDown, ShareNetwork, Trash } from '@phosphor-icons/react';
 import _ from 'lodash';
@@ -24,7 +24,7 @@ export default function Networking() {
 	const { t } = useTranslation();
 	const form = useFormContext<CreateContainerParams>();
 	const { container } = useContainerStore();
-	const { environment } = useProjectEnvironmentStore();
+	const { environment } = useEnvironmentStore();
 	return (
 		<ContainerFormTitle title={t('container.networking.title')} icon={<ShareNetwork size={20} />}>
 			{_.isNil(container?.iid) ? (

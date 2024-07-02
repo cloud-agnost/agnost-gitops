@@ -53,9 +53,15 @@ instance.interceptors.response.use(
       details: err.fields?.[0]?.msg ?? err.details,
     };
     if (ERROR_CODES_TO_REDIRECT_LOGIN_PAGE.includes(apiError.code)) {
+      console.log(
+        "Redirecting to login page",
+        apiError.code,
+        apiError.error,
+        apiError.details
+      );
       //TODO resetAllStores();
       //NAVIGATE TO LOGIN PAGE
-      window.location.href = "/login";
+      // window.location.href = "/login";
     }
 
     return Promise.reject(apiError);

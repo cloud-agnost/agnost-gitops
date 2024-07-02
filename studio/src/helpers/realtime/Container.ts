@@ -17,7 +17,6 @@ class Container implements RealtimeActions<ContainerType> {
     }));
   }
   update(param: RealtimeActionParams<ContainerType>): void {
-    console.log("realtime", param.data);
     useContainerStore.setState?.((state) => ({
       ...state,
       containers: state.containers.map((container) => {

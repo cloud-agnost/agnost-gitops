@@ -18,7 +18,6 @@ import BuildLogs from './BuildLogs';
 export default function Builds() {
 	const { getContainerPipelines, container, selectPipeline, selectedPipeline } =
 		useContainerStore();
-	console.log('selectedPipeline', selectedPipeline);
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
 	const { data: pipelines } = useQuery<ContainerPipeline[]>({
 		queryKey: ['containerPipelines'],

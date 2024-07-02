@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { NameSchema } from ".";
 
-export type OrgRoles = "Admin" | "Member" | "Resource Manager" | "Viewer";
+export type OrgRoles = "Admin" | "Member";
 export interface Organization {
   _id: string;
   ownerUserId: string;
@@ -114,6 +114,4 @@ export interface OrgRolePermissions {
 export interface OrgPermissions {
   Admin: OrgRolePermissions;
   Member: OrgRolePermissions;
-  Viewer: OrgRolePermissions;
-  "Resource Manager": OrgRolePermissions;
 }

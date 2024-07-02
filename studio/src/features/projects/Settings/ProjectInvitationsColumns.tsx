@@ -1,18 +1,19 @@
 import { Checkbox } from '@/components/Checkbox';
 import { DateText } from '@/components/DateText';
-import { ResendButton } from '@/components/ResendButton';
 import { TableConfirmation } from '@/components/Table';
 import { toast } from '@/hooks/useToast';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
 import { APIError, ColumnDefWithClassName, Invitation } from '@/types';
-import { getProjectPermission, translate } from '@/utils';
+import { copyToClipboard, getProjectPermission, translate } from '@/utils';
 import { RoleSelect } from '@/components/RoleDropdown';
 import { QueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/Button';
+import { Copy } from '@phosphor-icons/react';
 
 const queryClient = new QueryClient();
 
-const { updateInvitationUserRole, resendInvitation, deleteInvitation } = useProjectStore.getState();
+const { updateInvitationUserRole, deleteInvitation } = useProjectStore.getState();
 
 function getPermission(type: string) {
 	return getProjectPermission(`invite.${type}`);
@@ -41,33 +42,6 @@ function updateInvitationUserRoleHandler(token: string, role: string) {
 		})
 		.execute({ orgId, projectId, token, role });
 }
-
-function resendInvitationHandler(token: string, email: string) {
-	const orgId = useOrganizationStore.getState().organization._id;
-	const projectId = useProjectStore.getState().project?._id;
-
-	return queryClient
-		.getMutationCache()
-		.build(queryClient, {
-			mutationFn: resendInvitation,
-			onSuccess: () => {
-				toast({
-					title: translate('general.invitation.resent_success', {
-						email,
-					}),
-					action: 'success',
-				});
-			},
-			onError: (error: APIError) => {
-				toast({
-					title: error.details,
-					action: 'error',
-				});
-			},
-		})
-		.execute({ orgId, projectId, token });
-}
-
 async function deleteInvitationHandler(token: string) {
 	const orgId = useOrganizationStore.getState().organization._id;
 	const projectId = useProjectStore.getState().project?._id;
@@ -149,13 +123,17 @@ export const ProjectInvitationsColumns: ColumnDefWithClassName<Invitation>[] = [
 		className: 'actions',
 		size: 20,
 		cell: ({ row }) => {
-			const { token, email } = row.original;
+			const { token } = row.original;
 			return (
 				<div className='flex items-center justify-end'>
-					<ResendButton
-						disabled={!getPermission('update')}
-						onResend={() => resendInvitationHandler(token, email)}
-					/>
+					<Button
+						onClick={() => copyToClipboard(row.original.link)}
+						variant='icon'
+						size='sm'
+						rounded
+					>
+						<Copy size={14} />
+					</Button>
 					<TableConfirmation
 						title={translate('project.invite.delete')}
 						description={translate('project.invite.deleteDesc')}

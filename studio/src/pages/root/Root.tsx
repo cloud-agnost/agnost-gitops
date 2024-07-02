@@ -1,9 +1,8 @@
 import ReleaseHistory from '@/features/cluster/ReleaseHistory';
 import CreateEnvironment from '@/features/projects/CreateEnvironment';
 import EditProject from '@/features/projects/EditProject';
-import ProjectEnvironments from '@/features/projects/ProjectEnvironments';
+import Environments from '@/features/projects/Environments';
 import ProjectInviteMember from '@/features/projects/ProjectInviteMember';
-import { AddResourceDrawer } from '@/features/resources';
 import useAuthStore from '@/store/auth/authStore.ts';
 import useClusterStore from '@/store/cluster/clusterStore.ts';
 import useOrganizationStore from '@/store/organization/organizationStore.ts';
@@ -11,16 +10,6 @@ import { history, joinChannel } from '@/utils';
 import _ from 'lodash';
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
-
-const authPaths = [
-	'/login',
-	'/forgot-password',
-	'/confirm-change-email',
-	'/forgot-password',
-	'/verify-email',
-	'/complete-account-setup',
-	'/complete-account-setup/verify-email',
-];
 
 export default function Root() {
 	history.navigate = useNavigate();
@@ -55,7 +44,7 @@ export default function Root() {
 	}, []);
 
 	useEffect(() => {
-		const isAuthPath = authPaths.includes(pathname);
+		const isAuthPath = pathname === '/login';
 		if (!isAuthPath && isAuthenticated()) {
 			getUser();
 			joinChannel('cluster');
@@ -65,10 +54,9 @@ export default function Root() {
 	return (
 		<>
 			<Outlet />
-			<ProjectEnvironments />
+			<Environments />
 			<EditProject />
 			<CreateEnvironment />
-			<AddResourceDrawer />
 			<ProjectInviteMember />
 			<ReleaseHistory />
 		</>

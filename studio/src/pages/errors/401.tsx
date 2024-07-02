@@ -12,9 +12,7 @@ export default function UnauthorizedAccess() {
 				<Svg401 className='w-36 h-32' />
 
 				<h2 className='text-default text-2xl font-semibold '>{t('general.unauthorizedAccess')}</h2>
-				<p className='text-lg text-subtle font-sfCompact '>
-					{t('general.unauthorizedAccessDescription')}
-				</p>
+				<p className='text-lg text-subtle  '>{t('general.unauthorizedAccessDescription')}</p>
 			</div>
 			{isAuthenticated() ? (
 				<Button className='mt-8' variant='primary' to='/organization'>

@@ -1,10 +1,4 @@
 {
-	"menu": {
-		"projects": "Projects",
-		"apps": "Apps",
-		"resources": "Resources",
-		"settings": "Settings"
-	},
 	"create": "Create Organization",
 	"create-new": "Create New Organization",
 	"name": "Organization Name",
@@ -21,7 +15,7 @@
 	},
 	"settings": {
 		"pending-invitation": "Pending Invitations",
-		"general": "General",
+		"title": "Organization Settings",
 		"members": {
 			"title": "Members",
 			"description": "Manage your organization members",
@@ -71,5 +65,8 @@
 	"empty_organization": "You’re not a Member of any organization!",
 	"empty_organization_desc": "Contact your cluster administrator to request access to organizations.",
 	"member_delete_success": "You have successfully deleted the member from the organization.",
-	"invite_delete_success": "You have successfully deleted the invitation."
+	"invite_delete_success": "You have successfully deleted the invitation.",
+	"mark_all_as_read": "Mark all as read",
+	"view_all_notifications": "View all notifications",
+	"notifications": "Notifications"
 }

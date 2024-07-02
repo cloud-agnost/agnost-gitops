@@ -3,7 +3,7 @@ import { MENU_ITEMS } from '@/constants';
 import { AuthUserDropdown } from '@/features/auth/AuthUserDropdown';
 import { ReleaseDropdown } from '@/features/cluster';
 import { OrganizationDropdown } from '@/features/organization/OrganizationDropdown';
-import ProjectEnvironmentDropdown from '@/features/projects/ProjectEnvironmentDropdown';
+import EnvironmentDropdown from '@/features/projects/EnvironmentDropdown';
 import ProjectSelectDropdown from '@/features/projects/ProjectSelectDropdown';
 import _ from 'lodash';
 import { Link, useParams } from 'react-router-dom';
@@ -11,11 +11,11 @@ import { Button } from '../Button';
 import { Separator } from '../Separator';
 import Feedback from './Feedback';
 import './header.scss';
+import NotificationDropdown from '@/features/auth/Notifications/NotificationDropdown';
 
 export function Header() {
 	const { orgId, projectId, envId } = useParams();
-	//Todo
-	// const canViewNotf = true;
+
 	return (
 		<header className='header-menu'>
 			<div className='header-menu-left'>
@@ -40,7 +40,7 @@ export function Header() {
 					{envId && (
 						<>
 							<Separator orientation='vertical' className='h-8 transform rotate-12' />
-							<ProjectEnvironmentDropdown />
+							<EnvironmentDropdown />
 						</>
 					)}
 				</div>
@@ -69,8 +69,7 @@ export function Header() {
 				/>
 				<div className='header-menu-right-actions'>
 					<ReleaseDropdown />
-					//TODO NotificationDropdown
-					{/* {envId && canViewNotf && <NotificationDropdown />} */}
+					<NotificationDropdown />
 					<div className='header-menu-right-actions-user ml-2'>
 						<AuthUserDropdown />
 					</div>

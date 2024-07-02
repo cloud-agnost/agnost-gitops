@@ -87,7 +87,7 @@ export default function ReleaseDropdown() {
 			<DropdownMenuContent className='relative w-[21rem] h-full' align='end'>
 				<DropdownMenuLabel className='text-default flex items-center justify-between px-4 py-2'>
 					<p>{t('cluster.release_info')}</p>
-					<span className='text-subtle text-sm font-sfCompact inline-block text-right'>
+					<span className='text-subtle text-sm  inline-block text-right'>
 						{clusterReleaseInfo?.current?.release}
 					</span>
 				</DropdownMenuLabel>

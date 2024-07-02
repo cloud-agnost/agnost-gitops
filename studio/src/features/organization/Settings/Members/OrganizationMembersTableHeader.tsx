@@ -20,6 +20,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import '../../organization.scss';
+import InviteOrganization from './InviteOrganization';
 
 export default function OrganizationMembersTableHeader({ table }: { table: Table<any> }) {
 	const { t } = useTranslation();
@@ -87,21 +88,16 @@ export default function OrganizationMembersTableHeader({ table }: { table: Table
 		if (selectedTab === 'member') {
 			removeMemberMutate({
 				userIds: selectedRows.map((row) => row.original.member._id) ?? [],
-				onSuccess,
-				onError,
 			});
 		} else {
 			removeInvitationMutate({
 				tokens: selectedRows?.map((row) => row.original.token) ?? [],
-				onSuccess,
-				onError,
 			});
 		}
 	}
 	return (
-		<div className='members-filter'>
-			<SearchInput className='w-80' />
-
+		<div className='flex items-center gap-4'>
+			<SearchInput className='flex-1' />
 			<DropdownMenu>
 				<RoleDropdown type='org' onChange={setMemberRoleFilter} />
 				<DropdownMenuTrigger asChild>
@@ -136,6 +132,7 @@ export default function OrganizationMembersTableHeader({ table }: { table: Table
 					disabled={!canMultipleDelete}
 				/>
 			)}
+			<InviteOrganization />
 		</div>
 	);
 }

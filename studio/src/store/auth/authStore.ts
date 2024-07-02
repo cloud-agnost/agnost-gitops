@@ -1,5 +1,12 @@
 import { AuthService, UserService } from "@/services";
-import type { APIError, LoginParams, User } from "@/types";
+import type {
+  APIError,
+  LoginParams,
+  OrgAcceptInviteResponse,
+  ProjectAcceptInviteResponse,
+  User,
+  UserDataToRegister,
+} from "@/types";
 import { joinChannel, leaveChannel } from "@/utils";
 import { create } from "zustand";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
@@ -41,15 +48,17 @@ type Actions = {
     onError: (err: APIError) => void
   ) => Promise<void>;
   orgAcceptInvite: (
+    req: UserDataToRegister
+  ) => Promise<OrgAcceptInviteResponse>;
+  orgAcceptInviteWithSession: (
     token: string
-  ) => Promise<{
-    user: User;
-  }>;
+  ) => Promise<OrgAcceptInviteResponse>;
   projectAcceptInvite: (
+    req: UserDataToRegister
+  ) => Promise<ProjectAcceptInviteResponse>;
+  projectAcceptInviteWithSession: (
     token: string
-  ) => Promise<{
-    user: User;
-  }>;
+  ) => Promise<ProjectAcceptInviteResponse>;
   changeName: (name: string) => Promise<User>;
   changeEmail: (email: string, password: string) => Promise<string>;
   changeAvatar: (avatar: File) => Promise<User>;
@@ -90,7 +99,7 @@ const useAuthStore = create<AuthState & Actions>()(
           },
           login: async (req: LoginParams) => {
             try {
-              const user = await AuthService.login(req.email, req.password);
+              const user = await AuthService.login(req);
               get().setUser(user);
 
               return user;
@@ -158,18 +167,15 @@ const useAuthStore = create<AuthState & Actions>()(
               onError(error as APIError);
             }
           },
-          async orgAcceptInvite(token: string) {
+          async orgAcceptInvite(req: UserDataToRegister) {
             try {
-              const res = await UserService.orgAcceptInvite(token);
-              set({ isAccepted: true, user: res.user });
+              const res = await UserService.orgAcceptInvite(req);
+              get().setUser(res.user);
               joinChannel(res.org._id);
               if (get().isAuthenticated()) {
-                useOrganizationStore.setState?.({
-                  organizations: [
-                    ...useOrganizationStore.getState().organizations,
-                    res.org,
-                  ],
-                });
+                useOrganizationStore.setState?.((state) => ({
+                  organizations: [...state.organizations, res.org],
+                }));
               }
               return res;
             } catch (err) {
@@ -177,17 +183,49 @@ const useAuthStore = create<AuthState & Actions>()(
               throw err;
             }
           },
-          async projectAcceptInvite(token: string) {
+          async orgAcceptInviteWithSession(token: string) {
             try {
-              const res = await UserService.projectAcceptInvite(token);
-              set({ isAccepted: true, user: res.user });
-              joinChannel(res.project._id);
+              const res = await UserService.orgAcceptInviteWithSession(token);
+              get().setUser(res.user);
+              joinChannel(res.org._id);
               if (get().isAuthenticated()) {
-                if (get().isAuthenticated()) {
-                  useProjectStore.setState?.((state) => ({
-                    projects: [...state.projects, res.project],
-                  }));
-                }
+                useOrganizationStore.setState?.((state) => ({
+                  organizations: [...state.organizations, res.org],
+                }));
+              }
+              return res;
+            } catch (err) {
+              set({ error: err as APIError });
+              throw err;
+            }
+          },
+          async projectAcceptInvite(req: UserDataToRegister) {
+            try {
+              const res = await UserService.projectAcceptInvite(req);
+              get().setUser(res.user);
+              joinChannel(res.org._id);
+              if (get().isAuthenticated()) {
+                useProjectStore.setState?.((state) => ({
+                  projects: [...state.projects, res.project],
+                }));
+              }
+              return res;
+            } catch (err) {
+              set({ error: err as APIError });
+              throw err;
+            }
+          },
+          async projectAcceptInviteWithSession(token: string) {
+            try {
+              const res = await UserService.projectAcceptInviteWithSession(
+                token
+              );
+              get().setUser(res.user);
+              joinChannel(res.org._id);
+              if (get().isAuthenticated()) {
+                useProjectStore.setState?.((state) => ({
+                  projects: [...state.projects, res.project],
+                }));
               }
               return res;
             } catch (err) {
