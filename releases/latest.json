@@ -1,5 +1,5 @@
 {
-   "release": "v1.0.2",
+   "release": "v0.0.1",
    "modules": {
       "monitor": "v1.0.2",
       "platform": "v1.0.1",
