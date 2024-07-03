@@ -1,6 +1,6 @@
 {
    "name": "platform-worker",
-   "version": "v0.0.1",
+   "version": "v0.0.2",
    "description": "Platform worker api server",
    "main": "server.js",
    "type": "module",

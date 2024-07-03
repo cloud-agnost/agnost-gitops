@@ -1,6 +1,6 @@
 {
    "name": "engine-core",
-   "version": "v0.0.1",
+   "version": "v0.0.2",
    "description": "Engine core api server",
    "main": "server.js",
    "type": "module",
