@@ -177,7 +177,19 @@ export async function getContainerLogs({ container, environment }) {
 		const logPromises = payload.map((pod) => {
 			const podName = pod.name;
 			return k8sCoreApi
-				.readNamespacedPodLog(podName, environment.iid, container.iid)
+				.readNamespacedPodLog(
+					podName,
+					environment.iid,
+					container.template ? undefined : container.iid,
+					undefined,
+					undefined,
+					undefined,
+					false,
+					undefined,
+					undefined,
+					500,
+					false
+				)
 				.then((logs) => ({
 					podName: podName,
 					logs: logs.body ? logs.body.split("\n") : [],
