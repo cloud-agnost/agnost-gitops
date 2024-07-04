@@ -222,7 +222,7 @@ export async function getContainerTaskRuns({ container }) {
 		const taskruns = body.items
 			.filter((taskrun) =>
 				taskrun.metadata.labels["triggers.tekton.dev/eventlistener"]?.includes(
-					container.iid
+					container.slug
 				)
 			)
 			.map((taskrun) => {
