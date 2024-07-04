@@ -35,7 +35,7 @@ const router = express.Router({ mergeParams: true });
 /*
 @route      /v1/cluster/setup-status
 @method     GET
-@desc       Returns true if cluster set-up is complete otherwiser returns false
+@desc       Returns true if cluster set-up is complete otherwise returns false
 @access     public
 */
 router.get("/setup-status", async (req, res) => {
@@ -340,6 +340,66 @@ router.get(
 	async (req, res) => {
 		try {
 			res.json();
+		} catch (error) {
+			helper.handleError(req, res, error);
+		}
+	}
+);
+
+/*
+@route      /v1/cluster/reverse-proxy-url
+@method     PUT
+@desc       Returns information whether custom domains can be added to the cluster or not
+@access     public
+*/
+router.put(
+	"/reverse-proxy-url",
+	checkContentType,
+	authSession,
+	validateCluster,
+	applyRules("set-reverse-proxy-url"),
+	validate,
+	async (req, res) => {
+		try {
+			const { user, cluster } = req;
+			const { reverseProxyURL } = req.body;
+
+			if (!user.isClusterOwner) {
+				return res.status(401).json({
+					error: "Not Authorized",
+					details:
+						"You are not authorized to update cluster reverse proxy URL. Only the cluster owner can manage cluster settings.",
+					code: ERROR_CODES.unauthorized,
+				});
+			}
+
+			if (reverseProxyURL) {
+				// Update cluster reverse proxy URL
+				let updatedCluster = await clsCtrl.updateOneById(
+					cluster._id,
+					{
+						reverseProxyURL,
+					},
+					{},
+					{
+						cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+					}
+				);
+
+				return res.json(updatedCluster);
+			} else {
+				// Unset cluster reverse proxy URL
+				let updatedCluster = await clsCtrl.updateOneById(
+					cluster._id,
+					{},
+					{ reverseProxyURL: "" },
+					{
+						cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+					}
+				);
+
+				return res.json(updatedCluster);
+			}
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}

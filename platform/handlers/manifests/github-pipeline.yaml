@@ -30,7 +30,7 @@ spec:
     - name: gitrepo
       value: $(body.repository.git_url)
     - name: gitcommitter
-      value: $(body.head_commit.committer.username)
+      value: $(body.head_commit.committer.name)
     - name: gitcommiturl
       value: $(body.head_commit.url)
     - name: gitrepourl
@@ -82,7 +82,7 @@ spec:
           - name: ws
           steps:
           - name: setup
-            image: alpine
+            image: bitnami/git:2.44.0
             env:
             - name: GIT_REPO
               value: $(tt.params.gitrepo)
@@ -105,34 +105,34 @@ spec:
             - name: GIT_COMMIT_TIMESTAMP
               value: $(tt.params.gitcommittimestamp)
             script: |
-              #!/bin/sh
+              #!/bin/bash
+              export URL=$(echo $(tt.params.gitrepourl) | sed "s|://|://$(tt.params.githubpat)@|")
+              export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
+              cd $(workspaces.ws.path)
+              git clone ${URL} -b $(tt.params.gitbranch)
+              cd ${REPO_NAME}
               echo "$(tt.params.containerregistry)/$(tt.params.imagename):$(echo $(tt.params.gitrevision) | head -c 7)" > $(workspaces.ws.path)/image
           - name: build
             image: gcr.io/kaniko-project/executor:v1.21.1-debug
             script: |
               #!/busybox/sh
               export IMAGE=$(cat $(workspaces.ws.path)/image)
-              export CONTEXT=$(echo $(tt.params.gitrepo) | sed "s|git://|git://$(tt.params.githubpat)@|")
-              echo "Context: ${CONTEXT}"
-              echo "Sub path: $(tt.params.gitsubpath)"
+              export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
+              echo "Context: $(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath)"
               echo "Dockerfile: $(tt.params.dockerfile)"
               echo "Image: ${IMAGE}"
               if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 /kaniko/executor \
                   --destination=${IMAGE} \
-                  --context=${CONTEXT} \
-                  --context-sub-path=$(tt.params.gitsubpath) \
-                  --git branch=$(tt.params.gitbranch) \
+                  --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
                   --dockerfile=$(tt.params.dockerfile) \
                   --no-push \
                   --tar-path=$(workspaces.ws.path)/image.tar
               else
                 /kaniko/executor \
                   --destination=${IMAGE} \
-                  --context=${CONTEXT} \
-                  --context-sub-path=$(tt.params.gitsubpath) \
-                  --dockerfile=$(tt.params.dockerfile) \
-                  --git branch=$(tt.params.gitbranch)
+                  --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
+                  --dockerfile=$(tt.params.dockerfile)
               fi
           - image: quay.io/skopeo/stable:latest
             name: local-push

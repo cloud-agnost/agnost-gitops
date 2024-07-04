@@ -1,3 +1,4 @@
+import config from "config";
 import k8s from "@kubernetes/client-node";
 
 // Kubernetes client configuration
@@ -187,7 +188,7 @@ export async function getContainerLogs({ container, environment }) {
 					false,
 					undefined,
 					undefined,
-					500,
+					config.get("general.logLimitNumberOfLines"),
 					false
 				)
 				.then((logs) => ({

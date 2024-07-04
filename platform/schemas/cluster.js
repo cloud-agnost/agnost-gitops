@@ -47,6 +47,11 @@ export const ClusterModel = mongoose.model(
 				type: [String],
 				index: true,
 			},
+			// If the kubernetes cluster is running locally without a public access then it is possible to use a reverse proxy to expose the services such as ngrok
+			reverseProxyURL: {
+				type: String,
+				index: true,
+			},
 			// The ip addresses or hostnames of the cluster
 			ips: {
 				type: [String],
@@ -88,6 +93,14 @@ export const applyRules = (type) => {
 					.trim()
 					.notEmpty()
 					.withMessage("Required field, cannot be left empty"),
+			];
+		case "set-reverse-proxy-url":
+			return [
+				body("reverseProxyURL")
+					.trim()
+					.optional()
+					.isURL({ require_tld: false, require_protocol: true })
+					.withMessage("Invalid URL"),
 			];
 		case "add-domain":
 			return [

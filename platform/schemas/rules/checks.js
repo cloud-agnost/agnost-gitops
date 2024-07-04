@@ -72,7 +72,18 @@ export const checkRepoOrRegistry = (containerType) => {
 			.withMessage("Required field, cannot be left empty")
 			.bail()
 			.isIn(["repo", "registry"])
-			.withMessage(`Unsupported ${containerType} source type`),
+			.withMessage(`Unsupported ${containerType} source type`)
+			.bail()
+			.if((value) => value === "repo")
+			.custom(async (value, { req }) => {
+				const cluster = await getClusterRecord();
+				if (cluster.domains?.length === 0 && !cluster.reverseProxyURL) {
+					throw new Error(
+						`You have neither set your cluster's domain nor the reverse proxy URL. A repository source can only be assigned if the cluster domain or reverse proxy URL has been set.`
+					);
+				}
+				return true;
+			}),
 	];
 };
 
@@ -303,7 +314,7 @@ export const checkNetworking = (containerType, actionType) => {
 						const cluster = await getClusterRecord();
 						if (cluster.domains?.length === 0) {
 							throw new Error(
-								`You have not set the domain of your cluster yet. Subdomain based ingress for a container can only be activiated after the cluster domain has been set.`
+								`You have not set the domain of your cluster yet. Subdomain based ingress for a container can only be activated after the cluster domain has been set.`
 							);
 						}
 						return true;
@@ -330,7 +341,7 @@ export const checkNetworking = (containerType, actionType) => {
 						const cluster = await getClusterRecord();
 						if (cluster.domains?.length === 0) {
 							throw new Error(
-								`You have not set the domain of your cluster yet. Custom domains can only be activiated after the cluster domain has been set.`
+								`You have not set the domain of your cluster yet. Custom domains can only be created after the cluster domain has been set.`
 							);
 						}
 						return true;

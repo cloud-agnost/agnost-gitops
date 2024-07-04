@@ -6,7 +6,6 @@ import ERROR_CODES from "../config/errorCodes.js";
 
 // Checks whether the cluster ips are private or not. Before this middleware the validateCluster middleware is used to validate the cluster
 export const validateClusterIPs = async (req, res, next) => {
-	return next();
 	try {
 		let clusterIPs = req.cluster.ips;
 		// If the cluster ips are not available in the database, fetch them and update the cluster object

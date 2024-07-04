@@ -29,7 +29,7 @@ spec:
             - name: SOLVER_NAME
               value: "agnost"
             - name: RELEASE_NUMBER
-              value: "v1.0.0"
+              value: "v0.0.2"
           ports:
             - name: https
               containerPort: 443

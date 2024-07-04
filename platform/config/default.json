@@ -42,6 +42,7 @@
 		"minDatabaseSizeMi": 512,
 		"maxClusterCustomDomains": 3,
 		"tcpProxyPortStart": 35000,
+		"logLimitNumberOfLines": 500,
 		"containers": {
 			"minMillicores": 10,
 			"maxMillicores": 1000,

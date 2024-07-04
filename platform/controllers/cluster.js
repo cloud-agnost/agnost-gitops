@@ -20,14 +20,9 @@ class ClusterController extends BaseController {
 	async initializeCluster(session, user) {
 		// Check if there is already a cluster configuration or not
 		// If there is a configuration this means that the cluster has already been initialized
-		const cluster = await this.getOneByQuery(
-			{
-				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-			},
-			{
-				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
-			}
-		);
+		const cluster = await this.getOneByQuery({
+			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+		});
 
 		if (cluster) return;
 

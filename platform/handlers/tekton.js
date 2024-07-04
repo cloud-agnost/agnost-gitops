@@ -102,8 +102,8 @@ export async function createTektonPipeline(
 						"/tekton-" + pipelineId + "(/|$)(.*)";
 					resource.spec.rules[0].http.paths[0].backend.service.name +=
 						resourceNameSuffix;
-					// If cluster has SSL settings and custom domains then also add these to the API server ingress
-					if (cluster.domains.length > 0) {
+					// If cluster has SSL settings and a custom domain then also add these to the API server ingress
+					if (cluster.domains.length > 0 || cluster.reverseProxyURL) {
 						resource.metadata.annotations["kubernetes.io/ingress.class"] =
 							"nginx";
 
@@ -245,6 +245,14 @@ export async function createTektonPipeline(
 		{
 			webhookUrl = "https://" + cluster.domains[0] + `/tekton-${pipelineId}`;
 			sslVerification = true;
+		}
+	} else if (cluster.reverseProxyURL) {
+		// Pick the domain part from the reverse proxy URL
+		const match = cluster.reverseProxyURL.match(/https?:\/\/([^\/]+)/);
+		if (match) {
+			const domain = match[1];
+			webhookUrl = "https://" + domain + `/tekton-${pipelineId}`;
+			sslVerification = false;
 		}
 	} else {
 		webhookUrl = "http://" + cluster.ips[0] + `/tekton-${pipelineId}`;
