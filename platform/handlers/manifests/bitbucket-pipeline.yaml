@@ -30,7 +30,7 @@ spec:
     - name: gitrepo
       value: "git@bitbucket.org:$(body.repository.full_name).git"
     - name: gitcommitter
-      value: $(body.push.changes[0].commits[0].author.user.username)
+      value: $(body.actor.display_name)
     - name: gitcommiturl
       value: $(body.push.changes[0].commits[0].links.html.href)
     - name: gitrepourl
