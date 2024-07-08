@@ -250,8 +250,6 @@ export default function CreateContainerDrawer() {
 		}
 	}, [isCreateContainerDialogOpen]);
 
-	console.log({ err: form.formState.errors });
-
 	return (
 		<Drawer open={isCreateContainerDialogOpen} onOpenChange={onClose}>
 			<DrawerContent position='right' size='lg' className='h-full'>

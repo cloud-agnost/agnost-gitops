@@ -40,8 +40,6 @@ export default function Logs() {
 		}
 	}, [data]);
 
-	console.log({ selectedLogs, selectedPod });
-
 	return (
 		<div className='h-full space-y-4 flex flex-col'>
 			<Select value={selectedPod?.name} onValueChange={onSelect}>
