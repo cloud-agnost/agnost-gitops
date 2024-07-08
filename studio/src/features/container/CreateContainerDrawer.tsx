@@ -20,6 +20,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import CronJobFrom from './CreateForms/CronJobFrom';
 import DeploymentForm from './CreateForms/DeploymentForm';
 import StatefulForm from './CreateForms/StatefulForm';
+import { useToast } from '@/hooks';
 
 const defaultValues: Partial<CreateContainerParams> = {
 	repoOrRegistry: 'repo',
@@ -88,6 +89,7 @@ const defaultValues: Partial<CreateContainerParams> = {
 
 export default function CreateContainerDrawer() {
 	const { t } = useTranslation();
+	const { toast } = useToast();
 	const {
 		closeCreateContainerDialog,
 		createContainer,
@@ -107,7 +109,10 @@ export default function CreateContainerDrawer() {
 			onClose();
 		},
 		onError: (error) => {
-			console.error(error);
+			toast({
+				title: error.details,
+				action: 'error',
+			});
 		},
 	});
 	const onSubmit = (data: CreateContainerParams) => {

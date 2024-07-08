@@ -33,7 +33,6 @@ export default function ReverseProxyURL() {
 	const { mutate: setProxy, isPending } = useMutation({
 		mutationFn: setReverseProxyURL,
 		onSuccess: () => {
-			form.reset();
 			toast({
 				action: 'success',
 				title: t('cluster.reverseProxyURLSuccess') as string,
@@ -52,34 +51,32 @@ export default function ReverseProxyURL() {
 	};
 
 	return (
-		<div>
-			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-					<FormField
-						control={form.control}
-						name='reverseProxyURL'
-						render={({ field }) => (
-							<FormItem className='flex-1'>
-								<FormControl>
-									<Input
-										error={!!form.formState.errors.reverseProxyURL}
-										placeholder={t('forms.placeholder', {
-											label: t('cluster.domain.title'),
-										}).toString()}
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<div className='flex justify-end'>
-						<Button type='submit' size='lg' loading={isPending}>
-							{t('general.save')}
-						</Button>
-					</div>
-				</form>
-			</Form>
-		</div>
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+				<FormField
+					control={form.control}
+					name='reverseProxyURL'
+					render={({ field }) => (
+						<FormItem className='flex-1'>
+							<FormControl>
+								<Input
+									error={!!form.formState.errors.reverseProxyURL}
+									placeholder={t('forms.placeholder', {
+										label: t('cluster.domain.title'),
+									}).toString()}
+									{...field}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<div className='flex justify-end'>
+					<Button type='submit' size='lg' loading={isPending}>
+						{t('general.save')}
+					</Button>
+				</div>
+			</form>
+		</Form>
 	);
 }

@@ -1,4 +1,3 @@
-import { Feedback } from '@/components/Alert';
 import { Button } from '@/components/Button';
 import { Description } from '@/components/Description';
 import { Form } from '@/components/Form';
@@ -77,13 +76,5 @@ export default function CustomDomains() {
 				</Form>
 			</div>
 		</div>
-	) : (
-		<div className='h-full flex flex-col items-center justify-center'>
-			<Feedback
-				title={clusterDomainError?.error}
-				description={clusterDomainError?.details}
-				className='max-w-2xl'
-			/>
-		</div>
-	);
+	) : null;
 }
