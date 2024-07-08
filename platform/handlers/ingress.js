@@ -43,7 +43,6 @@ export async function createIngress(definition, name, namespace) {
 			},
 		},
 		spec: {
-			ingressClassName: "nginx",
 			rules: [],
 		},
 	};
@@ -206,7 +205,6 @@ export async function createCustomDomainIngress(
 			},
 		},
 		spec: {
-			ingressClassName: "nginx",
 			tls: [
 				{
 					hosts: [definition.customDomain.domain],
