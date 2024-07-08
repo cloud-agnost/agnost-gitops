@@ -89,7 +89,7 @@ export default function BuildLogs() {
 			<LogViewer logs={logs} className='flex-1' />
 			<p
 				className={cn(
-					' text-xs',
+					'text-xs',
 					selectedLog?.status === 'success' && 'text-elements-green',
 					selectedLog?.status === 'error' && 'text-elements-red',
 				)}

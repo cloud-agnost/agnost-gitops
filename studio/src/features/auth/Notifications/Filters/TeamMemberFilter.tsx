@@ -42,7 +42,7 @@ const formatOptionLabel = ({ label, value }: FormatOptionLabelProps<Organization
 
 export default function TeamMemberFilter() {
 	const form = useFormContext<z.infer<typeof NotificationFilterSchema>>();
-	const [searchParams, setSearchParams] = useSearchParams();
+	const [searchParams] = useSearchParams();
 	const { orgId } = useParams() as Record<string, string>;
 	const { getOrganizationMembers } = useOrganizationStore();
 	const { data: members } = useQuery({

@@ -1,10 +1,9 @@
 import { cn } from '@/utils';
-import { AppWindow, Bell, Envelope, Key, ShippingContainer, Users } from '@phosphor-icons/react';
+import { Bell, Envelope, ShippingContainer, Users } from '@phosphor-icons/react';
 import { ProjectorScreenChart } from '@phosphor-icons/react/dist/ssr';
 import React, { ElementType } from 'react';
 
-export type Modules = 'org' | 'app' | 'invitation' | 'project' | 'container';
-
+export type Modules = 'org' | 'invitation' | 'project' | 'container' | 'notification';
 interface EmptyStateProps {
 	title: string;
 	children?: React.ReactNode;
@@ -14,9 +13,7 @@ interface EmptyStateProps {
 
 export default function EmptyState({ type, title, className, children }: EmptyStateProps) {
 	const ICON_MAP: Record<string, ElementType> = {
-		apiKey: Key,
 		invitation: Envelope,
-		app: AppWindow,
 		org: Users,
 		notification: Bell,
 		project: ProjectorScreenChart,

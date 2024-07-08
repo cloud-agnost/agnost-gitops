@@ -9,6 +9,7 @@ import { DataTable } from '@/components/DataTable';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ProjectInvitationsColumns } from './Settings/ProjectInvitationsColumns';
+import ProjectInvitationFilter from './ProjectInvitationFilter';
 
 export default function ProjectInvitations() {
 	const { invitations, getProjectInvitations, lastFetchedInvitationsPage, project } =
@@ -57,7 +58,7 @@ export default function ProjectInvitations() {
 				dataLength={invitations.length}
 			>
 				<div className='space-y-4'>
-					{/*//TODO <AppInvitationFilter table={table} /> */}
+					<ProjectInvitationFilter table={table} />
 					<Loading loading={isFetching && !isFetchingNextPage} />
 					{!(isFetching && !isFetchingNextPage) && <DataTable<Invitation> table={table} />}
 				</div>

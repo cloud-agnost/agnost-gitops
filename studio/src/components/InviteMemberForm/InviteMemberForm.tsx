@@ -14,47 +14,17 @@ import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
 
 export const InviteMemberSchema = z.object({
-	member: z
-		.array(
-			z
-				.object({
-					email: z.string().email().optional().or(z.literal('')),
-					role: z.string().optional().or(z.literal('')),
-				})
-				.superRefine((val, ctx) => {
-					const { email, role } = val;
-					if (!role) {
-						ctx.addIssue({
-							code: z.ZodIssueCode.custom,
-							message: 'Role is required',
-							path: ['role'],
-						});
-					}
-					if (!email) {
-						ctx.addIssue({
-							code: z.ZodIssueCode.custom,
-							message: 'Email is required',
-							path: ['email'],
-						});
-					}
-				}),
-		)
-		.superRefine((val, ctx) => {
-			const emails = val.map((v) => v.email).filter(Boolean);
-			emails.forEach((item, index) => {
-				const hasDuplicate = emails.filter((email) => email === item).length > 1;
-				if (hasDuplicate) {
-					ctx.addIssue({
-						code: z.ZodIssueCode.custom,
-						message: 'Emails must be unique',
-						path: [`${index}.email`],
-					});
-				}
-			});
+	member: z.array(
+		z.object({
+			name: z.string().optional(),
+			role: z.string({
+				required_error: 'Role is required',
+			}),
 		}),
+	),
 });
 interface InviteMemberFormProps {
-	type: 'app' | 'org' | 'project';
+	type: 'org' | 'project';
 	loading: boolean;
 	actions?: React.ReactNode;
 	title?: string;
@@ -101,7 +71,7 @@ export default function InviteMemberForm({
 
 	useEffect(() => {
 		if (fields.length === 0) {
-			append({ email: '', role: '' });
+			append({ name: '', role: '' });
 		}
 	}, []);
 	return (
@@ -113,14 +83,14 @@ export default function InviteMemberForm({
 					<div className='flex gap-2' key={f.id}>
 						<FormField
 							control={form.control}
-							name={`member.${index}.email`}
+							name={`member.${index}.name`}
 							render={({ field }) => (
 								<FormItem className='flex-1'>
-									{index === 0 && <FormLabel>Email</FormLabel>}
+									{index === 0 && <FormLabel>Name</FormLabel>}
 									<FormControl>
 										<Input
-											placeholder='Email'
-											error={!!form.formState.errors.member?.[index]?.email}
+											placeholder='Name'
+											error={!!form.formState.errors.member?.[index]?.name}
 											{...field}
 										/>
 									</FormControl>
@@ -187,7 +157,7 @@ export default function InviteMemberForm({
 							disabled={disabled}
 							variant='text'
 							onClick={() => {
-								append({ email: '', role: '' });
+								append({ name: '', role: '' });
 							}}
 						>
 							<Plus size={16} />

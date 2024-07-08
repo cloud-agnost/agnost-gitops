@@ -81,7 +81,7 @@ export default function ProjectMembers({ loading }: { loading: boolean }) {
 					/>
 
 					<Button variant='primary' onClick={() => openInviteMemberModal(project as Project)}>
-						{t('project.invite')}
+						{t('general.addMembers')}
 					</Button>
 				</div>
 			</div>

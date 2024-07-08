@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Environment } from "./environment";
-import { NameSchema } from "./schema";
+import { ChangeNameFormSchema, NameSchema } from "./schema";
 import { UpdateRoleRequest } from "./type";
 
 export enum ProjectRole {
@@ -90,7 +90,7 @@ export interface Permission {
 }
 
 export const CreateProjectSchema = z.object({
-  name: NameSchema,
+  name: ChangeNameFormSchema.shape.name,
   envName: NameSchema,
 });
 
@@ -104,7 +104,7 @@ export interface UpdateProjectParams {
   orgId: string;
 }
 export interface ProjectMemberRequest {
-  email: string;
+  name: string;
   role: ProjectRole | "";
   uiBaseURL: string;
 }

@@ -16,54 +16,66 @@ import ContainerFormTitle from '../config/ContainerFormLayout';
 import { useEffect } from 'react';
 import useContainerStore from '@/store/container/containerStore';
 export default function StatefulForm() {
-	const { t } = useTranslation();
-	const form = useFormContext<CreateContainerParams>();
-	const { container } = useContainerStore();
-	useEffect(() => {
-		form.setValue(
-			'statefulSetConfig.desiredReplicas',
-			container?.statefulSetConfig?.desiredReplicas ?? 1,
-		);
-		form.setValue(
-			'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted',
-			container?.statefulSetConfig?.persistentVolumeClaimRetentionPolicy?.whenDeleted ?? 'Retain',
-		);
-		form.setValue(
-			'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled',
-			container?.statefulSetConfig?.persistentVolumeClaimRetentionPolicy?.whenScaled ?? 'Retain',
-		);
-	}, [container]);
+	const { template } = useContainerStore();
+	useDefaultFormValues();
+
+	const visibleSections = template?.config?.visibleSections;
+
+	const renderSection = (key: string, Component: React.FC): React.ReactNode => {
+		if (!visibleSections || visibleSections.includes(key)) {
+			return <Component />;
+		}
+		return null;
+	};
 
 	return (
 		<>
-			<ContainerFormTitle
-				title={t('container.general')}
-				descriptionI18nKey='container.stateful.description'
-				icon={<IdentificationCard size={20} />}
-			>
-				<div className='flex justify-center gap-4'>
-					<FormField
-						control={form.control}
-						name='name'
-						render={({ field }) => (
-							<FormItem className='flex-1'>
-								<FormLabel>{t('container.stateful.name')}</FormLabel>
-								<FormControl>
-									<Input
-										error={Boolean(form.formState.errors.name)}
-										placeholder={
-											t('forms.placeholder', {
-												label: t('container.stateful.name'),
-											}) ?? ''
-										}
-										{...field}
-									/>
-								</FormControl>
-								<FormDescription>{t('forms.max64.description')}</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+			{renderSection('general', GeneralSection)}
+			{renderSection('source', SourceConfig)}
+			{renderSection('networking', Networking)}
+			{renderSection('podConfig', PodConfiguration)}
+			{renderSection('probes', Probes)}
+			{renderSection('storageConfig', StorageConfig)}
+		</>
+	);
+}
+
+const GeneralSection = () => {
+	const { t } = useTranslation();
+	const form = useFormContext<CreateContainerParams>();
+	const { template } = useContainerStore();
+	const visibleFields = template?.config?.visibleFields ?? [];
+
+	return (
+		<ContainerFormTitle
+			title={t('container.general')}
+			descriptionI18nKey='container.stateful.description'
+			icon={<IdentificationCard size={20} />}
+		>
+			<div className='flex justify-center gap-4'>
+				<FormField
+					control={form.control}
+					name='name'
+					render={({ field }) => (
+						<FormItem className='flex-1'>
+							<FormLabel>{t('container.stateful.name')}</FormLabel>
+							<FormControl>
+								<Input
+									error={Boolean(form.formState.errors.name)}
+									placeholder={
+										t('forms.placeholder', {
+											label: t('container.stateful.name'),
+										}) ?? ''
+									}
+									{...field}
+								/>
+							</FormControl>
+							<FormDescription>{t('forms.max64.description')}</FormDescription>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				{(visibleFields?.includes('deploymentConfig.desiredReplicas') ?? true) && (
 					<FormField
 						control={form.control}
 						name='statefulSetConfig.desiredReplicas'
@@ -86,14 +98,28 @@ export default function StatefulForm() {
 							</FormItem>
 						)}
 					/>
-				</div>
-			</ContainerFormTitle>
-
-			<SourceConfig />
-			<Networking />
-			<PodConfiguration />
-			<Probes />
-			<StorageConfig />
-		</>
+				)}
+			</div>
+		</ContainerFormTitle>
 	);
-}
+};
+
+const useDefaultFormValues = () => {
+	const form = useFormContext();
+	const { container } = useContainerStore();
+
+	useEffect(() => {
+		form.setValue(
+			'statefulSetConfig.desiredReplicas',
+			container?.statefulSetConfig?.desiredReplicas ?? 1,
+		);
+		form.setValue(
+			'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted',
+			container?.statefulSetConfig?.persistentVolumeClaimRetentionPolicy?.whenDeleted ?? 'Retain',
+		);
+		form.setValue(
+			'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled',
+			container?.statefulSetConfig?.persistentVolumeClaimRetentionPolicy?.whenScaled ?? 'Retain',
+		);
+	}, [container, form]);
+};

@@ -55,5 +55,10 @@
 	"activate": "Activate",
 	"deactivate": "Deactivate",
 	"gitOpsActive": "GitOps is active for this cluster.",
-	"gitOpsActiveDescription": "You can  deploy any app in any programming language hosted on your Git repository automatically."
+	"gitOpsActiveDescription": "You can  deploy any app in any programming language hosted on your Git repository automatically.",
+	"setReverseProxy": "Set Reverse Proxy URL",
+	"setReverseProxyDescription": "Set the reverse proxy URL for your cluster.",
+	"reverseProxyURL": "Reverse Proxy URL",
+	"reverseProxyURLDescription": "Enter the reverse proxy URL for your cluster.",
+	"reverseProxyURLSuccess": "Reverse proxy URL has been set successfully."
 }

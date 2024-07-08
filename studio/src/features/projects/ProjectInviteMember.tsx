@@ -55,10 +55,10 @@ export default function ProjectInviteMember() {
 			orgId,
 			projectId: project?._id,
 			members: data.member
-				.filter((item) => item.email !== '' && item.role !== '')
+				.filter((item) => item.name !== '' && item.role !== '')
 				.map((member) => ({
 					role: member.role as ProjectRole,
-					email: member.email as string,
+					name: member.name as string,
 					uiBaseURL: window.location.origin,
 				})),
 			uiBaseURL: window.location.origin,

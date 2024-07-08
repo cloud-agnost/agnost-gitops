@@ -18,7 +18,7 @@ export default function ProjectFilter() {
 	});
 
 	useEffect(() => {
-		refetch();
+		if (form.watch('orgId')) refetch();
 	}, [form.watch('orgId')]);
 
 	return (
@@ -35,7 +35,7 @@ export default function ProjectFilter() {
 								value={field.value}
 								onValueChange={(val) => {
 									field.onChange(val);
-									form.setValue('envId', undefined);
+									form.setValue('envId', '');
 								}}
 								disabled={!form.watch('orgId')}
 							>
@@ -62,7 +62,4 @@ export default function ProjectFilter() {
 			/>
 		</div>
 	);
-}
-function refetch() {
-	throw new Error('Function not implemented.');
 }

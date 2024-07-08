@@ -3,7 +3,6 @@ import { DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
 import { Loading } from '@/components/Loading';
 import { SearchInput } from '@/components/SearchInput';
-import { SelectedRowButton } from '@/components/Table';
 import { TableLoading } from '@/components/Table/Table';
 import { MODULE_PAGE_SIZE } from '@/constants';
 import ContainerColumns from '@/features/container/ContainerColumns';
@@ -23,8 +22,8 @@ export default function EnvironmentContainers() {
 	const { containers, getContainersInEnv, lastFetchedPage } = useContainerStore();
 	const { orgId, projectId, envId } = useParams() as Record<string, string>;
 	const [searchParams, setSearchParams] = useSearchParams();
-	// Todo
-	const canCreate = true;
+
+	// Todo const canCreate = true;
 
 	const table = useTable<Container>({
 		data: containers,
@@ -101,15 +100,6 @@ export default function EnvironmentContainers() {
 								className='sm:w-[450px] flex-1'
 							/>
 
-							{table.getSelectedRowModel().rows.length ? (
-								<SelectedRowButton
-									count={table.getSelectedRowModel().rows.length}
-									onReset={() => table.toggleAllRowsSelected(false)}
-									//TODO onMultipleDelete={onMultipleDelete}
-									onDelete={() => {}}
-									disabled={!canCreate}
-								/>
-							) : null}
 							<CreateContainerButton />
 						</div>
 					</div>

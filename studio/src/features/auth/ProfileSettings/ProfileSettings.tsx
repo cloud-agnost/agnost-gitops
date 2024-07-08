@@ -1,21 +1,14 @@
-import { useTranslation } from 'react-i18next';
-import useAuthStore from '@/store/auth/authStore.ts';
 import { CopyInput } from '@/components/CopyInput';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
+import { ChangeUserAvatar } from '@/features/auth/ChangeAvatar';
 import { ChangeName } from '@/features/auth/ChangeName';
 import { DeleteAccount } from '@/features/auth/DeleteAccount';
-import { ChangeUserAvatar } from '@/features/auth/ChangeAvatar';
+import useAuthStore from '@/store/auth/authStore.ts';
 import { ReactNode } from 'react';
-import {
-	Drawer,
-	DrawerContent,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerTrigger,
-} from '@/components/Drawer';
-import { DropdownMenuItem } from '@/components/Dropdown';
-import { cn } from '@/utils';
-import { GearSix } from '@phosphor-icons/react';
+import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { Notifications } from '../Notifications';
+import { UserProviders } from '../UserProviders';
 
 interface SettingsFormItemProps {
 	title: string;
@@ -25,16 +18,17 @@ interface SettingsFormItemProps {
 
 export default function ProfileSettingsForm() {
 	const { t } = useTranslation();
-	const { user } = useAuthStore();
+	const { user, isProfileSettingsOpen, toggleProfileSettings } = useAuthStore();
+	const [_, setSearchParams] = useSearchParams();
+	const onOpenChange = (open: boolean) => {
+		if (!open) {
+			toggleProfileSettings();
+		}
+		setSearchParams({});
+	};
 
 	return (
-		<Drawer>
-			<DrawerTrigger className='dropdown-item'>
-				<div className={cn('flex items-center gap-2')}>
-					<GearSix className='text-icon-base text-lg' />
-					{t('general.account_settings')}
-				</div>
-			</DrawerTrigger>
+		<Drawer open={isProfileSettingsOpen} onOpenChange={onOpenChange}>
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>{t('profileSettings.title')}</DrawerTitle>
@@ -58,6 +52,12 @@ export default function ProfileSettingsForm() {
 						description={t('profileSettings.your_avatar_description')}
 					>
 						<ChangeUserAvatar />
+					</ProfileSettingsFormItem>
+					<ProfileSettingsFormItem
+						title={t('profileSettings.your_providers')}
+						description={t('profileSettings.your_providers_description')}
+					>
+						<UserProviders />
 					</ProfileSettingsFormItem>
 					<ProfileSettingsFormItem
 						title={t('profileSettings.notifications_title')}

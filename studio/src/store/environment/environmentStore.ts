@@ -37,7 +37,7 @@ const initialState: EnvironmentStore = {
   isDeleteEnvironmentModalOpen: false,
 };
 
-const useEnvironmentStore = create<EnvironmentStore & Actions>((set) => ({
+const useEnvironmentStore = create<EnvironmentStore & Actions>((set, get) => ({
   ...initialState,
   getEnvironments: async (req: GetEnvironmentRequest) => {
     const environments = await EnvironmentService.getEnvironments(req);
@@ -60,7 +60,7 @@ const useEnvironmentStore = create<EnvironmentStore & Actions>((set) => ({
   selectEnvironment: (environment) => {
     set({ environment });
     joinChannel(environment._id);
-    // TODO: resetAfterVersionChange();
+    get().reset();
     history.navigate?.(
       `/organization/${environment.orgId}/projects/${environment.projectId}/env/${environment._id}`
     );

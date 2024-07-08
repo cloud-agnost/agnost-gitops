@@ -17,10 +17,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
+import CronJobFrom from './CreateForms/CronJobFrom';
 import DeploymentForm from './CreateForms/DeploymentForm';
 import StatefulForm from './CreateForms/StatefulForm';
-import KnativeForm from './CreateForms/KnativeForm';
-import CronJobFrom from './CreateForms/CronJobFrom';
 
 const defaultValues: Partial<CreateContainerParams> = {
 	repoOrRegistry: 'repo',
@@ -28,7 +27,7 @@ const defaultValues: Partial<CreateContainerParams> = {
 	repo: {
 		type: 'github',
 		dockerfile: 'Dockerfile',
-		connected: false,
+		connected: true,
 		path: '/',
 	},
 	podConfig: {
@@ -94,6 +93,7 @@ export default function CreateContainerDrawer() {
 		createContainer,
 		isCreateContainerDialogOpen,
 		createdContainerType,
+		templates,
 	} = useContainerStore();
 	const { orgId, projectId, envId } = useParams() as Record<string, string>;
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -112,7 +112,15 @@ export default function CreateContainerDrawer() {
 	});
 	const onSubmit = (data: CreateContainerParams) => {
 		localStorage.removeItem('createDeployment');
-		createContainerHandler(data);
+		createContainerHandler({
+			...data,
+			//@ts-ignore
+			template: {
+				manifest: data.template?.manifest!,
+				name: data.template?.name!,
+				version: data.template?.version!,
+			},
+		});
 	};
 
 	function onClose() {
@@ -120,9 +128,7 @@ export default function CreateContainerDrawer() {
 			...defaultValues,
 			type: createdContainerType!,
 		});
-		searchParams.delete('access_token');
-		searchParams.delete('action');
-		searchParams.delete('status');
+		setSearchParams({});
 		localStorage.removeItem('createDeployment');
 		setSearchParams(searchParams);
 		closeCreateContainerDialog();
@@ -139,33 +145,127 @@ export default function CreateContainerDrawer() {
 
 	useEffect(() => {
 		const storedData = localStorage.getItem('createDeployment');
-		if (isCreateContainerDialogOpen && storedData) {
-			form.reset({
-				...JSON.parse(storedData),
-				type: createdContainerType!,
-				orgId,
-				projectId,
-				envId,
-			});
+		const templateName = searchParams.get('template');
+		if (isCreateContainerDialogOpen) {
+			if (storedData) {
+				form.reset({
+					...JSON.parse(storedData),
+					type: createdContainerType!,
+					orgId,
+					projectId,
+					envId,
+				});
+			}
+
+			if (templateName) {
+				const template = templates
+					?.flatMap((t) => t.templates)
+					.find((t) => t.name === templateName);
+				const defaultValues = template?.config.defaultValues;
+				if (template && defaultValues) {
+					form.reset({
+						template,
+						type: template.type as ContainerType,
+						orgId,
+						projectId,
+						envId,
+						registry: {
+							imageUrl: defaultValues['registry.imageUrl'],
+						},
+						networking: {
+							containerPort: defaultValues['networking.containerPort'],
+							tcpProxy: {
+								enabled: defaultValues['networking.tcpProxy.enabled'],
+							},
+						},
+						podConfig: {
+							cpuLimit: defaultValues['podConfig.cpuLimit'],
+							cpuLimitType: defaultValues['podConfig.cpuLimitType'],
+							cpuRequest: defaultValues['podConfig.cpuRequest'],
+							cpuRequestType: defaultValues['podConfig.cpuRequestType'],
+							memoryLimit: defaultValues['podConfig.memoryLimit'],
+							memoryLimitType: defaultValues['podConfig.memoryLimitType'],
+							memoryRequest: defaultValues['podConfig.memoryRequest'],
+							memoryRequestType: defaultValues['podConfig.memoryRequestType'],
+							restartPolicy: defaultValues['podConfig.restartPolicy'],
+						},
+						probes: {
+							liveness: {
+								enabled: defaultValues['probes.liveness.enabled'],
+							},
+							readiness: {
+								enabled: defaultValues['probes.readiness.enabled'],
+							},
+							startup: {
+								enabled: defaultValues['probes.startup.enabled'],
+							},
+						},
+						...(template.type === ContainerType.StatefulSet && {
+							statefulSetConfig: {
+								desiredReplicas: defaultValues['statefulSetConfig.desiredReplicas'],
+								persistentVolumeClaimRetentionPolicy: {
+									whenDeleted:
+										defaultValues[
+											'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted'
+										],
+									whenScaled:
+										defaultValues[
+											'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled'
+										],
+								},
+							},
+						}),
+						...(template.type === ContainerType.Deployment && {
+							deploymentConfig: {
+								desiredReplicas: defaultValues['deploymentConfig.desiredReplicas'],
+								cpuMetric: {
+									enabled: defaultValues['deploymentConfig.cpuMetric.enabled'],
+								},
+								memoryMetric: {
+									enabled: defaultValues['deploymentConfig.memoryMetric.enabled'],
+								},
+							},
+						}),
+						storageConfig: {
+							accessModes: defaultValues['storageConfig.accessModes'],
+							enabled: defaultValues['storageConfig.enabled'],
+							mountPath: defaultValues['storageConfig.mountPath'],
+							size: defaultValues['storageConfig.size'],
+							sizeType: defaultValues['storageConfig.sizeType'],
+						},
+
+						variables: Object.entries(template.config.variables).map(([name, value]) => ({
+							name,
+							value,
+						})),
+						repoOrRegistry: defaultValues['repoOrRegistry'],
+					});
+				}
+			}
 		}
 	}, [isCreateContainerDialogOpen]);
+
+	console.log({ err: form.formState.errors });
 
 	return (
 		<Drawer open={isCreateContainerDialogOpen} onOpenChange={onClose}>
 			<DrawerContent position='right' size='lg' className='h-full'>
 				<DrawerHeader>
 					<DrawerTitle>
-						{t('container.create', {
-							type: startCase(createdContainerType!),
-						})}
+						{!!form.watch('template.name')
+							? t('container.create_container_from_template', {
+									type: form.watch('template.name'),
+							  })
+							: t('container.create', {
+									type: startCase(createdContainerType!),
+							  })}
 					</DrawerTitle>
 				</DrawerHeader>
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className='overflow-auto'>
+					<form onSubmit={form.handleSubmit(onSubmit)} className='overflow-auto h-full'>
 						<div className='p-6 scroll space-y-6 relative'>
 							{ContainerType.Deployment === createdContainerType && <DeploymentForm />}
 							{ContainerType.StatefulSet === createdContainerType && <StatefulForm />}
-							{ContainerType.KNativeService === createdContainerType && <KnativeForm />}
 							{ContainerType.CronJob === createdContainerType && <CronJobFrom />}
 						</div>
 

@@ -10,12 +10,13 @@ import { Input } from '@/components/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import { Switch } from '@/components/Switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/Tooltip';
-import { ContainerType, CreateContainerParams } from '@/types';
+import { CreateContainerParams } from '@/types';
 import { Info, Pulse } from '@phosphor-icons/react';
-import { Fragment, useMemo } from 'react';
+import { Fragment } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Trans, useTranslation } from 'react-i18next';
 import ContainerFormTitle from './ContainerFormLayout';
+import useContainerStore from '@/store/container/containerStore';
 
 const TOOLTIP_FIELDS = [
 	'initialDelaySeconds',
@@ -27,13 +28,10 @@ const TOOLTIP_FIELDS = [
 export default function Probes() {
 	const { t } = useTranslation();
 	const form = useFormContext<CreateContainerParams>();
-
-	const PROBES_TYPES = useMemo(() => {
-		if (form.watch('type') === ContainerType.KNativeService) {
-			return ['readiness', 'liveness'] as const;
-		}
-		return ['startup', 'readiness', 'liveness'] as const;
-	}, [form.watch('type')]);
+	const { template } = useContainerStore();
+	const visibleFields = template?.config?.visibleFields ?? [];
+	const disabledFields = template?.config?.disabledFields ?? [];
+	const PROBES_TYPES = ['startup', 'readiness', 'liveness'] as const;
 
 	return (
 		<ContainerFormTitle
@@ -41,35 +39,38 @@ export default function Probes() {
 			descriptionI18nKey='container.probes.description'
 			icon={<Pulse size={20} />}
 		>
-			{PROBES_TYPES.map((type) => (
+			{PROBES_TYPES?.map((type) => (
 				<Fragment key={type}>
-					<FormField
-						control={form.control}
-						name={`probes.${type}.enabled`}
-						render={({ field }) => (
-							<FormItem className='flex items-center space-y-0 gap-2'>
-								<div>
-									<FormLabel>{t(`container.probes.${type}`)}</FormLabel>
-									<FormDescription className='text-pretty'>
-										{t(`container.probes.${type}_help`)}
-									</FormDescription>
-								</div>
-								<FormControl className='justify-self-end'>
-									<Switch
-										onBlur={field.onBlur}
-										ref={field.ref}
-										name={field.name}
-										checked={field.value}
-										onCheckedChange={field.onChange}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<div className='space-y-6'>
-						{form.watch(`probes.${type}.enabled`) && (
-							<>
+					{(visibleFields?.includes(`probes.${type}.enabled`) ?? true) && (
+						<FormField
+							control={form.control}
+							name={`probes.${type}.enabled`}
+							render={({ field }) => (
+								<FormItem className='flex items-center space-y-0 gap-2'>
+									<div>
+										<FormLabel>{t(`container.probes.${type}`)}</FormLabel>
+										<FormDescription className='text-pretty'>
+											{t(`container.probes.${type}_help`)}
+										</FormDescription>
+									</div>
+									<FormControl className='justify-self-end'>
+										<Switch
+											onBlur={field.onBlur}
+											ref={field.ref}
+											name={field.name}
+											checked={field.value}
+											onCheckedChange={field.onChange}
+											disabled={disabledFields?.includes(`probes.${type}.enabled`)}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					)}
+					{form.watch(`probes.${type}.enabled`) && (
+						<div className='space-y-6'>
+							{(visibleFields?.includes(`probes.${type}.checkMechanism`) ?? true) && (
 								<FormField
 									control={form.control}
 									name={`probes.${type}.checkMechanism`}
@@ -80,6 +81,7 @@ export default function Probes() {
 												value={field.value}
 												defaultValue={field.value}
 												onValueChange={field.onChange}
+												disabled={disabledFields?.includes(`probes.${type}.checkMechanism`)}
 											>
 												<FormControl>
 													<SelectTrigger className='w-full'>
@@ -104,8 +106,9 @@ export default function Probes() {
 										</FormItem>
 									)}
 								/>
-
-								{form.watch(`probes.${type}.checkMechanism`) === 'exec' && (
+							)}
+							{form.watch(`probes.${type}.checkMechanism`) === 'exec' &&
+								(visibleFields?.includes(`probes.${type}.execCommand`) ?? true) && (
 									<FormField
 										control={form.control}
 										name={`probes.${type}.execCommand`}
@@ -120,6 +123,7 @@ export default function Probes() {
 																label: t('container.probes.command').toLowerCase(),
 															}) ?? ''
 														}
+														disabled={disabledFields?.includes(`probes.${type}.execCommand`)}
 														{...field}
 													/>
 												</FormControl>
@@ -128,7 +132,8 @@ export default function Probes() {
 										)}
 									/>
 								)}
-								{form.watch(`probes.${type}.checkMechanism`) === 'tcpSocket' && (
+							{form.watch(`probes.${type}.checkMechanism`) === 'tcpSocket' &&
+								(visibleFields?.includes(`probes.${type}.tcpPort`) ?? true) && (
 									<FormField
 										control={form.control}
 										name={`probes.${type}.tcpPort`}
@@ -143,6 +148,7 @@ export default function Probes() {
 																label: t('container.probes.port').toLowerCase(),
 															}) ?? ''
 														}
+														disabled={disabledFields?.includes(`probes.${type}.tcpPort`)}
 														{...field}
 													/>
 												</FormControl>
@@ -151,8 +157,9 @@ export default function Probes() {
 										)}
 									/>
 								)}
-								{form.watch(`probes.${type}.checkMechanism`) === 'httpGet' && (
-									<div className='flex gap-4'>
+							{form.watch(`probes.${type}.checkMechanism`) === 'httpGet' && (
+								<div className='flex gap-4'>
+									{(visibleFields?.includes(`probes.${type}.httpPath`) ?? true) && (
 										<FormField
 											control={form.control}
 											name={`probes.${type}.httpPath`}
@@ -167,6 +174,7 @@ export default function Probes() {
 																	label: t('container.probes.path').toLowerCase(),
 																}) ?? ''
 															}
+															disabled={disabledFields?.includes(`probes.${type}.httpPath`)}
 															{...field}
 														/>
 													</FormControl>
@@ -174,6 +182,8 @@ export default function Probes() {
 												</FormItem>
 											)}
 										/>
+									)}
+									{(visibleFields?.includes(`probes.${type}.httpPort`) ?? true) && (
 										<FormField
 											control={form.control}
 											name={`probes.${type}.httpPort`}
@@ -188,6 +198,7 @@ export default function Probes() {
 																	label: t('container.probes.port').toLowerCase(),
 																}) ?? ''
 															}
+															disabled={disabledFields?.includes(`probes.${type}.httpPort`)}
 															{...field}
 														/>
 													</FormControl>
@@ -195,52 +206,56 @@ export default function Probes() {
 												</FormItem>
 											)}
 										/>
-									</div>
-								)}
-								<div className='grid grid-cols-4 gap-4'>
-									{TOOLTIP_FIELDS.map((f) => (
-										<FormField
-											key={f}
-											control={form.control}
-											name={`probes.${type}.${f}`}
-											render={({ field }) => (
-												<FormItem>
-													<div className='flex items-center gap-1'>
-														<FormLabel>{t(`container.probes.${f}`)}</FormLabel>
-														<TooltipProvider>
-															<Tooltip>
-																<TooltipTrigger>
-																	<Info size={16} />
-																</TooltipTrigger>
-																<TooltipContent align='end'>
-																	<Trans
-																		i18nKey={`container.probes.${f}_help`}
-																		components={{ 1: <br /> }}
-																	/>
-																</TooltipContent>
-															</Tooltip>
-														</TooltipProvider>
-													</div>
-													<FormControl>
-														<Input
-															error={Boolean(form.formState.errors.name)}
-															placeholder={
-																t('forms.placeholder', {
-																	label: t(`container.probes.${f}`).toLowerCase(),
-																}) ?? ''
-															}
-															{...field}
-														/>
-													</FormControl>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-									))}
+									)}
 								</div>
-							</>
-						)}
-					</div>
+							)}
+							<div className='grid grid-cols-4 gap-4'>
+								{TOOLTIP_FIELDS.map(
+									(f) =>
+										(visibleFields?.includes(`probes.${type}.${f}`) ?? true) && (
+											<FormField
+												key={f}
+												control={form.control}
+												name={`probes.${type}.${f}`}
+												render={({ field }) => (
+													<FormItem>
+														<div className='flex items-center gap-1'>
+															<FormLabel>{t(`container.probes.${f}`)}</FormLabel>
+															<TooltipProvider>
+																<Tooltip>
+																	<TooltipTrigger>
+																		<Info size={16} />
+																	</TooltipTrigger>
+																	<TooltipContent align='end'>
+																		<Trans
+																			i18nKey={`container.probes.${f}_help`}
+																			components={{ 1: <br /> }}
+																		/>
+																	</TooltipContent>
+																</Tooltip>
+															</TooltipProvider>
+														</div>
+														<FormControl>
+															<Input
+																error={Boolean(form.formState.errors.name)}
+																placeholder={
+																	t('forms.placeholder', {
+																		label: t(`container.probes.${f}`).toLowerCase(),
+																	}) ?? ''
+																}
+																disabled={disabledFields?.includes(`probes.${type}.${f}`)}
+																{...field}
+															/>
+														</FormControl>
+														<FormMessage />
+													</FormItem>
+												)}
+											/>
+										),
+								)}
+							</div>
+						</div>
+					)}
 				</Fragment>
 			))}
 		</ContainerFormTitle>

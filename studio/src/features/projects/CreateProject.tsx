@@ -21,6 +21,7 @@ import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useProjectStore from '@/store/project/projectStore';
 import { APIError } from '@/types';
 import { CreateProjectRequest, CreateProjectSchema } from '@/types/project';
+import { cn } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
@@ -28,7 +29,13 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-export default function CreateProject({ className }: { className?: string }) {
+export default function CreateProject({
+	className,
+	dropdown,
+}: {
+	dropdown?: boolean;
+	className?: string;
+}) {
 	const { createProject } = useProjectStore();
 	const canProjectCreate = useAuthorizeOrg('project.create');
 	const { t } = useTranslation();
@@ -69,7 +76,12 @@ export default function CreateProject({ className }: { className?: string }) {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button variant='primary' size='lg' disabled={!canProjectCreate} className={className}>
+				<Button
+					variant={dropdown ? 'blank' : 'primary'}
+					size='lg'
+					disabled={!canProjectCreate}
+					className={cn(className, dropdown && 'justify-start dropdown-item')}
+				>
 					<Plus size={14} className='mr-1 text-icon-default' />
 					{t('project.create')}
 				</Button>

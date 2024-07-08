@@ -28,8 +28,8 @@ export default function OrganizationsFilter() {
 								value={field.value}
 								onValueChange={(val) => {
 									field.onChange(val);
-									form.setValue('projectId', undefined);
-									form.setValue('envId', undefined);
+									form.setValue('projectId', '');
+									form.setValue('envId', '');
 								}}
 							>
 								<FormControl>

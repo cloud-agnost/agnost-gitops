@@ -1,3 +1,4 @@
+import { ClusterService } from "@/services";
 import ContainerService from "@/services/ContainerService";
 import {
   AddGitProviderParams,
@@ -7,6 +8,7 @@ import {
   ContainerPipeline,
   ContainerPipelineLogs,
   ContainerPod,
+  ContainerTemplate,
   ContainerType,
   CreateContainerParams,
   DeleteContainerParams,
@@ -16,6 +18,7 @@ import {
   GitBranch,
   GitProvider,
   GitRepo,
+  Template,
   UpdateContainerParams,
 } from "@/types";
 import { joinChannel, leaveChannel } from "@/utils";
@@ -30,23 +33,25 @@ type ContainerState = {
   isCreateContainerDialogOpen: boolean;
   isEditContainerDialogOpen: boolean;
   createdContainerType: ContainerType | null;
-  gitProvider?: GitProvider;
   lastFetchedPage?: number;
   selectedPod?: ContainerPod;
   isPodInfoOpen: boolean;
   selectedPipeline?: ContainerPipeline;
+  templates?: ContainerTemplate[];
+  template?: Template;
 };
 
 type Actions = {
-  openCreateContainerDialog: (type: ContainerType) => void;
+  openCreateContainerDialog: (type: ContainerType, template?: Template) => void;
   closeCreateContainerDialog: () => void;
-  openEditContainerDialog: (container: Container) => void;
+  openEditContainerDialog: (container: Container, template?: Template) => void;
   closeEditContainerDialog: () => void;
   openDeleteContainerDialog: (container: Container) => void;
   closeDeleteContainerDialog: () => void;
   openPodInfo: (pod: ContainerPod) => void;
   closePodInfo: () => void;
   selectPipeline: (pipeline?: ContainerPipeline) => void;
+  getGitProviders: () => Promise<GitProvider[]>;
   addGitProvider: (req: AddGitProviderParams) => Promise<GitProvider>;
   disconnectGitProvider: (providerId: string) => Promise<void>;
   getGitRepositories: (providerId: string) => Promise<GitRepo[]>;
@@ -64,6 +69,8 @@ type Actions = {
   getContainerPipelineLogs: (
     req: GetContainerPipelineLogsParams
   ) => Promise<ContainerPipelineLogs[]>;
+  getContainerTemplates: () => Promise<ContainerTemplate[]>;
+  getContainerTemplate: (name: string, version: string) => Promise<Template>;
   reset: () => void;
 };
 
@@ -84,24 +91,27 @@ const useContainerStore = create<ContainerState & Actions>()(
     persist(
       (set) => ({
         ...initialState,
-        openCreateContainerDialog: (type) =>
+        openCreateContainerDialog: (type, template) =>
           set({
             isCreateContainerDialogOpen: true,
             createdContainerType: type,
+            template,
           }),
         closeCreateContainerDialog: () =>
           set({
             isCreateContainerDialogOpen: false,
             createdContainerType: null,
+            template: undefined,
           }),
-        openEditContainerDialog: (container) => {
-          set({ isEditContainerDialogOpen: true, container });
+        openEditContainerDialog: (container, template) => {
+          set({ isEditContainerDialogOpen: true, container, template });
         },
         closeEditContainerDialog: () => {
           set({
             isEditContainerDialogOpen: false,
             container: null,
             selectedPipeline: undefined,
+            template: undefined,
           });
         },
         openDeleteContainerDialog: (container) => {
@@ -124,12 +134,14 @@ const useContainerStore = create<ContainerState & Actions>()(
         },
         addGitProvider: async (req) => {
           const provider = await ContainerService.addGitProvider(req);
-          set({ gitProvider: provider });
           return provider;
+        },
+        getGitProviders: async () => {
+          const providers = await ContainerService.getGitProviders();
+          return providers;
         },
         disconnectGitProvider: async (providerId) => {
           await ContainerService.disconnectGitProvider(providerId);
-          set({ gitProvider: {} as GitProvider });
         },
         getGitRepositories: async (providerId) => {
           return await ContainerService.getGitRepositories(providerId);
@@ -209,7 +221,21 @@ const useContainerStore = create<ContainerState & Actions>()(
         getContainerPipelineLogs: async (req) => {
           return await ContainerService.getContainerPipelineLogs(req);
         },
-
+        getContainerTemplates: async () => {
+          const templates = await ClusterService.getContainerTemplates();
+          set({
+            templates,
+          });
+          return templates;
+        },
+        getContainerTemplate: async (name, version) => {
+          const template = await ClusterService.getContainerTemplate(
+            name,
+            version
+          );
+          set({ template });
+          return template;
+        },
         reset: () => set(initialState),
       }),
       {
@@ -218,7 +244,6 @@ const useContainerStore = create<ContainerState & Actions>()(
           isCreateContainerDialogOpen: state.isCreateContainerDialogOpen,
           isEditContainerDialogOpen: state.isEditContainerDialogOpen,
           createdContainerType: state.createdContainerType,
-          gitProvider: state.gitProvider,
           container: state.container,
         }),
       }

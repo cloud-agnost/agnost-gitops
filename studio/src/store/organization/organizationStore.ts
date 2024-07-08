@@ -4,14 +4,12 @@ import {
   ChangeOrganizationAvatarRequest,
   ChangeOrganizationNameRequest,
   CreateOrganizationRequest,
-  GetAuditLogsRequest,
   GetInvitationRequest,
   GetOrganizationMembersRequest,
   Invitation,
   InvitationRequest,
   InviteOrgRequest,
   LeaveOrganizationRequest,
-  Notification,
   OrgPermissions,
   Organization,
   OrganizationMember,
@@ -22,7 +20,6 @@ import {
 import { joinChannel, leaveChannel, resetAfterOrgChange } from "@/utils";
 import { create } from "zustand";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
-import useAuthStore from "../auth/authStore";
 interface OrganizationStore {
   organization: Organization;
   organizations: Organization[];
@@ -30,10 +27,6 @@ interface OrganizationStore {
   invitations: Invitation[];
   lastFetchedInvitationsPage: number;
   orgAuthorization: OrgPermissions;
-  notifications: Notification[];
-  notificationsPreview: Notification[];
-  notificationLastSeen: Date;
-  notificationLastFetchedPage: number | undefined;
 }
 
 type Actions = {
@@ -74,9 +67,6 @@ type Actions = {
     req: GetInvitationRequest
   ) => Promise<Invitation[]>;
   getOrgPermissions: () => Promise<OrgPermissions>;
-  getNotifications: (req: GetAuditLogsRequest) => Promise<void>;
-  getNotificationsPreview: (req: GetAuditLogsRequest) => Promise<void>;
-  updateNotificationLastSeen: () => void;
   reset: () => void;
 };
 
@@ -87,10 +77,6 @@ const initialState: OrganizationStore = {
   invitations: [],
   orgAuthorization: {} as OrgPermissions,
   lastFetchedInvitationsPage: 0,
-  notifications: [],
-  notificationsPreview: [],
-  notificationLastSeen: new Date(),
-  notificationLastFetchedPage: undefined,
 };
 
 const useOrganizationStore = create<OrganizationStore & Actions>()(
@@ -426,39 +412,7 @@ const useOrganizationStore = create<OrganizationStore & Actions>()(
         set({ orgAuthorization });
         return orgAuthorization;
       },
-      async getNotificationsPreview(req: GetAuditLogsRequest) {
-        const notifications = await OrganizationService.getAuditLogs(req);
-        const user = useAuthStore.getState().user;
-        const allowedNotifications = user?.notifications.map((ntf) => {
-          if (ntf === "org") return ntf;
-          if (ntf === "project") return `org.${ntf}`;
-          return `org.project.environment.${ntf}`;
-        });
 
-        const filteredNotifications = notifications.filter(
-          (ntf: Notification) => allowedNotifications?.includes(ntf.object)
-        );
-        set({
-          notificationsPreview: notifications,
-        });
-      },
-      async getNotifications(params: GetAuditLogsRequest) {
-        const notifications = await OrganizationService.getAuditLogs(params);
-        if (params.page === 0) {
-          set({
-            notifications,
-            notificationLastFetchedPage: params.page,
-          });
-        } else {
-          set((prev) => ({
-            notifications: [...prev.notifications, ...notifications],
-            notificationLastFetchedPage: params.page,
-          }));
-        }
-      },
-      updateNotificationLastSeen: () => {
-        set({ notificationLastSeen: new Date() });
-      },
       reset: () => set(initialState),
     }))
   )

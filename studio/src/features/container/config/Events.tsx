@@ -34,6 +34,7 @@ export default function Events() {
 					className='navigator table-fixed relative'
 					headerClassName='sticky top-0 z-50'
 					containerClassName='!border-none h-full'
+					noDataMessage='No recent events'
 				/>
 			</div>
 		</div>

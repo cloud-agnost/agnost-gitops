@@ -1,5 +1,3 @@
-import { Alert, AlertTitle, AlertDescription } from '@/components/Alert';
-import Providers from '@/features/auth/Providers/Providers';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { GuestOnly } from '@/router';
 import { APIError } from '@/types';

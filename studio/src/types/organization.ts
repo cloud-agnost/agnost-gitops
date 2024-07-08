@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { NameSchema } from ".";
+import { ChangeNameFormSchema } from ".";
 
 export type OrgRoles = "Admin" | "Member";
 export interface Organization {
@@ -23,9 +22,7 @@ export interface LeaveOrganizationRequest {
   organizationId: string;
 }
 
-export const CreateOrganizationSchema = z.object({
-  name: NameSchema,
-});
+export const CreateOrganizationSchema = ChangeNameFormSchema;
 export interface ChangeOrganizationNameRequest {
   name: string;
   organizationId: string;
@@ -64,7 +61,7 @@ export interface OrganizationMember {
   };
 }
 export interface OrgMemberRequest {
-  email: string;
+  name: string;
   role: OrgRoles | "";
 }
 export interface InviteOrgRequest {

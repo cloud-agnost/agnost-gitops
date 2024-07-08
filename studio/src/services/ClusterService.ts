@@ -70,4 +70,19 @@ export default class ClusterService {
   static async disabledCICD() {
     return (await axios.post(`${this.url}/cicd/disable`, {})).data;
   }
+
+  static async getContainerTemplates() {
+    return (await axios.get(`${this.url}/templates`)).data;
+  }
+  static async getContainerTemplate(name: string, version: string) {
+    return (
+      await axios.get(`${this.url}/template`, { params: { name, version } })
+    ).data;
+  }
+
+  static async setReverseProxyURL(reverseProxyURL: string): Promise<Cluster> {
+    return (
+      await axios.put(`${this.url}/reverse-proxy-url`, { reverseProxyURL })
+    ).data;
+  }
 }

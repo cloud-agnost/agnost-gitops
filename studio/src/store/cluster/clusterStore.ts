@@ -63,6 +63,7 @@ type Actions = {
   ) => Promise<ClusterComponent>;
   enabledCICD: () => Promise<Cluster>;
   disabledCICD: () => Promise<Cluster>;
+  setReverseProxyURL: (url: string) => Promise<Cluster>;
   reset: () => void;
 };
 
@@ -276,6 +277,11 @@ const useClusterStore = create<ClusterStore & Actions>()(
     },
     disabledCICD: async () => {
       const cluster = await ClusterService.disabledCICD();
+      set({ cluster });
+      return cluster;
+    },
+    setReverseProxyURL: async (url) => {
+      const cluster = await ClusterService.setReverseProxyURL(url);
       set({ cluster });
       return cluster;
     },

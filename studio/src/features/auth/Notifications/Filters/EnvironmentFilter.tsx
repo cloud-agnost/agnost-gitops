@@ -2,11 +2,10 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import useEnvironmentStore from '@/store/environment/environmentStore';
 import { useQuery } from '@tanstack/react-query';
-import { useFormContext } from 'react-hook-form';
-import { NotificationFilterSchema } from '../NotificationFilter';
-import { z } from 'zod';
-import { useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useFormContext } from 'react-hook-form';
+import { z } from 'zod';
+import { NotificationFilterSchema } from '../NotificationFilter';
 export default function EnvironmentFilter() {
 	const { getEnvironments } = useEnvironmentStore();
 	const form = useFormContext<z.infer<typeof NotificationFilterSchema>>();
@@ -23,7 +22,7 @@ export default function EnvironmentFilter() {
 	});
 
 	useEffect(() => {
-		refetch();
+		if (form.watch('orgId') && form.watch('projectId')) refetch();
 	}, [form.watch('orgId'), form.watch('projectId')]);
 	return (
 		<div className='space-y-3'>

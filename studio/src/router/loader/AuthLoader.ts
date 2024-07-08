@@ -1,5 +1,6 @@
 import useAuthStore from "@/store/auth/authStore";
 import useClusterStore from "@/store/cluster/clusterStore";
+import { resetAllStores } from "@/utils";
 import { LoaderFunctionArgs, redirect } from "react-router-dom";
 
 async function registerLoader({ request }: LoaderFunctionArgs) {
@@ -22,7 +23,7 @@ async function registerLoader({ request }: LoaderFunctionArgs) {
           "refresh_token"
         ) as string,
       });
-      return redirect("/organization");
+      return redirect("/register/setup");
     } catch (error) {
       return error;
     }
@@ -34,7 +35,7 @@ async function loginLoader({ request }: LoaderFunctionArgs) {
   const accessToken = new URL(request.url).searchParams.get("access_token");
   const status = new URL(request.url).searchParams.get("status");
   const error = new URL(request.url).searchParams.get("error");
-  //TODO resetAllStores();
+  resetAllStores();
   if (status === "200" && accessToken && !error) {
     try {
       await useAuthStore.getState().login({

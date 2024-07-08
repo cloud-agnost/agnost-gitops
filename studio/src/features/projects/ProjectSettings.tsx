@@ -14,7 +14,7 @@ interface ProjectSettingsProps {
 	project: Project;
 	role: ProjectRole;
 }
-export default function ProjectSettings({ project: application, role }: ProjectSettingsProps) {
+export default function ProjectSettings({ project, role }: ProjectSettingsProps) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -32,9 +32,9 @@ export default function ProjectSettings({ project: application, role }: ProjectS
 						<div key={setting.id}>
 							<DropdownMenuItem
 								id={setting.id}
-								disabled={setting.isDisabled(role, application)}
+								disabled={setting.isDisabled(role, project)}
 								className=' px-3'
-								onClick={() => setting.onClick(application)}
+								onClick={() => setting.onClick(project)}
 							>
 								<setting.icon className='w-5 h-5 mr-2' />
 								{setting.name}

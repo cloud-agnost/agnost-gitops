@@ -23,13 +23,7 @@ export default function useEnvironmentDropdown() {
 	} = useEnvironmentStore();
 
 	const { mutate: updateEnvironmentHandler } = useMutation({
-		mutationFn: (params: UpdateEnvironmentRequest) =>
-			updateEnvironment({
-				...params,
-				envId,
-				projectId,
-				orgId,
-			}),
+		mutationFn: (params: UpdateEnvironmentRequest) => updateEnvironment(params),
 		onError: (error: APIError) => {
 			toast({
 				action: 'error',
@@ -71,32 +65,38 @@ export default function useEnvironmentDropdown() {
 			// 	icon: GitFork,
 			// },
 			{
-				title: environment?.readOnly ? t('version.mark_read_write') : t('version.mark_read_only'),
+				title: environment?.readOnly ? t('project.mark_read_write') : t('project.mark_read_only'),
 				action: () => {
 					if (!environment) return;
 					updateEnvironmentHandler({
 						name: environment?.name,
 						private: environment?.private,
 						readOnly: !environment?.readOnly,
+						envId,
+						projectId,
+						orgId,
 					});
 				},
 				disabled: false,
 				icon: !environment?.readOnly ? LockSimple : LockSimpleOpen,
 			},
 			{
-				title: environment?.private ? t('version.set_public') : t('version.set_private'),
+				title: environment?.private ? t('project.set_public') : t('project.set_private'),
 				action: () => {
 					if (!environment) return;
 					updateEnvironmentHandler({
 						name: environment?.name,
 						readOnly: environment?.readOnly,
 						private: !environment?.private,
+						envId,
+						projectId,
+						orgId,
 					});
 				},
 				icon: !environment?.private ? EyeSlash : Eye,
 			},
 			{
-				title: t('version.delete'),
+				title: t('general.delete'),
 				action: toggleDeleteEnvironmentModal,
 				icon: Trash,
 				disabled: environments.length <= 1,

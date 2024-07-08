@@ -20,10 +20,10 @@ export default function AuthLayout({ className, error, title, subtitle }: AuthLa
 			)}
 		>
 			<Agnost className='size-24' />
-			<div className='space-y-8'>
+			<div className='space-y-8 max-w-lg'>
 				<div className='space-y-2 text-center'>
 					<h1 className='text-3xl font-bold'>{title}</h1>
-					<p className='text-muted-foreground'>{subtitle}</p>
+					<p className='text-subtle'>{subtitle}</p>
 				</div>
 				{error?.error && (
 					<Alert className='!max-w-full' variant='error'>

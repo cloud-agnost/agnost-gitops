@@ -114,7 +114,7 @@ export interface FormatOptionLabelProps<T> {
 export interface Invitation {
   _id: string;
   orgId: string;
-  email: string;
+  name: string;
   token: string;
   role: string;
   status: "Pending" | "Active";
@@ -127,7 +127,7 @@ export interface Invitation {
   };
   createdAt: string;
   orgRole?: OrgRoles;
-  appId?: string;
+  projectId?: string;
 }
 
 export interface GetInvitationRequest extends BaseGetRequest {
@@ -254,6 +254,13 @@ export interface GetAuditLogsRequest extends BaseGetRequest {
   actor?: string[];
   action?: NotificationActions[];
 }
+
+export interface GetDistinctActionsRequest {
+  orgId: string;
+  projectId?: string;
+  envId?: string;
+}
+
 export interface Notification {
   _id: string;
   object: string;

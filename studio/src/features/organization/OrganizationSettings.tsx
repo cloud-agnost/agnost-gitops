@@ -17,7 +17,7 @@ import {
 	OrganizationMenuItem,
 	TransferOrganization,
 } from '@/features/organization';
-import { useEffect } from 'react';
+import { GearSix } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 export default function OrganizationSettings() {
@@ -36,11 +36,10 @@ export default function OrganizationSettings() {
 	return (
 		<Drawer onOpenChange={onOpenChange}>
 			<DrawerTrigger asChild>
-				<div className='px-2 py-1.5 hover:bg-lighter'>
-					<Button size='full' variant='text'>
-						{t('general.settings')}
-					</Button>
-				</div>
+				<Button className='justify-start dropdown-item' variant='blank' size='full'>
+					<GearSix size={16} className='mr-2' />
+					{t('general.settings')}
+				</Button>
 			</DrawerTrigger>
 			<DrawerContent position='right' size='lg' className='h-full'>
 				<DrawerHeader className='border-none'>
@@ -94,7 +93,7 @@ function GeneralSettings() {
 	];
 	return (
 		<div className='divide-y'>
-			{ORGANIZATION_GENERAL_SETTINGS.map((item, index) => (
+			{ORGANIZATION_GENERAL_SETTINGS.map((item) => (
 				<SettingsFormItem
 					key={item.title}
 					title={item.title}

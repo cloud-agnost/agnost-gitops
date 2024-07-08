@@ -19,6 +19,8 @@ import { useTranslation } from 'react-i18next';
 import MultiSelect from 'react-select';
 import { PodConfiguration, SourceConfig, StorageConfig } from '../config';
 import ContainerFormTitle from '../config/ContainerFormLayout';
+import CronExamples from '../config/CronExamples';
+import { CRON_EXAMPLES } from '@/constants';
 
 export default function CronJobFrom() {
 	const { t } = useTranslation();
@@ -97,13 +99,13 @@ export default function CronJobFrom() {
 					/>
 				</div>
 				<div className='grid grid-cols-[2fr_1fr] gap-4'>
-					{/* //TODO <FormField
+					<FormField
 						control={form.control}
 						name='cronJobConfig.schedule'
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>{t('container.cronjob.schedule')}</FormLabel>
-								
+
 								<CronExamples
 									selectCron={(cron: string) => form.setValue('cronJobConfig.schedule', cron)}
 								>
@@ -118,7 +120,7 @@ export default function CronJobFrom() {
 								<FormMessage />
 							</FormItem>
 						)}
-					/> */}
+					/>
 					<FormField
 						control={form.control}
 						name='cronJobConfig.timeZone'

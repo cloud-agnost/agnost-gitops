@@ -1,22 +1,22 @@
-import { Button } from '@/components/Button';
-import { CommandItem } from '@/components/Command';
 import { InfoModal } from '@/components/InfoModal';
 import { SelectionDropdown } from '@/components/SelectionDropdown';
 import { OrganizationCreateModal } from '@/features/organization';
 import { useToast } from '@/hooks';
 import useAuthStore from '@/store/auth/authStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
+import useProjectStore from '@/store/project/projectStore';
 import { APIError, Organization } from '@/types';
-import { Plus } from '@phosphor-icons/react';
+import { Plus, SignOut } from '@phosphor-icons/react';
+import { DropdownMenuItem } from '@/components/Dropdown';
 import { useMutation } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import './organization.scss';
-import useProjectStore from '@/store/project/projectStore';
 import OrganizationSettings from './OrganizationSettings';
 import InviteOrganization from './Settings/Members/InviteOrganization';
+import useEnvironmentStore from '@/store/environment/environmentStore';
 export function OrganizationDropdown() {
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
@@ -67,7 +67,8 @@ export function OrganizationDropdown() {
 	}
 
 	function navigateOrg() {
-		//TODO resetAfterProjectChange();
+		useProjectStore.getState().reset();
+		useEnvironmentStore.getState().reset();
 		navigate(`/organization/${organization?._id}/projects`);
 	}
 
@@ -86,28 +87,18 @@ export function OrganizationDropdown() {
 			>
 				<OrganizationSettings />
 				<InviteOrganization dropdown />
-				<div className='px-2 py-1.5 hover:bg-lighter'>
-					<Button
-						disabled={organization?.ownerUserId === user?._id}
-						className='w-full font-normal'
-						variant='text'
-						onClick={() => setOpenModal(true)}
-					>
-						{t('organization.leave.main')}
-					</Button>
-				</div>
-				<div className='px-2 py-1.5 hover:bg-lighter'>
-					<Button
-						disabled={!user?.isClusterOwner}
-						className='font-normal'
-						size='full'
-						variant='primary'
-						onClick={() => setOpenCreateModal(true)}
-					>
-						<Plus size={16} className='mr-2' />
-						{t('organization.create')}
-					</Button>
-				</div>
+
+				<DropdownMenuItem
+					onClick={() => setOpenModal(true)}
+					disabled={organization?.ownerUserId === user?._id}
+				>
+					<SignOut size={16} className='mr-2' />
+					{t('organization.leave.main')}
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => setOpenCreateModal(true)} disabled={!user?.isClusterOwner}>
+					<Plus size={16} className='mr-2' />
+					{t('organization.create')}
+				</DropdownMenuItem>
 			</SelectionDropdown>
 
 			<InfoModal

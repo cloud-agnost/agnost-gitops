@@ -1,3 +1,4 @@
+import { ProfileSettings } from '@/features/auth/ProfileSettings';
 import ReleaseHistory from '@/features/cluster/ReleaseHistory';
 import CreateEnvironment from '@/features/projects/CreateEnvironment';
 import EditProject from '@/features/projects/EditProject';
@@ -59,6 +60,7 @@ export default function Root() {
 			<CreateEnvironment />
 			<ProjectInviteMember />
 			<ReleaseHistory />
+			<ProfileSettings />
 		</>
 	);
 }

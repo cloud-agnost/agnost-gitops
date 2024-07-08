@@ -97,7 +97,7 @@ export const PROJECT_SETTINGS = [
 
 export const ORGANIZATION_SETTINGS = [
   {
-    title: translate("organization.settings.general"),
+    title: translate("general.settings"),
     href: "/organization/:id/settings",
     icon: GearSix,
   },
@@ -250,8 +250,7 @@ export const CRON_EXAMPLES = [
 
 export const CONTAINER_TYPES = [
   "deployment",
-  "stateful set",
-  "knative service",
+  "statefulset",
   "cron job",
 ] as const;
 

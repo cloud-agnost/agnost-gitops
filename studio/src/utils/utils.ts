@@ -4,6 +4,7 @@ import {
 import { STATE_LIST } from '@/constants/stateList';
 import { socket } from '@/helpers';
 import { toast } from '@/hooks/useToast';
+import useAuthStore from '@/store/auth/authStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
 import { ProjectRole, RealtimeData } from '@/types';
@@ -148,3 +149,12 @@ export function sortByField<T extends { updatedBy?: string; updatedAt: string; t
 		[direction, 'asc'],
 	);
 }
+
+
+
+export const resetAllStores = () => {
+	Object.entries(STATE_LIST).forEach(([, store]) => {
+		store?.getState()?.reset?.();
+	});
+		useAuthStore.getState().reset();
+};

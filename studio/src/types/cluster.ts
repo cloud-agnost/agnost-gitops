@@ -89,6 +89,7 @@ export interface Cluster {
   clusterResourceStatus: ClusterResourceStatus[];
   createdAt: string;
   updatedAt: string;
+  reverseProxyURL: string;
 }
 
 export interface ClusterReleaseInfo {

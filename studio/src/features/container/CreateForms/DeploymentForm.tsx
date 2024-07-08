@@ -20,41 +20,68 @@ import {
 	StorageConfig,
 } from '../config';
 import ContainerFormTitle from '../config/ContainerFormLayout';
+import useContainerStore from '@/store/container/containerStore';
 
 export default function DeploymentForm() {
-	const { t } = useTranslation();
-	const form = useFormContext<CreateContainerParams>();
+	const { template } = useContainerStore();
+	const visibleSections = template?.config?.visibleSections;
+
+	const renderSection = (key: string, Component: React.FC): React.ReactNode => {
+		if (!visibleSections || visibleSections.includes(key)) {
+			return <Component />;
+		}
+		return null;
+	};
 
 	return (
 		<>
-			<ContainerFormTitle
-				title={t('container.general')}
-				descriptionI18nKey='container.deployment.description'
-				icon={<IdentificationCard size={20} />}
-			>
-				<div className='flex justify-center gap-4'>
-					<FormField
-						control={form.control}
-						name='name'
-						render={({ field }) => (
-							<FormItem className='flex-1'>
-								<FormLabel>{t('container.deployment.name')}</FormLabel>
-								<FormControl>
-									<Input
-										error={Boolean(form.formState.errors.name)}
-										placeholder={
-											t('forms.placeholder', {
-												label: t('container.deployment.name'),
-											}) ?? ''
-										}
-										{...field}
-									/>
-								</FormControl>
-								<FormDescription>{t('forms.max64.description')}</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+			{renderSection('general', GeneralSection)}
+			{renderSection('source', SourceConfig)}
+			{renderSection('networking', Networking)}
+			{renderSection('podConfig', PodConfiguration)}
+			{renderSection('autoScaleConfig', AutoScaleConfig)}
+			{renderSection('probes', Probes)}
+			{renderSection('storageConfig', StorageConfig)}
+		</>
+	);
+}
+
+const GeneralSection = () => {
+	const { t } = useTranslation();
+	const form = useFormContext<CreateContainerParams>();
+
+	const { template } = useContainerStore();
+	const visibleFields = template?.config?.visibleFields ?? [];
+	return (
+		<ContainerFormTitle
+			title={t('container.general')}
+			descriptionI18nKey='container.deployment.description'
+			icon={<IdentificationCard size={20} />}
+		>
+			<div className='flex justify-center gap-4'>
+				<FormField
+					control={form.control}
+					name='name'
+					render={({ field }) => (
+						<FormItem className='flex-1'>
+							<FormLabel>{t('container.deployment.name')}</FormLabel>
+							<FormControl>
+								<Input
+									error={Boolean(form.formState.errors.name)}
+									placeholder={
+										t('forms.placeholder', {
+											label: t('container.deployment.name'),
+										}) ?? ''
+									}
+									{...field}
+								/>
+							</FormControl>
+							<FormDescription>{t('forms.max64.description')}</FormDescription>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				{(visibleFields.includes('sdeploymentConfig.desiredReplicas') ?? true) && (
 					<FormField
 						control={form.control}
 						name='deploymentConfig.desiredReplicas'
@@ -77,15 +104,8 @@ export default function DeploymentForm() {
 							</FormItem>
 						)}
 					/>
-				</div>
-			</ContainerFormTitle>
-
-			<SourceConfig />
-			<Networking />
-			<PodConfiguration />
-			<AutoScaleConfig />
-			<Probes />
-			<StorageConfig />
-		</>
+				)}
+			</div>
+		</ContainerFormTitle>
 	);
-}
+};

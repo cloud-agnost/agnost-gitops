@@ -89,9 +89,9 @@ export const ProjectInvitationsColumns: ColumnDefWithClassName<Invitation>[] = [
 		enableHiding: false,
 	},
 	{
-		id: 'email',
-		header: 'Email',
-		accessorKey: 'email',
+		id: 'name',
+		header: 'Name',
+		accessorKey: 'name',
 	},
 	{
 		id: 'invitedAt',

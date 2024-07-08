@@ -11,7 +11,9 @@ import { InviteMemberForm, InviteMemberSchema } from '@/components/InviteMemberF
 import { useToast } from '@/hooks';
 import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useOrganizationStore from '@/store/organization/organizationStore';
+import { cn } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Envelope } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -36,7 +38,7 @@ export default function InviteOrganization({ dropdown }: { dropdown?: boolean })
 			form.reset({
 				member: [
 					{
-						email: '',
+						name: '',
 						role: '',
 					},
 				],
@@ -55,7 +57,7 @@ export default function InviteOrganization({ dropdown }: { dropdown?: boolean })
 	const onSubmit = (data: z.infer<typeof InviteMemberSchema>) => {
 		inviteMutate({
 			organizationId: organization?._id as string,
-			members: data.member.filter((item) => item.email !== '' && item.role !== '') as any,
+			members: data.member.filter((item) => item.name !== '' && item.role !== '') as any,
 			uiBaseURL: window.location.origin,
 		});
 	};
@@ -63,11 +65,14 @@ export default function InviteOrganization({ dropdown }: { dropdown?: boolean })
 	return (
 		<Drawer>
 			<DrawerTrigger asChild>
-				<div className='px-2 py-1.5 hover:bg-lighter'>
-					<Button size={dropdown ? 'full' : 'md'} variant={dropdown ? 'text' : 'primary'}>
-						{t('general.addMembers')}
-					</Button>
-				</div>
+				<Button
+					size={dropdown ? 'full' : 'md'}
+					variant={dropdown ? 'blank' : 'primary'}
+					className={cn(dropdown && 'justify-start dropdown-item')}
+				>
+					{dropdown && <Envelope size={16} className='mr-2' />}
+					{t('general.addMembers')}
+				</Button>
 			</DrawerTrigger>
 			<DrawerContent position='right' size='lg'>
 				<DrawerHeader>

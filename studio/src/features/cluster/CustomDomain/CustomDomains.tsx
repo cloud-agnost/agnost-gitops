@@ -24,7 +24,7 @@ export default function CustomDomains() {
 	});
 	const { toast } = useToast();
 	const user = useAuthStore((state) => state.user);
-	const { addDomain, clusterDomainError, cluster } = useClusterStore();
+	const { addDomain, clusterDomainError } = useClusterStore();
 
 	const { mutate: addDomainMutation, isPending } = useMutation({
 		mutationFn: addDomain,

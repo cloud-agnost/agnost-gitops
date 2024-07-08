@@ -121,7 +121,7 @@ const ProjectAcceptInvitation = loadable(
 );
 
 const Notifications = loadable(
-	() => componentLoader(() => import('../pages/organization/OrganizationNotifications')),
+	() => componentLoader(() => import('../pages/notifications/Notifications')),
 	{
 		fallback: <Fallback />,
 		resolveComponent: (mod: any) => mod.default,
@@ -155,6 +155,10 @@ const router = createBrowserRouter(
 					element: <Login />,
 				},
 				{
+					path: 'notifications',
+					element: <Notifications />,
+				},
+				{
 					path: '/organization',
 					element: <Organization />,
 					children: [
@@ -185,10 +189,6 @@ const router = createBrowserRouter(
 											],
 										},
 									],
-								},
-								{
-									path: 'notifications',
-									element: <Notifications />,
 								},
 							],
 						},

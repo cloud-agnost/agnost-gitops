@@ -18,10 +18,8 @@ interface AuthState {
   refreshToken: string | null | undefined;
   loading: boolean;
   error: APIError | undefined;
+  isProfileSettingsOpen: boolean;
   user: User;
-  email: string | undefined;
-  isAccepted: boolean;
-  isEditorSettingsDrawerOpen: boolean;
 }
 
 type Actions = {
@@ -31,17 +29,6 @@ type Actions = {
   setToken: (accessToken: string | null | undefined) => void;
   setRefreshToken: (refreshToken: string | null | undefined) => void;
   isAuthenticated: () => boolean;
-  renewAccessToken: () => void;
-  resetPassword: (email: string) => Promise<void>;
-  verifyEmail: (email: string, code: number) => Promise<void>;
-  changePasswordWithToken: ({
-    token,
-    newPassword,
-  }: {
-    token: string;
-    newPassword: string;
-  }) => Promise<null | APIError>;
-  resendEmailVerificationCode: (email: string) => Promise<void>;
   initiateAccountSetup: (
     email: string,
     onSuccess: () => void,
@@ -63,14 +50,10 @@ type Actions = {
   changeEmail: (email: string, password: string) => Promise<string>;
   changeAvatar: (avatar: File) => Promise<User>;
   removeAvatar: () => Promise<void>;
-  changePassword: (
-    currentPassword: string,
-    newPassword: string
-  ) => Promise<void>;
   deleteAccount: () => Promise<void>;
   updateNotifications: (notifications: string[]) => Promise<User>;
-  confirmChangeLoginEmail: (token: string) => Promise<void>;
   getUser: () => Promise<User>;
+  toggleProfileSettings: () => void;
   reset: () => void;
 };
 
@@ -80,9 +63,7 @@ const initialState: AuthState = {
   loading: false,
   error: undefined,
   user: {} as User,
-  email: undefined,
-  isAccepted: false,
-  isEditorSettingsDrawerOpen: false,
+  isProfileSettingsOpen: false,
 };
 
 const useAuthStore = create<AuthState & Actions>()(
@@ -91,6 +72,10 @@ const useAuthStore = create<AuthState & Actions>()(
       persist(
         (set, get) => ({
           ...initialState,
+          toggleProfileSettings: () =>
+            set((state) => ({
+              isProfileSettingsOpen: !state.isProfileSettingsOpen,
+            })),
           setUser: (user) => {
             set({ user });
             if (user) joinChannel(user._id);
@@ -130,30 +115,6 @@ const useAuthStore = create<AuthState & Actions>()(
             get().setToken(res.at);
           },
 
-          resetPassword(email) {
-            return UserService.resetPassword({
-              email,
-              uiBaseURL: window.location.origin,
-            });
-          },
-          async verifyEmail(email: string, code: number) {
-            try {
-              const user = await AuthService.validateEmail(email, code);
-              get().setUser(user);
-              return user;
-            } catch (error) {
-              throw error as APIError;
-            }
-          },
-          changePasswordWithToken({ token, newPassword }) {
-            return UserService.changePasswordWithToken({
-              token,
-              newPassword,
-            });
-          },
-          async resendEmailVerificationCode(email: string) {
-            await AuthService.resendEmailVerificationCode(email);
-          },
           async initiateAccountSetup(
             email: string,
             onSuccess: () => void,
@@ -161,7 +122,6 @@ const useAuthStore = create<AuthState & Actions>()(
           ) {
             try {
               await AuthService.initiateAccountSetup(email);
-              set({ email });
               onSuccess();
             } catch (error) {
               onError(error as APIError);
@@ -272,13 +232,6 @@ const useAuthStore = create<AuthState & Actions>()(
             });
             set({ user: res });
             return res;
-          },
-          confirmChangeLoginEmail(token: string) {
-            try {
-              return UserService.confirmChangeLoginEmail(token);
-            } catch (error) {
-              throw error as APIError;
-            }
           },
           async getUser() {
             const user = await UserService.getUser();

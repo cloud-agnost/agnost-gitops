@@ -223,106 +223,6 @@ export const CronJobConfigSchema = z.object({
   failedJobsHistoryLimit: z.number().optional(),
 });
 
-export const KnativeConfigSchema = z.object({
-  initialScale: z
-    .number({
-      coerce: true,
-      invalid_type_error: "Initial Scale should be a number",
-    })
-    .int("Initial Scale should be an integer")
-    .positive("Initial Scale should be greater than 0")
-    .max(100, "Initial Scale should be less than 100")
-    .transform((value) => Math.round(value))
-    .default(1)
-    .optional(),
-  concurrency: z
-    .number({
-      coerce: true,
-      invalid_type_error: "Concurrency should be a number",
-    })
-    .positive("Concurrency should be greater than 0")
-    .max(100, "Concurrency should be less than 100")
-    .int()
-    .transform((value) => Math.round(value))
-    .default(100)
-    .optional(),
-  scalingMetric: z
-    .enum(["concurrency", "rps", "cpu", "memory"])
-    .optional()
-    .optional(),
-  scalingMetricTarget: z
-    .number({
-      coerce: true,
-      invalid_type_error: "Scaling metric target should be a number",
-    })
-    .optional(),
-  minScale: z
-    .number({
-      coerce: true,
-      invalid_type_error: "Min scale should be a number",
-    })
-    .int({
-      message: "Min scale should be an integer",
-    })
-    .min(0, "Min scale should be greater than or equal to 0")
-    .max(100, "Min scale should be less than 100")
-    .transform((value) => Math.round(value))
-    .optional(),
-  maxScale: z
-    .number({
-      coerce: true,
-      invalid_type_error: "Max scale should be a number",
-    })
-    .int({
-      message: "Max scale should be an integer",
-    })
-    .positive({
-      message: "Max scale should be greater than 0",
-    })
-    .max(100, "Max scale should be less than 100")
-    .transform((value) => Math.round(value))
-    .optional(),
-  scaleDownDelay: z
-    .number({
-      coerce: true,
-      invalid_type_error: "Scale down delay should be a number",
-    })
-    .int({
-      message: "Scale down delay should be an integer",
-    })
-    .min(0, "Scale down delay should be greater than or equal to 0")
-    .max(3600, "Scale down delay should be less than 3600")
-    .transform((value) => Math.round(value))
-    .optional(),
-  scaleToZeroPodRetentionPeriod: z
-    .number({
-      coerce: true,
-      invalid_type_error: "Scale down delay should be a number",
-    })
-    .int({
-      message: "Scale down delay should be an integer",
-    })
-    .min(0, "Scale down delay should be greater than or equal to 0")
-    .max(3600, "Scale down delay should be less than 3600")
-    .transform((value) => Math.round(value))
-    .optional(),
-});
-// .superRefine((data, ctx) => {
-// min scale should be less than or equal to max scale
-// if (data.minScale! > data.maxScale!) {
-// 	ctx.addIssue({
-// 		code: z.ZodIssueCode.custom,
-// 		message: 'Min scale should be less than or equal to max scale',
-// 		path: ['minScale'],
-// 	});
-// }
-// if (data.scalingMetric === 'cpu') {
-// 	checkCPU(data.scalingMetricTarget, 'millicores', ctx, 'scalingMetricTarget');
-// } else if (data.scalingMetric === 'memory') {
-// 	checkMemory(data.scalingMetricTarget, 'mebibyte', ctx, 'scalingMetricTarget');
-// }
-// });
-
 export const NetworkingSchema = z.object({
   containerPort: z
     .number({
@@ -672,6 +572,11 @@ export const SourceConfigSchema = z
       })
       .trim()
       .optional(),
+    repoId: z
+      .number({
+        required_error: "Branch is required",
+      })
+      .optional(),
     path: z
       .string({
         required_error: "Path is required",
@@ -729,36 +634,118 @@ export const SourceConfigSchema = z
     }
   });
 
+const TemplateSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  manifest: z.string(),
+});
+
+// ConfigSchema type
+type TemplateConfig = {
+  visibleSections: string[];
+  visibleFields: string[];
+  disabledFields: string[];
+  defaultValues: {
+    "registry.imageUrl"?: string;
+    "networking.containerPort"?: number;
+    "networking.tcpProxy.enabled"?: boolean;
+    "podConfig.restartPolicy": "Always" | "OnFailure" | "Never";
+    "podConfig.cpuRequest"?: number;
+    "podConfig.cpuRequestType": "millicores" | "cores";
+    "podConfig.cpuLimit"?: number;
+    "podConfig.cpuLimitType": "millicores" | "cores";
+    "podConfig.memoryRequest"?: number;
+    "podConfig.memoryRequestType": "mebibyte" | "gibibyte";
+    "podConfig.memoryLimit"?: number;
+    "podConfig.memoryLimitType": "mebibyte" | "gibibyte";
+    "storageConfig.enabled"?: boolean;
+    "storageConfig.mountPath"?: string;
+    "storageConfig.size"?: number;
+    "storageConfig.sizeType": "mebibyte" | "gibibyte";
+    "storageConfig.accessModes"?: (
+      | "ReadWriteOnce"
+      | "ReadOnlyMany"
+      | "ReadWriteMany"
+    )[];
+    "statefulSetConfig.desiredReplicas"?: number;
+    "statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted":
+      | "Retain"
+      | "Delete";
+    "statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled":
+      | "Retain"
+      | "Delete";
+    "probes.readiness.enabled"?: boolean;
+    "probes.liveness.enabled"?: boolean;
+    "probes.startup.enabled"?: boolean;
+    "deploymentConfig.desiredReplicas"?: number;
+    "deploymentConfig.cpuMetric.enabled"?: boolean;
+    "deploymentConfig.memoryMetric.enabled"?: boolean;
+    repoOrRegistry: "repo" | "registry";
+  };
+  secrets: {
+    username?: string;
+    password?: string;
+    keyfile?: string;
+    accessKey?: string;
+    secretKey?: string;
+  };
+  variables: {
+    MONGO_INITDB_ROOT_USERNAME?: string;
+    MONGO_INITDB_ROOT_PASSWORD?: string;
+    MONGO_INITDB_DATABASE?: string;
+    POSTGRES_USER?: string;
+    POSTGRES_PASSWORD?: string;
+    MYSQL_ROOT_USER?: string;
+    MYSQL_ROOT_PASSWORD?: string;
+    MARIADB_ROOT_USER?: string;
+    MARIADB_ROOT_PASSWORD?: string;
+    REDIS_PASSWORD?: string;
+    MINIO_ROOT_USER?: string;
+    MINIO_ROOT_PASSWORD?: string;
+  };
+};
+
+// TemplateSchema type
+export type Template = {
+  name: string;
+  description: string;
+  manifest: string;
+  version: string;
+  isLatest: boolean;
+  type: "statefulset" | "deployment";
+  config: TemplateConfig;
+};
+
+// Category schema
+
 export const ContainerSchema = z.object({
   orgId: z.string(),
   projectId: z.string(),
   envId: z.string(),
   name: NameSchema,
-  type: z.enum(["deployment", "stateful set", "cron job", "knative service"]),
+  type: z.enum(["deployment", "statefulset", "cron job"]),
   variables: z.array(z.object({ name: z.string(), value: z.string() })),
   repoOrRegistry: z.enum(["repo", "registry"]),
   registry: z
     .object({
-      registryId: z.string().optional(),
-      image: z.string().url().optional(),
+      imageUrl: z.string().optional(),
     })
     .optional(),
   repo: SourceConfigSchema.optional(),
   deploymentConfig: DeploymentConfigSchema.optional(),
   statefulSetConfig: StatefulSetConfigSchema.optional(),
   cronJobConfig: CronJobConfigSchema.optional(),
-  knativeConfig: KnativeConfigSchema.optional(),
   networking: NetworkingSchema.optional(),
   probes: ProbesSchema.optional(),
   podConfig: PodConfigSchema.optional(),
   storageConfig: StorageConfigSchema.optional(),
+  template: TemplateSchema.optional(),
 });
 
 export enum ContainerType {
   Deployment = "deployment",
-  StatefulSet = "stateful set",
+  StatefulSet = "statefulset",
   CronJob = "cron job",
-  KNativeService = "knative service",
 }
 
 export type CreateContainerParams = z.infer<typeof ContainerSchema>;
@@ -819,18 +806,21 @@ export interface GetContainerPipelineLogsParams extends DeleteContainerParams {
 export interface AddGitProviderParams {
   provider: "github" | "gitlab" | "bitbucket";
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
+  expiresAt?: string;
+  token?: string;
 }
 
 export interface GetBranchesParams {
   gitProviderId: string;
   repo: string;
   owner: string;
+  repoId?: number;
 }
 export interface GitProvider {
   iid: string;
   userId: string;
-  provider: string;
+  provider: "github" | "gitlab" | "bitbucket";
   providerUserId: string;
   username: string;
   email: string;
@@ -1079,4 +1069,8 @@ export interface ContainerPipelineLogs {
   step: ContainerPipelineLogStep;
   status: ContainerPipelineLogStatus;
   logs: string[];
+}
+export interface ContainerTemplate {
+  category: "Database" | "Object Storage" | "KV Store";
+  templates: Template[];
 }

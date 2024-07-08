@@ -58,9 +58,9 @@ export const OrganizationInvitationsColumns: ColumnDef<Invitation>[] = [
 		size: 25,
 	},
 	{
-		id: 'email',
-		header: 'Email',
-		accessorKey: 'email',
+		id: 'name',
+		header: 'Name',
+		accessorKey: 'name',
 		size: 600,
 	},
 	{

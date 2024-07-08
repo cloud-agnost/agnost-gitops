@@ -1,10 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/Tooltip';
-import useOrganizationStore from '@/store/organization/organizationStore';
+import useNotificationStore from '@/store/notification/notificationStore';
 import { Notification } from '@/types';
 import { cn, getRelativeTime } from '@/utils';
-import { Bell, GearSix } from '@phosphor-icons/react';
+import { Bell } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import {
 	DropdownMenu,
@@ -13,15 +13,15 @@ import {
 	DropdownMenuTrigger,
 } from 'components/Dropdown';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 export default function NotificationDropdown() {
 	const { t } = useTranslation();
 	const { notificationsPreview, updateNotificationLastSeen, getNotificationsPreview } =
-		useOrganizationStore();
+		useNotificationStore();
 	const navigate = useNavigate();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
 	function seeAllNotifications() {
-		navigate(`/organization/${orgId}/notifications`);
+		navigate(`/notifications`);
 		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 	}
 
@@ -37,6 +37,7 @@ export default function NotificationDropdown() {
 				envId,
 				projectId,
 			}),
+		enabled: !!orgId,
 	});
 	return (
 		<DropdownMenu>
@@ -68,7 +69,7 @@ export default function NotificationDropdown() {
 }
 
 function NotificationItem({ notification }: { notification: Notification }) {
-	const { notificationLastSeen } = useOrganizationStore();
+	const { notificationLastSeen } = useNotificationStore();
 	return (
 		<div className='py-1.5 px-4 relative flex items-center gap-4'>
 			<TooltipProvider>

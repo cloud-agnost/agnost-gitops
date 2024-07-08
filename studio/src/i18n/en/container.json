@@ -11,6 +11,8 @@
 	"add_variable": "Add Variable",
 	"unsaved_changes": "You have unsaved changes.",
 	"pipelineStatus": "Pipeline Status",
+	"template": "Template",
+	"create_container_from_template": "Create {{type}} from Template",
 	"source": {
 		"title": "Source",
 		"description": "Set up the repository, branch and root folder (if you have a monorepo) of your application source code and Dockerfile that will be downloaded and used to build the Docker image",
@@ -21,12 +23,11 @@
 		"rootDirectoryHelp": "If you have a monorepo where you maintain code for multiple apps such as backend and frontend then this is the path of the app that you would like to link this deployment to (e.g. /frontend)",
 		"dockerFile": "Docker File",
 		"dockerFileHelp": "The name of the Docker file that will be used to create the Docker image of your app.",
-		"connect_github": "Connect your GitHub Account"
+		"connect_git": "Connect {{provider}} Account"
 	},
 	"registry": {
-		"id": "Registry ID",
-		"id_help": "Internal iid or the image registry",
-		"image": "Image"
+		"help": "Enter a Docker image from DockerHub, GHCR, or quay.io, e.g., any public docker image registry",
+		"image": "Docker Image URL"
 	},
 	"general": "General",
 	"deployment": {
@@ -121,30 +122,7 @@
 		"ReadWriteMany": "The volume can be mounted as read-write by many nodes.",
 		"enable": "Allow pod to access storage"
 	},
-	"knative": {
-		"name": "Knative Service Name",
-		"description": "A Knative service is a high-level abstraction that simplifies the deployment and management of serverless applications. It automatically handles the scaling, routing, and versioning of workloads.",
-		"concurrency_config": "Concurrency",
-		"concurrency_help": "Concurrency determines the number of simultaneous requests that can be processed by each replica of an application at any given time.",
-		"scaling_metric": "Scaling Metric",
-		"metric_target": "Metric Target",
-		"min_replicas": "Min Replicas",
-		"min_replicas_help": "Minimum number of pods, can be zero.",
-		"max_replicas": "Max Replicas",
-		"max_replicas_help": "Maximum number of pods.",
-		"scale_down_delay": "Scale Down Delay",
-		"scale_to_zero": "Scale to Zero Pod Retention Period",
-		"concurrency": "Concurrency percentage",
-		"rps": "Requests per second",
-		"cpu": "CPU usage in millicores",
-		"memory": "Memory usage in mebibytes ",
-		"concurrency_postfix": "percent",
-		"rps_postfix": "rps",
-		"cpu_postfix": "Millicores",
-		"memory_postfix": "Mebibytes",
-		"seconds": "Seconds",
-		"initial_scale": "Initial Scale"
-	},
+
 	"cronjob": {
 		"name": "CronJob Name",
 		"description": "A cron job is a scheduled task that runs at specified intervals, similar to allows users to automate repetitive tasks such as backups, report generation, or cleanup operations by defining jobs that are executed based on a schedule.",

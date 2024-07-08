@@ -20,6 +20,10 @@ import {
 export default class ContainerService {
   static readonly url = "/v1/org";
 
+  static async getGitProviders(): Promise<GitProvider[]> {
+    return (await axios.get("/v1/user/git/")).data;
+  }
+
   static async addGitProvider(req: AddGitProviderParams): Promise<GitProvider> {
     return (await axios.post(`/v1/user/git`, req)).data;
   }
@@ -33,10 +37,11 @@ export default class ContainerService {
     gitProviderId,
     owner,
     repo,
+    repoId,
   }: GetBranchesParams): Promise<GitBranch[]> {
     return (
       await axios.get(`/v1/user/git/${gitProviderId}/repo/branch`, {
-        params: { owner, repo },
+        params: { owner, repo, repoId },
       })
     ).data;
   }

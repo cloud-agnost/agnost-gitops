@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { useTranslation } from 'react-i18next';
 import CustomDomains from '../cluster/CustomDomain/CustomDomains';
 import TransferClusterOwnership from './TransferClusterOwnership';
+import ReverseProxyURL from '../cluster/CustomDomain/ReverseProxyURL';
 
 export default function ClusterManagement() {
 	const { t } = useTranslation();
@@ -61,6 +62,14 @@ export default function ClusterManagement() {
 						description={t('cluster.transferClusterOwnershipDescription')}
 					>
 						<TransferClusterOwnership />
+					</SettingsFormItem>
+					<SettingsFormItem
+						className='space-y-0 py-0 pb-6'
+						contentClassName='pt-6'
+						title={t('cluster.reverseProxyURL')}
+						description={t('cluster.reverseProxyURLDescription')}
+					>
+						<ReverseProxyURL />
 					</SettingsFormItem>
 					<div className='w-full overflow-y-auto h-[calc(100%-4rem)]'>
 						<CustomDomains />

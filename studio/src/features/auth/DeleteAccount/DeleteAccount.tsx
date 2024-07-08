@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import './deleteAccount.scss';
+import { resetAllStores } from '@/utils';
 export default function DeleteAccount() {
 	const { t } = useTranslation();
 	const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -20,8 +21,7 @@ export default function DeleteAccount() {
 		mutationFn: deleteAccount,
 		onSuccess: () => {
 			navigate('/login');
-
-			//TODO resetAllStores();
+			resetAllStores();
 		},
 	});
 	function closeModal() {

@@ -1,4 +1,5 @@
 import { AuthUserAvatar } from '@/components/AuthUserAvatar';
+import { Button } from '@/components/Button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -20,14 +21,13 @@ import useEnvironmentStore from '@/store/environment/environmentStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
 import useThemeStore from '@/store/theme/themeStore.ts';
-import { cn, leaveChannel } from '@/utils';
-import { Laptop, MoonStars, SignOut, SunDim } from '@phosphor-icons/react';
+import { cn, leaveChannel, resetAllStores } from '@/utils';
+import { GearSix, Laptop, MoonStars, SignOut, SunDim } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ProfileSettings } from '../ProfileSettings';
 export default function AuthUserDropdown() {
-	const { user, logout } = useAuthStore();
+	const { user, logout, toggleProfileSettings } = useAuthStore();
 	const { orgId } = useParams() as { orgId: string };
 	const { t } = useTranslation();
 	const { setTheme, getTheme } = useThemeStore();
@@ -36,6 +36,7 @@ export default function AuthUserDropdown() {
 	const { environments } = useEnvironmentStore();
 	const { projects } = useProjectStore();
 	const { containers } = useContainerStore();
+
 	const THEMES = [
 		{
 			id: 'light',
@@ -74,7 +75,7 @@ export default function AuthUserDropdown() {
 
 			leaveChannel('cluster');
 			leaveChannel(user?._id ?? '');
-			//TODO resetAllStores();
+			resetAllStores();
 			navigate('/login');
 		},
 		onError: (error) => {
@@ -101,7 +102,16 @@ export default function AuthUserDropdown() {
 				<DropdownMenuSeparator />
 
 				<DropdownMenuItemContainer>
-					<ProfileSettings />
+					<Button
+						variant='blank'
+						className='!w-full justify-start !px-3 !py-1.5'
+						onClick={toggleProfileSettings}
+					>
+						<div className={cn('flex items-center gap-2')}>
+							<GearSix className='text-icon-base text-lg' />
+							{t('general.account_settings')}
+						</div>
+					</Button>
 					{user?.isClusterOwner && <ClusterManagement />}
 
 					<DropdownMenuSub>

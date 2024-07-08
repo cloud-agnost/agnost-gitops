@@ -1,13 +1,4 @@
 import { Button } from '@/components/Button';
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandSeparator,
-} from '@/components/Command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/Popover';
 import { Organization } from '@/types';
 import { Project } from '@/types/project';
 import { cn } from '@/utils';
@@ -15,6 +6,12 @@ import { CaretUpDown, Check } from '@phosphor-icons/react';
 import { MouseEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '../Avatar';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '../Dropdown';
 import { SearchInput } from '../SearchInput';
 interface SelectionLabelProps {
 	selectedData: Organization | Project;
@@ -48,16 +45,16 @@ export default function SelectionDropdown<T extends Organization | Project>({
 		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 	}
 	return (
-		<Popover>
+		<DropdownMenu>
 			<div className='w-[210px] h-10 relative'>
 				<SelectionLabel onClick={onClick} selectedData={selectedData} />
-				<PopoverTrigger asChild>
+				<DropdownMenuTrigger asChild>
 					<Button variant='icon' size='sm' className='absolute z-50 top-0 -right-1' rounded>
 						<CaretUpDown size={20} />
 					</Button>
-				</PopoverTrigger>
+				</DropdownMenuTrigger>
 			</div>
-			<PopoverContent align='end' className='bg-subtle w-[250px]'>
+			<DropdownMenuContent align='end' className='bg-subtle w-[250px]'>
 				{data.length > 5 && (
 					<SearchInput
 						placeholder={t('organization.select') as string}
@@ -66,8 +63,12 @@ export default function SelectionDropdown<T extends Organization | Project>({
 					/>
 				)}
 				{filteredData.map((d) => (
-					<div className='px-2 py-1.5 hover:bg-lighter' key={d._id}>
-						<Button variant='blank' onClick={() => handleSelect(d)} size='full'>
+					<DropdownMenuItem
+						key={d._id}
+						className='mb-2 w-full !pt-2.5'
+						onClick={() => handleSelect(d)}
+					>
+						<div className='flex items-center justify-between flex-1'>
 							<SelectionLabel selectedData={d} />
 							<Check
 								size={16}
@@ -77,13 +78,13 @@ export default function SelectionDropdown<T extends Organization | Project>({
 								)}
 								weight='bold'
 							/>
-						</Button>
-					</div>
+						</div>
+					</DropdownMenuItem>
 				))}
 				{children && <div>{children}</div>}
 				{/* <CommandEmpty>{t('organization.empty')}</CommandEmpty> */}
-			</PopoverContent>
-		</Popover>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 
@@ -99,7 +100,7 @@ function SelectionLabel({ selectedData, onClick }: SelectionLabelProps) {
 		<Button
 			variant='blank'
 			size='sm'
-			className='flex items-center px-1.5 h-full w-full transition font-normal rounded-sm hover:bg-wrapper-background-hover dark:hover:bg-button-secondary-hover'
+			className='flex items-center h-full w-full transition font-normal rounded-sm hover:bg-wrapper-background-hover dark:hover:bg-button-secondary-hover'
 			onClick={openAppSettings}
 		>
 			<Avatar className='mr-2' size='sm' square>

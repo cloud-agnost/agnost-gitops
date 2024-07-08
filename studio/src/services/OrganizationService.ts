@@ -2,7 +2,6 @@ import { axios } from "@/helpers";
 import useOrganizationStore from "@/store/organization/organizationStore";
 import {
   ChangeOrganizationAvatarRequest,
-  GetAuditLogsRequest,
   GetInvitationRequest,
   GetOrganizationMembersRequest,
   Invitation,
@@ -229,13 +228,5 @@ export default class OrganizationService {
 
   static async getAllOrganizationRoleDefinitions(): Promise<OrgPermissions> {
     return (await axios.get(`${this.url}/roles`)).data;
-  }
-
-  static async getAuditLogs({ orgId, ...rest }: GetAuditLogsRequest) {
-    return (
-      await axios.get(`/v1/log/org/${orgId}`, {
-        params: rest,
-      })
-    ).data;
   }
 }

@@ -3,15 +3,29 @@ import { Badge } from '@/components/Badge';
 import { CopyButton } from '@/components/CopyButton';
 import { SortButton } from '@/components/DataTable';
 import { DateText } from '@/components/DateText';
-import { Github } from '@/components/icons';
+import { Bitbucket, Github } from '@/components/icons';
+import GitLab from '@/components/icons/GitLab';
 import { BADGE_COLOR_MAP } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { ColumnDefWithClassName } from '@/types';
 import { Container } from '@/types';
-import { translate } from '@/utils';
+import { cn, translate } from '@/utils';
 import { startCase } from 'lodash';
 import { Link } from 'react-router-dom';
+
+function getProviderIcon(provider: 'github' | 'gitlab' | 'bitbucket', className?: string) {
+	switch (provider) {
+		case 'github':
+			return <Github className={cn('size-5 mr-2', className)} />;
+		case 'gitlab':
+			return <GitLab className={cn('size-5 mr-2', className)} />;
+		case 'bitbucket':
+			return <Bitbucket className={cn('size-5 mr-2', className)} />;
+		default:
+			return null;
+	}
+}
 
 const ContainerColumns: ColumnDefWithClassName<Container>[] = [
 	{
@@ -94,13 +108,13 @@ const ContainerColumns: ColumnDefWithClassName<Container>[] = [
 			return (
 				repo?.url && (
 					<Link
-						to={repo?.url ?? registry?.image ?? ''}
+						to={repo?.url ?? registry?.imageUrl ?? ''}
 						target='_blank'
 						rel='noopener noreferrer'
 						className='hover:underline'
 					>
 						<div className='flex items-center gap-2'>
-							<Github className='shrink-0 size-6' />
+							{getProviderIcon(repo.type, 'shrink-0 size-6')}
 							<div>
 								<p className='truncate whitespace-nowrap'>{repo.name?.split('/')[0]}</p>
 								<p className='truncate whitespace-nowrap'>

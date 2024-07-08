@@ -11,7 +11,6 @@ export { default as GcpStorage } from "./GcpStorage";
 export { default as Github } from "./Github";
 export { default as Gitlab } from "./GitLab";
 export { default as Kafka } from "./Kafka";
-export { default as Knative } from "./Knative";
 export { default as Kubernetes } from "./Kubernetes";
 export { default as Logo } from "./Logo";
 export { default as MinIo } from "./MinIo";

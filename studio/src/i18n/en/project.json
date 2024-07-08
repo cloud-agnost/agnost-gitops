@@ -67,5 +67,9 @@
 
 	"containers": "Containers",
 	"sourceOrRegistry": "Source or Registry",
-	"source": "Source"
+	"source": "Source",
+	"mark_read_only": "Mark as Read Only",
+	"mark_read_write": "Mark as Read/Write",
+	"set_private": "Set Private",
+	"set_public": "Set Public"
 }

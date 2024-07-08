@@ -1,20 +1,38 @@
-import { Button } from '@/components/Button';
 import { Checkbox } from '@/components/Checkbox';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
-import { NOTIFICATION_ACTIONS } from '@/constants';
+import useNotificationStore from '@/store/notification/notificationStore';
+import { useQuery } from '@tanstack/react-query';
+import _ from 'lodash';
+import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { NotificationFilterSchema } from '../NotificationFilter';
-import _ from 'lodash';
 
 export default function ActionFilter() {
-	const [searchParams, setSearchParams] = useSearchParams();
+	const [searchParams] = useSearchParams();
 	const form = useFormContext<z.infer<typeof NotificationFilterSchema>>();
+	const { getDistinctActions } = useNotificationStore();
 
-	function resetFilter() {
-		searchParams.delete('a');
-		setSearchParams(searchParams);
+	const { data: actions, refetch } = useQuery({
+		queryKey: ['actions'],
+		queryFn: () =>
+			getDistinctActions({
+				orgId: form.getValues('orgId'),
+				...(form.getValues('projectId') && { projectId: form.getValues('projectId') }),
+				...(form.getValues('envId') && { envId: form.getValues('envId') }),
+			}),
+		enabled: searchParams.has('orgId'),
+	});
+
+	useEffect(() => {
+		if (form.watch('orgId')) {
+			refetch();
+		}
+	}, [form.watch('orgId'), form.watch('envId'), form.watch('projectId')]);
+
+	if (_.isEmpty(actions)) {
+		return null;
 	}
 
 	return (
@@ -24,13 +42,8 @@ export default function ActionFilter() {
 				name='action'
 				render={() => (
 					<FormItem>
-						<div className='flex items-center justify-between'>
-							<FormLabel>Action</FormLabel>
-							<Button variant='blank' className='link' onClick={resetFilter}>
-								Clear
-							</Button>
-						</div>
-						{NOTIFICATION_ACTIONS.map((action) => (
+						<FormLabel>Actions</FormLabel>
+						{actions?.map((action: string) => (
 							<FormField
 								key={action}
 								control={form.control}
