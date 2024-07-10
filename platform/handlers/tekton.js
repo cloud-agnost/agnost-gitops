@@ -188,6 +188,7 @@ export async function createTektonPipeline(
 					resource.spec.params[7].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
 					resource.spec.params[8].value = containerImageName;
 					resource.spec.params[9].value = dockerfile.replace(/^\/+/, ""); // remove leading slash, if exists
+					var taskrunParams = resource.spec.params;
 					await k8sCustomObjectApi.createNamespacedCustomObject(
 						group,
 						version,
@@ -200,6 +201,7 @@ export async function createTektonPipeline(
 					{
 						resource.spec.resourcetemplates[0].spec.serviceAccountName +=
 							resourceNameSuffix;
+						var taskrunSpec = resource.spec.resourcetemplates[0].spec;
 						await k8sCustomObjectApi.createNamespacedCustomObject(
 							group,
 							version,
@@ -221,6 +223,48 @@ export async function createTektonPipeline(
 			);
 			throw err;
 		}
+	}
+
+	// Run the initial pipeline
+	try {
+		const specString = JSON.stringify(taskrunSpec).replace(/tt\.params/g, 'params');
+		const populatedSpec = JSON.parse(specString);
+		const path = new URL(gitRepoUrl).pathname;
+
+		// Need to populate params that comes with Webhook call
+		taskrunParams[10].value = 'abc1234';
+		taskrunParams[11].value = gitRepoUrl;
+		taskrunParams[12].value = 'agnost-gitops';
+		taskrunParams[13].value = gitRepoUrl + '/commit/abc1234';
+		taskrunParams[14].value = gitRepoUrl;
+		taskrunParams[15].value = path.split('/')[2];
+		taskrunParams[16].value = "Initial TaskRun";
+		taskrunParams[17].value = new Date().toISOString();
+		populatedSpec.params = taskrunParams;
+
+		const taskrunResource = {
+			apiVersion: 'tekton.dev/v1',
+			kind: 'TaskRun',
+			metadata: {
+				name: 'manual-run-' + pipelineId
+			},
+			spec: populatedSpec
+		};
+
+		await k8sCustomObjectApi.createNamespacedCustomObject(
+			'tekton.dev',
+			'v1',
+			'tekton-builds',
+			'taskruns',
+			taskrunResource
+		);
+	} catch (err) {
+		console.error(
+			`Error applying tekton pipeline resource ${taskrunResource.kind} ${
+				taskrunResource.metadata.name
+			}. ${err.response?.body?.message ?? err.message}`
+		);
+		throw err;
 	}
 
 	let webhookUrl = "";
