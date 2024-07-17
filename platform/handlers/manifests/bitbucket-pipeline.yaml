@@ -83,6 +83,7 @@ spec:
           steps:
           - name: setup
             image: bitnami/git:2.44.0
+            onError: continue
             env:
             - name: GIT_REPO
               value: $(tt.params.gitrepo)
@@ -111,17 +112,38 @@ spec:
               cd $(workspaces.ws.path)
               git clone ${URL} -b $(tt.params.gitbranch)
               cd ${REPO_NAME}
+
+              # Do not check commits if this is an initial manual run
+              if [[ ! $(context.taskRun.name) =~ "manual-run-" ]]; then
+                # If subpath is defined, then check for the changed files
+                if [ $(tt.params.gitsubpath) != "" ]; then
+                  git diff --name-only $(git log -1 --pretty=%P $(tt.params.gitrevision) | awk '{print $1}')..$(tt.params.gitrevision) > /tmp/changed_files
+                  NUM_CHANGES=$(grep -c "^$(tt.params.gitsubpath)" /tmp/changed_files)
+                  # If there are not changes on this subpath, exit with Error, but onError is set to continue
+                  if [ ${NUM_CHANGES} == 0 ]; then
+                    echo "No changed files for this pipeline, exiting..."
+                    exit 1
+                  fi
+                fi
+              fi
+
               echo "$(tt.params.containerregistry)/$(tt.params.imagename):$(echo $(tt.params.gitrevision) | head -c 7)" > $(workspaces.ws.path)/image
           - name: build
             image: gcr.io/kaniko-project/executor:v1.21.1-debug
             script: |
               #!/busybox/sh
+
+              CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
+              if [ ${CANCEL_PIPELINE} -eq 1 ]; then
+                echo "Pipeline cancelled..."
+                exit 0
+              fi
               export IMAGE=$(cat $(workspaces.ws.path)/image)
               export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
               echo "Context: $(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath)"
               echo "Dockerfile: $(tt.params.dockerfile)"
               echo "Image: ${IMAGE}"
-              if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
+              if [ "$(tt.params.containerregistry)" = "zot.$(tt.params.agnostnamespace):5000" ]; then
                 /kaniko/executor \
                   --destination=${IMAGE} \
                   --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
@@ -138,6 +160,13 @@ spec:
             image: quay.io/skopeo/stable:latest
             script: |
               #!/bin/bash
+
+              CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
+              if [ ${CANCEL_PIPELINE} -eq 1 ]; then
+                echo "Pipeline cancelled..."
+                exit 0
+              fi
+
               if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
                 export IMAGE=$(cat $(workspaces.ws.path)/image)
                 skopeo --insecure-policy copy \
@@ -151,6 +180,13 @@ spec:
             image: bitnami/kubectl:1.29.2
             script: |
               #!/usr/bin/bash
+
+              CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
+              if [ ${CANCEL_PIPELINE} -eq 1 ]; then
+                echo "Pipeline cancelled..."
+                exit 0
+              fi
+
               export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/zot.$(tt.params.agnostnamespace):5000/localhost:30050/')
               kubectl set image $(tt.params.kind)/$(tt.params.resourcename) $(tt.params.resourcename)=${IMAGE} -n $(tt.params.resourcenamespace)
               kubectl rollout status $(tt.params.kind)/$(tt.params.resourcename) -n $(tt.params.resourcenamespace) -w
@@ -221,8 +257,6 @@ spec:
           params:
             - name: "filter"
               value: "body.ref == 'refs/heads/master'"
-            - name: "filter"
-              value: "will be replaced or removed"
       bindings:
         - ref: bitbucket-push-binding
       template:

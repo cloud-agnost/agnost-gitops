@@ -151,24 +151,6 @@ export async function createTektonPipeline(
 					resource.spec.triggers[0].template.ref += resourceNameSuffix;
 					resource.spec.resources.kubernetesResource.spec.template.spec.serviceAccountName +=
 						resourceNameSuffix;
-					if (gitSubPath != "/" && gitProvider.provider !== "bitbucket") {
-						// remove leading slash, if exists
-						let path = gitSubPath.replace(/^\/+/, "");
-						resource.spec.triggers[0].interceptors[1].params[1].name = "filter";
-						resource.spec.triggers[0].interceptors[1].params[1].value = `
-								size(body.commits) > 0 && 
-								body.commits.exists(c, 
-									(size(c.modified) > 0 && c.modified.exists(m, m.startsWith("${path}"))) || 
-									(size(c.added) > 0 && c.added.exists(a, a.startsWith("${path}"))) || 
-									(size(c.removed) > 0 && c.removed.exists(r, r.startsWith("${path}")))
-								)
-								`;
-					} else {
-						// remove the filter interceptor
-						// Note that the bitbucket push evnet does not provide added, modified and removed files information similar to github and gitlab
-						// Currently we do not apply this filter for bitbucket and build all the repo again in case of changes
-						delete resource.spec.triggers[0].interceptors[1].params[1];
-					}
 					await k8sCustomObjectApi.createNamespacedCustomObject(
 						group,
 						version,
