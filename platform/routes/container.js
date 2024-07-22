@@ -386,7 +386,7 @@ router.put(
 
 /*
 @route      /v1/org/:orgId/project/:projectId/env/:envId/containers/:containerId
-@method     PIT
+@method     DELETE
 @desc       Deletes the container
 @access     private
 */
@@ -403,7 +403,7 @@ router.delete(
 		const session = await cntrCtrl.startSession();
 
 		try {
-			const { org, project, environment, container, body, user } = req;
+			const { org, project, environment, container, user } = req;
 
 			if (container.isClusterEntity) {
 				return res.status(401).json({
@@ -449,7 +449,7 @@ router.delete(
 				user,
 				"org.project.environment.container",
 				"delete",
-				`Deleted '${body.type}' named '${body.name}'`,
+				`Deleted '${container.type}' named '${container.name}'`,
 				{},
 				{
 					orgId: org._id,
