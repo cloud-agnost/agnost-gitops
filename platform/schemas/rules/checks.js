@@ -310,9 +310,9 @@ export const checkNetworking = (containerType, actionType) => {
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
 					.bail()
-					.custom(async () => {
+					.custom(async (value) => {
 						const cluster = await getClusterRecord();
-						if (cluster.domains?.length === 0) {
+						if (value && cluster.domains?.length === 0) {
 							throw new Error(
 								`You have not set the domain of your cluster yet. Subdomain based ingress for a container can only be activated after the cluster domain has been set.`
 							);
@@ -337,9 +337,9 @@ export const checkNetworking = (containerType, actionType) => {
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
 					.bail()
-					.custom(async () => {
+					.custom(async (value) => {
 						const cluster = await getClusterRecord();
-						if (cluster.domains?.length === 0) {
+						if (value && cluster.domains?.length === 0) {
 							throw new Error(
 								`You have not set the domain of your cluster yet. Custom domains can only be created after the cluster domain has been set.`
 							);

@@ -31,6 +31,7 @@ import {
 import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
+import e from "express";
 
 const router = express.Router({ mergeParams: true });
 
@@ -124,7 +125,9 @@ router.post(
 			else body.pipelineStatus = "N/A";
 
 			if (body.type !== "cronjob") {
-				// If there already a port number assignment then use it otherwise generate a new one
+				if (!body.networking.tcpProxy) body.networking.tcpProxy = {};
+				// Generate a default TCP proxy port number
+				body.networking.tcpProxy.enabled = false;
 				body.networking.tcpProxy.publicPort = await getNewTCPPortNumber();
 			}
 

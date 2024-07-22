@@ -167,7 +167,7 @@ spec:
                 exit 0
               fi
 
-              if [ "$(tt.params.containerregistry)" == "zot.$(tt.params.agnostnamespace):5000" ]; then
+              if [ "$(tt.params.containerregistry)" = "zot.$(tt.params.agnostnamespace):5000" ]; then
                 export IMAGE=$(cat $(workspaces.ws.path)/image)
                 skopeo --insecure-policy copy \
                   --dest-authfile /root/.docker/config.json \

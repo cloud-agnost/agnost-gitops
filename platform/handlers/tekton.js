@@ -151,6 +151,7 @@ export async function createTektonPipeline(
 					resource.spec.triggers[0].template.ref += resourceNameSuffix;
 					resource.spec.resources.kubernetesResource.spec.template.spec.serviceAccountName +=
 						resourceNameSuffix;
+
 					await k8sCustomObjectApi.createNamespacedCustomObject(
 						group,
 						version,

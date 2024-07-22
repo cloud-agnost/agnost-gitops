@@ -62,6 +62,7 @@ export async function manageContainer(payload) {
 			await manageCronJob(payload);
 		}
 	} catch (err) {
+		console.log(err);
 		throw new Error(
 			`Cannot ${payload.action} the ${payload.container.type} named '${
 				payload.container.name
