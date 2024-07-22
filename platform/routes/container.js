@@ -123,6 +123,11 @@ router.post(
 					: "Not Connected";
 			else body.pipelineStatus = "N/A";
 
+			if (body.type !== "cronjob") {
+				// If there already a port number assignment then use it otherwise generate a new one
+				body.networking.tcpProxy.publicPort = await getNewTCPPortNumber();
+			}
+
 			container = await cntrCtrl.create(
 				{
 					...body,
