@@ -21,8 +21,8 @@ import { toDisplayName } from '@/utils';
 import { CaretDown, Cloud, HardDrive, Package, Plus, Timer } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import CreateContainerDrawer from './CreateContainerDrawer';
 import { useSearchParams } from 'react-router-dom';
+import CreateContainerDrawer from './CreateContainerDrawer';
 export default function CreateContainerButton() {
 	const { t } = useTranslation();
 	const canCreateContainer = true;
@@ -33,7 +33,7 @@ export default function CreateContainerButton() {
 		switch (type) {
 			case 'deployment':
 				return <Package size={16} />;
-			case 'cron job':
+			case 'cronjob':
 				return <Timer size={16} />;
 			case 'statefulset':
 				return <Kubernetes className='size-4' />;
@@ -86,7 +86,7 @@ export default function CreateContainerButton() {
 														key={template.name}
 														className='gap-2'
 														onSelect={() => {
-															openCreateContainerDialog(template.type as ContainerType);
+															openCreateContainerDialog(template.type as ContainerType, template);
 															setSearchParams({ template: template.name });
 														}}
 													>

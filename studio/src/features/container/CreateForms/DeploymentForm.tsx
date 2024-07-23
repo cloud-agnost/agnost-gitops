@@ -81,7 +81,8 @@ const GeneralSection = () => {
 						</FormItem>
 					)}
 				/>
-				{(visibleFields.includes('sdeploymentConfig.desiredReplicas') ?? true) && (
+				{((!visibleFields.length || visibleFields.includes('deploymentConfig.desiredReplicas')) ??
+					true) && (
 					<FormField
 						control={form.control}
 						name='deploymentConfig.desiredReplicas'

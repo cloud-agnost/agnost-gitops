@@ -5,11 +5,11 @@ import { BADGE_COLOR_MAP } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
 import { ContainerPod } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 export default function Logs() {
-	const { getContainerLogs, container } = useContainerStore();
+	const { getContainerLogs, container, selectedPod, setSelectedPod } = useContainerStore();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
 
 	const { data } = useQuery({
@@ -23,11 +23,10 @@ export default function Logs() {
 			}),
 		refetchInterval: 3000,
 	});
-	const [selectedPod, setSelectedPod] = useState<ContainerPod | undefined>(data?.pods[0]);
 
 	function onSelect(podName: string) {
 		if (!data?.pods) return;
-		setSelectedPod(data.pods.find((pod) => pod.name === podName));
+		setSelectedPod(data.pods.find((pod) => pod.name === podName) as ContainerPod);
 	}
 
 	const selectedLogs = useMemo(() => {

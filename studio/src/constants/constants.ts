@@ -251,7 +251,7 @@ export const CRON_EXAMPLES = [
 export const CONTAINER_TYPES = [
   "deployment",
   "statefulset",
-  "cron job",
+  "cronjob",
 ] as const;
 
 export const EDIT_PROJECT_MENU_ITEMS = [

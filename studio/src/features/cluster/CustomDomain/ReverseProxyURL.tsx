@@ -37,6 +37,7 @@ export default function ReverseProxyURL() {
 				action: 'success',
 				title: t('cluster.reverseProxyURLSuccess') as string,
 			});
+			document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 		},
 		onError: (error) => {
 			toast({

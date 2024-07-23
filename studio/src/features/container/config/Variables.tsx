@@ -17,7 +17,6 @@ export default function Variables() {
 		control: form.control,
 		name: 'variables',
 	});
-
 	return (
 		<div className='space-y-8'>
 			{fields.map((f, index) => (
@@ -27,13 +26,13 @@ export default function Variables() {
 						name={`variables.${index}.name`}
 						render={({ field }) => (
 							<FormItem className='flex-1'>
-								{index === 0 && <FormLabel>{t('resources.database.key')}</FormLabel>}
+								{index === 0 && <FormLabel>{t('general.key')}</FormLabel>}
 								<FormControl>
 									<Input
 										readOnly={!!template}
 										placeholder={
 											t('forms.placeholder', {
-												label: t('resources.database.key'),
+												label: t('general.key'),
 											}) ?? ''
 										}
 										error={!!form.formState.errors.variables?.[index]?.name}
@@ -49,14 +48,14 @@ export default function Variables() {
 						name={`variables.${index}.value`}
 						render={({ field }) => (
 							<FormItem className='flex-1'>
-								{index === 0 && <FormLabel>{t('resources.database.value')}</FormLabel>}
+								{index === 0 && <FormLabel>{t('general.value')}</FormLabel>}
 
 								<PasswordInput
 									readOnly={!!template}
 									copyable
 									placeholder={
 										t('forms.placeholder', {
-											label: t('resources.database.value'),
+											label: t('general.value'),
 										}) ?? ''
 									}
 									error={!!form.formState.errors.variables?.[index]?.name}

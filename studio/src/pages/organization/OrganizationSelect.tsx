@@ -56,7 +56,7 @@ export default function OrganizationSelect() {
 										variant='blank'
 										onClick={() => handleClickOrganization(organization)}
 										key={organization?._id}
-										className='select-organization-button'
+										className='select-organization-button !p-0'
 									>
 										<div className='select-organization-item'>
 											<Avatar size='4xl' square>

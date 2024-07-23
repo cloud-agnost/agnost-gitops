@@ -37,7 +37,7 @@ export default function StorageConfig() {
 			icon={<Database size={20} />}
 			descriptionI18nKey='container.storage.description'
 		>
-			{(visibleFields?.includes('storageConfig.enabled') ?? true) && (
+			{(visibleFields?.includes('storageConfig.enabled') || !visibleFields.length) && (
 				<FormField
 					control={form.control}
 					name='storageConfig.enabled'
@@ -61,7 +61,7 @@ export default function StorageConfig() {
 			{form.watch('storageConfig.enabled') && (
 				<div className='space-y-4'>
 					<div className='grid grid-cols-2 gap-4'>
-						{(visibleFields?.includes('storageConfig.mountPath') ?? true) && (
+						{(visibleFields?.includes('storageConfig.mountPath') || !visibleFields.length) && (
 							<FormField
 								control={form.control}
 								name='storageConfig.mountPath'
@@ -87,7 +87,7 @@ export default function StorageConfig() {
 							/>
 						)}
 						<FormFieldGroup label={t('container.storage.storage_size') ?? ''}>
-							{(visibleFields?.includes('storageConfig.size') ?? true) && (
+							{(visibleFields?.includes('storageConfig.size') || !visibleFields.length) && (
 								<FormField
 									control={form.control}
 									name='storageConfig.size'
@@ -113,7 +113,7 @@ export default function StorageConfig() {
 									)}
 								/>
 							)}
-							{(visibleFields?.includes('storageConfig.sizeType') ?? true) && (
+							{(visibleFields?.includes('storageConfig.sizeType') || !visibleFields.length) && (
 								<FormField
 									control={form.control}
 									name='storageConfig.sizeType'
@@ -150,7 +150,7 @@ export default function StorageConfig() {
 							)}
 						</FormFieldGroup>
 					</div>
-					{(visibleFields?.includes('storageConfig.accessModes') ?? true) && (
+					{(visibleFields?.includes('storageConfig.accessModes') || !visibleFields.length) && (
 						<FormField
 							control={form.control}
 							name='storageConfig.accessModes'

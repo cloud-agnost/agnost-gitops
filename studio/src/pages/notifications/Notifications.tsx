@@ -27,7 +27,7 @@ export default function Notifications() {
 				actor: searchParams.get('actor')?.split(',') ?? undefined,
 				start: searchParams.get('start') ?? undefined,
 				end: searchParams.get('end') ?? undefined,
-				action: (searchParams.get('action')?.split(',') as NotificationActions[]) ?? undefined,
+				action: (searchParams.get('a')?.split(',') as NotificationActions[]) ?? undefined,
 				orgId: searchParams.get('orgId') ?? '',
 				envId: searchParams.get('envId') ?? undefined,
 				projectId: searchParams.get('projectId') ?? undefined,

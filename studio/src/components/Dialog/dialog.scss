@@ -6,7 +6,7 @@
 		@apply fixed inset-0 z-50 bg-base/80 backdrop-blur-sm transition-all duration-100 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in;
 	}
 	&-content {
-		@apply fixed z-50 grid w-full gap-4 rounded-b-lg bg-subtle p-6 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:slide-in-from-bottom-10 sm:max-w-xl sm:rounded-lg sm:zoom-in-90 data-[state=open]:sm:slide-in-from-bottom-0;
+		@apply fixed z-50 grid w-full gap-4 rounded-b-lg bg-subtle p-6 shadow-lg animate-in data-[state=open]:fade-in-90 data-[state=open]:slide-in-from-bottom-10 sm:max-w-2xl sm:rounded-lg sm:zoom-in-90 data-[state=open]:sm:slide-in-from-bottom-0;
 	}
 	&-close {
 		@apply absolute right-4 top-4 aspect-square w-10 h-10 text-icon-base hover:text-icon-secondary;

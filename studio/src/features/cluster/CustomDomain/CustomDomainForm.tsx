@@ -12,6 +12,7 @@ import { Input } from '@/components/Input';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import DnsSettings from './DnsSettings';
+import useClusterStore from '@/store/cluster/clusterStore';
 
 interface CustomDomainFormProps {
 	loading?: boolean;
@@ -21,9 +22,16 @@ interface CustomDomainFormProps {
 export default function CustomDomainForm({ loading, modal }: CustomDomainFormProps) {
 	const form = useFormContext();
 	const { t } = useTranslation();
+	const cluster = useClusterStore((state) => state.cluster);
 	return (
 		<div className='space-y-6'>
-			{modal && <DnsSettings />}
+			{modal && (
+				<DnsSettings
+					description={t('cluster.dns_settings_description')}
+					ips={cluster.ips}
+					slug={cluster?.slug ?? ''}
+				/>
+			)}
 			<FormField
 				control={form.control}
 				name='domain'

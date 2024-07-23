@@ -24,7 +24,6 @@ export default function ClusterManagement() {
 	useQuery({
 		queryFn: getClusterInfo,
 		queryKey: ['getClusterInfo'],
-		enabled: !_.isNil(cluster),
 	});
 
 	useQuery({
@@ -71,7 +70,7 @@ export default function ClusterManagement() {
 					>
 						<ReverseProxyURL />
 					</SettingsFormItem>
-					<div className='w-full overflow-y-auto h-[calc(100%-4rem)]'>
+					<div className='w-full'>
 						<CustomDomains />
 					</div>
 				</div>

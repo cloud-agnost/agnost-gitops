@@ -12,7 +12,6 @@
 		@apply flex flex-col justify-center items-center gap-4;
 	}
 	&-button {
-		flex: 0 0 calc(25% - 20px);
 		@apply h-[13rem];
 	}
 	&-info {

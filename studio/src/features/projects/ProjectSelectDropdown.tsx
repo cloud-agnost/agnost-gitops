@@ -34,7 +34,7 @@ export default function ProjectSelectDropdown() {
 				<>
 					<DropdownMenuItem
 						onClick={() => setting.onClick(project)}
-						key={setting.name + index}
+						key={index}
 						disabled={setting.isDisabled(project.role, project)}
 					>
 						<setting.icon className='w-5 h-5 mr-2' />

@@ -75,12 +75,14 @@ const EventColumns: ColumnDefWithClassName<ContainerEvent>[] = [
 		header: 'First Seen',
 		accessorKey: 'firstSeen',
 		size: 200,
+		cell: ({ row }) => new Date(row.original.firstSeen).toLocaleString(),
 	},
 	{
 		id: 'lastSeen',
 		header: 'Last Seen',
 		accessorKey: 'lastSeen',
 		size: 200,
+		cell: ({ row }) => new Date(row.original.lastSeen).toLocaleString(),
 	},
 	{
 		id: 'count',

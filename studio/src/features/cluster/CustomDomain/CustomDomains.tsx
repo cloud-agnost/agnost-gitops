@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from '@/components/Alert';
 import { Button } from '@/components/Button';
 import { Description } from '@/components/Description';
 import { Form } from '@/components/Form';
@@ -7,14 +8,12 @@ import useClusterStore from '@/store/cluster/clusterStore';
 import { APIError, CustomDomainSchema } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import _ from 'lodash';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
 import CustomDomainForm from './CustomDomainForm';
 import DnsSettings from './DnsSettings';
 import DomainList from './DomainList';
-import EnforceSSL from './EnforceSSL';
 
 export default function CustomDomains() {
 	const { t } = useTranslation();
@@ -23,7 +22,7 @@ export default function CustomDomains() {
 	});
 	const { toast } = useToast();
 	const user = useAuthStore((state) => state.user);
-	const { addDomain, clusterDomainError } = useClusterStore();
+	const { addDomain, clusterDomainError, cluster } = useClusterStore();
 
 	const { mutate: addDomainMutation, isPending } = useMutation({
 		mutationFn: addDomain,
@@ -50,31 +49,52 @@ export default function CustomDomains() {
 		});
 	}
 
-	return _.isNil(clusterDomainError) ? (
+	return (
 		<div className='space-y-6 max-w-2xl'>
 			<h2 className='text-lg font-semibold'>{t('cluster.custom_domain')}</h2>
 			<p className='text-subtle text-sm'>{t('cluster.custom_domain_description')}</p>
-			<EnforceSSL />
-			<DnsSettings />
-			<div className='space-y-4'>
-				<Description title={t('cluster.domains')} />
-				<DomainList />
-				<Form {...form}>
-					<form className='space-y-4' onSubmit={form.handleSubmit(onSubmit)}>
-						<CustomDomainForm />
-						<div className='flex justify-end'>
-							<Button
-								type='submit'
-								variant='primary'
-								loading={isPending}
-								disabled={!user?.isClusterOwner}
-							>
-								{t('cluster.add_domain')}
-							</Button>
-						</div>
-					</form>
-				</Form>
-			</div>
+			{!clusterDomainError ? (
+				<Alert variant='warning'>
+					<AlertDescription>
+						Your cluster is not accessible publicly through a public IP address or DNS hostname. For
+						this reason you cannot define the cluster domain.
+					</AlertDescription>
+				</Alert>
+			) : (
+				<>
+					<div className='space-y-4'>
+						<Description title={t('cluster.domains')} />
+						<DomainList />
+						{!cluster?.domains.length && (
+							<Form {...form}>
+								<form
+									className='flex items-center justify-center gap-2'
+									onSubmit={form.handleSubmit(onSubmit)}
+								>
+									<CustomDomainForm />
+									<div className='flex justify-end'>
+										<Button
+											type='submit'
+											variant='primary'
+											loading={isPending}
+											disabled={!user?.isClusterOwner}
+										>
+											{t('cluster.add_domain')}
+										</Button>
+									</div>
+								</form>
+							</Form>
+						)}
+					</div>
+					{!!cluster.domains.length && (
+						<DnsSettings
+							description={t('cluster.dns_settings_description')}
+							ips={cluster.ips}
+							slug={cluster?.slug ?? ''}
+						/>
+					)}
+				</>
+			)}
 		</div>
-	) : null;
+	);
 }

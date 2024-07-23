@@ -41,7 +41,7 @@ export default function Probes() {
 		>
 			{PROBES_TYPES?.map((type) => (
 				<Fragment key={type}>
-					{(visibleFields?.includes(`probes.${type}.enabled`) ?? true) && (
+					{(visibleFields?.includes(`probes.${type}.enabled`) || !visibleFields.length) && (
 						<FormField
 							control={form.control}
 							name={`probes.${type}.enabled`}
@@ -70,7 +70,8 @@ export default function Probes() {
 					)}
 					{form.watch(`probes.${type}.enabled`) && (
 						<div className='space-y-6'>
-							{(visibleFields?.includes(`probes.${type}.checkMechanism`) ?? true) && (
+							{(visibleFields?.includes(`probes.${type}.checkMechanism`) ||
+								!visibleFields.length) && (
 								<FormField
 									control={form.control}
 									name={`probes.${type}.checkMechanism`}
@@ -108,7 +109,8 @@ export default function Probes() {
 								/>
 							)}
 							{form.watch(`probes.${type}.checkMechanism`) === 'exec' &&
-								(visibleFields?.includes(`probes.${type}.execCommand`) ?? true) && (
+								(visibleFields?.includes(`probes.${type}.execCommand`) ||
+									!visibleFields.length) && (
 									<FormField
 										control={form.control}
 										name={`probes.${type}.execCommand`}
@@ -133,7 +135,7 @@ export default function Probes() {
 									/>
 								)}
 							{form.watch(`probes.${type}.checkMechanism`) === 'tcpSocket' &&
-								(visibleFields?.includes(`probes.${type}.tcpPort`) ?? true) && (
+								(visibleFields?.includes(`probes.${type}.tcpPort`) || !visibleFields.length) && (
 									<FormField
 										control={form.control}
 										name={`probes.${type}.tcpPort`}
@@ -159,7 +161,8 @@ export default function Probes() {
 								)}
 							{form.watch(`probes.${type}.checkMechanism`) === 'httpGet' && (
 								<div className='flex gap-4'>
-									{(visibleFields?.includes(`probes.${type}.httpPath`) ?? true) && (
+									{(visibleFields?.includes(`probes.${type}.httpPath`) ||
+										!visibleFields.length) && (
 										<FormField
 											control={form.control}
 											name={`probes.${type}.httpPath`}
@@ -183,7 +186,8 @@ export default function Probes() {
 											)}
 										/>
 									)}
-									{(visibleFields?.includes(`probes.${type}.httpPort`) ?? true) && (
+									{(visibleFields?.includes(`probes.${type}.httpPort`) ||
+										!visibleFields.length) && (
 										<FormField
 											control={form.control}
 											name={`probes.${type}.httpPort`}
@@ -212,7 +216,7 @@ export default function Probes() {
 							<div className='grid grid-cols-4 gap-4'>
 								{TOOLTIP_FIELDS.map(
 									(f) =>
-										(visibleFields?.includes(`probes.${type}.${f}`) ?? true) && (
+										(visibleFields?.includes(`probes.${type}.${f}`) || !visibleFields.length) && (
 											<FormField
 												key={f}
 												control={form.control}

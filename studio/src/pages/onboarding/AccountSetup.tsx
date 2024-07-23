@@ -40,8 +40,10 @@ export default function AccountSetup() {
 
 	const { mutate, isPending, error } = useMutation({
 		mutationFn: finalizeClusterSetup,
-		onSuccess: () => {
-			navigate('/organization');
+		onSuccess: (data) => {
+			navigate(
+				`/organization/${data.org._id}/projects/${data.project._id}/env/${data.environment._id}`,
+			);
 		},
 	});
 

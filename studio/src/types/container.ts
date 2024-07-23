@@ -1,3 +1,4 @@
+import useContainerStore from "@/store/container/containerStore";
 import useTypeStore from "@/store/types/typeStore";
 import parser from "cron-parser";
 import { z } from "zod";
@@ -223,37 +224,55 @@ export const CronJobConfigSchema = z.object({
   failedJobsHistoryLimit: z.number().optional(),
 });
 
-export const NetworkingSchema = z.object({
-  containerPort: z
-    .number({
-      required_error: "Container port is required",
-      coerce: true,
-      invalid_type_error: "Container port should be a number",
-    })
-    .int()
-    .positive("Container port should be greater than 0")
-    .max(65535, "Container port should be less than 65536")
-    .transform((value) => Math.round(value)),
-  ingress: z
-    .object({
-      enabled: z.boolean().optional(),
-      url: z.string().optional(),
-    })
-    .optional(),
-  customDomain: z
-    .object({
-      enabled: z.boolean().optional(),
-      added: z.boolean().optional(),
-      domain: z.string().optional(),
-    })
-    .optional(),
-  tcpProxy: z
-    .object({
-      enabled: z.boolean().optional(),
-      publicPort: z.number().optional(),
-    })
-    .optional(),
-});
+export const NetworkingSchema = z
+  .object({
+    containerPort: z
+      .number({
+        required_error: "Container port is required",
+        coerce: true,
+        invalid_type_error: "Container port should be a number",
+      })
+      .int()
+      .positive("Container port should be greater than 0")
+      .max(65535, "Container port should be less than 65536")
+      .transform((value) => Math.round(value))
+      .optional(),
+    ingress: z
+      .object({
+        enabled: z.boolean().optional(),
+        url: z.string().optional(),
+      })
+      .optional(),
+    customDomain: z
+      .object({
+        enabled: z.boolean().optional(),
+        added: z.boolean().optional(),
+        domain: z.string().optional(),
+      })
+      .optional(),
+    tcpProxy: z
+      .object({
+        enabled: z.boolean().optional(),
+        publicPort: z.number().optional(),
+      })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    const { container, createdContainerType } = useContainerStore.getState();
+    const type = container?.type ?? createdContainerType;
+    if (
+      [ContainerType.Deployment, ContainerType.StatefulSet].includes(
+        type as ContainerType
+      ) &&
+      !data.containerPort
+    ) {
+      return ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Container port is required",
+        path: ["containerPort"],
+      });
+    }
+  });
 const ProbeConfigSchema = z
   .object({
     enabled: z.boolean(),
@@ -572,7 +591,7 @@ export const SourceConfigSchema = z
       })
       .trim()
       .optional(),
-    repoId: z
+    repoId: z.coerce
       .number({
         required_error: "Branch is required",
       })
@@ -723,7 +742,7 @@ export const ContainerSchema = z.object({
   projectId: z.string(),
   envId: z.string(),
   name: NameSchema,
-  type: z.enum(["deployment", "statefulset", "cron job"]),
+  type: z.enum(["deployment", "statefulset", "cronjob"]),
   variables: z.array(z.object({ name: z.string(), value: z.string() })),
   repoOrRegistry: z.enum(["repo", "registry"]),
   registry: z
@@ -745,7 +764,7 @@ export const ContainerSchema = z.object({
 export enum ContainerType {
   Deployment = "deployment",
   StatefulSet = "statefulset",
-  CronJob = "cron job",
+  CronJob = "cronjob",
 }
 
 export type CreateContainerParams = z.infer<typeof ContainerSchema>;
@@ -763,6 +782,7 @@ export type Container = z.infer<typeof ContainerSchema> & {
   updatedBy: string;
   status: ContainerStatus;
   pipelineStatus: ContainerPipelineStatus;
+  slug: string;
 };
 
 export interface ContainerStatus {

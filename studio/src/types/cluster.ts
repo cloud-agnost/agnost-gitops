@@ -1,4 +1,4 @@
-import Environment from "@/helpers/realtime/Environment";
+import { Environment } from "./environment";
 import { Organization } from "./organization";
 import { Project } from "./project";
 
@@ -90,6 +90,7 @@ export interface Cluster {
   createdAt: string;
   updatedAt: string;
   reverseProxyURL: string;
+  slug: string;
 }
 
 export interface ClusterReleaseInfo {

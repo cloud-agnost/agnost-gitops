@@ -79,6 +79,7 @@ export default function TransferClusterOwnership() {
 				action: 'success',
 			});
 			navigate('/organization');
+			document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 		},
 		onError: (err) => {
 			toast({

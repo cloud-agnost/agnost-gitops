@@ -60,5 +60,9 @@
 	"setReverseProxyDescription": "Set the reverse proxy URL for your cluster.",
 	"reverseProxyURL": "Reverse Proxy URL",
 	"reverseProxyURLDescription": "Enter the reverse proxy URL for your cluster.",
-	"reverseProxyURLSuccess": "Reverse proxy URL has been set successfully."
+	"reverseProxyURLSuccess": "Reverse proxy URL has been set successfully.",
+	"ip": "Value/IP Address",
+	"target": "Value/Target",
+	"at": "A",
+	"cname": "CNAME"
 }

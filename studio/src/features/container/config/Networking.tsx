@@ -1,3 +1,4 @@
+import { Accordion, AccordionContent, AccordionItem } from '@/components/Accordion';
 import { Button } from '@/components/Button';
 import { CopyInput } from '@/components/CopyInput';
 import {
@@ -9,26 +10,27 @@ import {
 	FormMessage,
 } from '@/components/Form';
 import { Input } from '@/components/Input';
-import { Separator } from '@/components/Separator';
 import { Switch } from '@/components/Switch';
+import DnsSettings from '@/features/cluster/CustomDomain/DnsSettings';
+import useClusterStore from '@/store/cluster/clusterStore';
 import useContainerStore from '@/store/container/containerStore';
 import useEnvironmentStore from '@/store/environment/environmentStore';
 import { CreateContainerParams } from '@/types';
-import { ArrowRight, ShareNetwork, Trash } from '@phosphor-icons/react';
+import { isWildcardDomain } from '@/utils';
+import { ArrowRight, CaretDown, ShareNetwork, Trash } from '@phosphor-icons/react';
+import { AccordionTrigger } from '@radix-ui/react-accordion';
+import _ from 'lodash';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import ContainerFormTitle from './ContainerFormLayout';
-import _ from 'lodash';
 
 export default function Networking() {
 	const { t } = useTranslation();
 	const form = useFormContext<CreateContainerParams>();
 	const { container, template } = useContainerStore();
 	const { environment } = useEnvironmentStore();
-
-	const visibleFields = template?.config?.visibleFields ?? [];
+	const { cluster } = useClusterStore();
 	const disabledFields = template?.config?.disabledFields ?? [];
-
 	const renderContainerPortInput = () => (
 		<FormField
 			control={form.control}
@@ -38,7 +40,6 @@ export default function Networking() {
 					<FormLabel>{t('container.networking.container_port')}</FormLabel>
 					<FormControl>
 						<Input
-							readOnly={visibleFields.includes('networking.containerPort')}
 							className='w-1/3'
 							type='number'
 							error={Boolean(form.formState.errors.networking?.containerPort)}
@@ -63,14 +64,13 @@ export default function Networking() {
 				<FormItem>
 					<FormLabel>{t('container.networking.private_networking')}</FormLabel>
 					<FormControl>
-						<div className='flex items-center bg-input-background gap-2 rounded-sm h-9'>
-							<p className='px-2'>
+						<div className='flex items-center bg-input-background rounded-sm h-9'>
+							<p className='px-2 bg-wrapper-background-hover h-full flex items-center justify-center'>
 								{container?.iid}.{environment.iid}.svc.cluster.local:
 							</p>
-							<Separator orientation='vertical' className='bg-base-reverse/50 h-3/4' />
 							<Input
 								readOnly={disabledFields.includes('networking.containerPort')}
-								className='rounded-l-none pl-0 flex-1'
+								className='rounded-l-none pl-1 flex-1'
 								type='number'
 								error={Boolean(form.formState.errors.networking?.containerPort)}
 								placeholder={
@@ -86,7 +86,6 @@ export default function Networking() {
 			)}
 		/>
 	);
-
 	const renderCustomDomainSwitch = () => (
 		<FormField
 			control={form.control}
@@ -101,7 +100,10 @@ export default function Networking() {
 						<Switch
 							checked={field.value}
 							onCheckedChange={field.onChange}
-							disabled={disabledFields.includes('networking.customDomain.enabled')}
+							disabled={
+								!cluster.domains?.length ||
+								disabledFields.includes('networking.customDomain.enabled')
+							}
 						/>
 					</FormControl>
 				</FormItem>
@@ -157,6 +159,29 @@ export default function Networking() {
 							/>
 						)}
 					</FormControl>
+					<Accordion type='single' collapsible className='w-full'>
+						<AccordionItem value='dns' className='border-none group'>
+							<AccordionTrigger className='link flex items-center justify-center gap-2'>
+								<div>
+									<span className='hidden group-data-[state=closed]:inline'>Show</span>
+									<span className='hidden group-data-[state=open]:inline'>Hide</span> DNS
+									configuration instructions
+								</div>
+								<CaretDown className='shrink-0 text-icon-base transition-transform duration-200 group-data-[state=open]:rotate-180' />
+							</AccordionTrigger>
+							<AccordionContent>
+								<DnsSettings
+									description='To finalize setting up your custom domain, please add the following entries to your domain DNS records'
+									ips={cluster.domains}
+									slug={container?.slug ?? ''}
+									isWildcard={
+										isWildcardDomain(form.watch('networking.customDomain.domain') ?? '') ?? false
+									}
+									isContainer
+								/>
+							</AccordionContent>
+						</AccordionItem>
+					</Accordion>
 					<FormMessage />
 				</FormItem>
 			)}
@@ -181,7 +206,6 @@ export default function Networking() {
 					{form.watch('networking.tcpProxy.enabled') && (
 						<div className='flex items-center gap-2'>
 							<CopyInput
-								className='flex-1'
 								readOnly
 								value={`${window.location.hostname}:${
 									container?.networking?.tcpProxy?.publicPort ?? ''
@@ -215,12 +239,17 @@ export default function Networking() {
 							<Switch
 								checked={field.value}
 								onCheckedChange={field.onChange}
-								disabled={disabledFields.includes('networking.ingress.enabled')}
+								disabled={
+									!cluster.domains?.length || disabledFields.includes('networking.ingress.enabled')
+								}
 							/>
 						</FormControl>
 					</FormItem>
 					{form.watch('networking.ingress.enabled') && (
-						<CopyInput readOnly value={`${container?.iid}.${window.location.href}`} />
+						<CopyInput
+							readOnly
+							value={`${container?.iid}-${environment.iid}.${cluster.domains[0]}`}
+						/>
 					)}
 				</div>
 			)}

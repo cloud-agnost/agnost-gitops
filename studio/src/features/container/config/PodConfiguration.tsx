@@ -52,7 +52,6 @@ export default function PodConfiguration() {
 	const type = form.watch('type');
 	const RESTART_POLICIES = useRestartPolicies(type as ContainerType);
 	const { errors } = form.formState;
-
 	const renderFormFieldGroup = ({
 		fieldName,
 		fieldType,
@@ -119,7 +118,7 @@ export default function PodConfiguration() {
 			icon={<Cube size={20} />}
 		>
 			<div className='grid grid-cols-2 gap-6'>
-				{(visibleFields.includes('podConfig.cpuRequest') ?? true) &&
+				{(!visibleFields.length || visibleFields.includes('podConfig.cpuRequest')) &&
 					renderFormFieldGroup({
 						fieldName: 'podConfig.cpuRequest',
 						fieldType: 'podConfig.cpuRequestType',
@@ -127,7 +126,7 @@ export default function PodConfiguration() {
 						placeholderKey: 'container.pod_config.cpu_request',
 						options: ['millicores', 'cores'],
 					})}
-				{(visibleFields.includes('podConfig.cpuLimit') ?? true) &&
+				{(!visibleFields.length || visibleFields.includes('podConfig.cpuLimit')) &&
 					renderFormFieldGroup({
 						fieldName: 'podConfig.cpuLimit',
 						fieldType: 'podConfig.cpuLimitType',
@@ -135,7 +134,7 @@ export default function PodConfiguration() {
 						placeholderKey: 'container.pod_config.cpu_limit',
 						options: ['millicores', 'cores'],
 					})}
-				{(visibleFields.includes('podConfig.memoryRequest') ?? true) &&
+				{(!visibleFields.length || visibleFields.includes('podConfig.memoryRequest')) &&
 					renderFormFieldGroup({
 						fieldName: 'podConfig.memoryRequest',
 						fieldType: 'podConfig.memoryRequestType',
@@ -143,7 +142,7 @@ export default function PodConfiguration() {
 						placeholderKey: 'container.pod_config.memory_request',
 						options: ['mebibyte', 'gibibyte'],
 					})}
-				{(visibleFields.includes('podConfig.memoryLimit') ?? true) &&
+				{(!visibleFields.length || visibleFields.includes('podConfig.memoryLimit')) &&
 					renderFormFieldGroup({
 						fieldName: 'podConfig.memoryLimit',
 						fieldType: 'podConfig.memoryLimitType',
@@ -152,7 +151,7 @@ export default function PodConfiguration() {
 						options: ['mebibyte', 'gibibyte'],
 					})}
 			</div>
-			{(visibleFields.includes('podConfig.restartPolicy') ?? true) && (
+			{(!visibleFields.length || visibleFields.includes('podConfig.restartPolicy')) && (
 				<FormField
 					control={form.control}
 					name='podConfig.restartPolicy'

@@ -250,6 +250,7 @@ export default function CreateContainerDrawer() {
 		}
 	}, [isCreateContainerDialogOpen]);
 
+	console.log('createdContainerType', form.formState.errors);
 	return (
 		<Drawer open={isCreateContainerDialogOpen} onOpenChange={onClose}>
 			<DrawerContent position='right' size='lg' className='h-full'>
@@ -279,7 +280,7 @@ export default function CreateContainerDrawer() {
 								</Button>
 							</DrawerClose>
 							<Button className='ml-2' type='submit' size='lg' loading={isPending}>
-								{t('general.save')}
+								{t('general.create')}
 							</Button>
 						</DrawerFooter>
 					</form>

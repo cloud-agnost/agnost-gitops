@@ -25,7 +25,7 @@ import { cn } from '@/utils';
 import { Code, Folder, GitBranch } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import _ from 'lodash';
-import { Fragment, useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -66,8 +66,9 @@ function RepoOrRegistryField() {
 	const container = useContainerStore((state) => state.container);
 
 	function onChange(value: string) {
+		console.log(value);
 		form.setValue('repoOrRegistry', value as 'repo' | 'registry');
-		if (value === 'registry') form.setValue('repo', undefined);
+		// if (value === 'registry') form.setValue('repo', undefined);
 	}
 	return (
 		<FormField
@@ -96,11 +97,6 @@ function RepoOrRegistryField() {
 							</FormItem>
 						</RadioGroup>
 					</FormControl>
-					<FormDescription>
-						Set up the repository, branch and root folder (if you have a monorepo) of your
-						application source code and Dockerfile that will be downloaded and used to build the
-						Docker image
-					</FormDescription>
 					<FormMessage />
 				</FormItem>
 			)}
@@ -268,7 +264,8 @@ function RepositorySelect() {
 		const providers: GitProvider[] = qc.getQueryData(['git-providers']) ?? [];
 		return providers?.find((provider) => provider._id === form.watch('repo.gitProviderId'));
 	}, [form.watch('repo.gitProviderId')]);
-
+	const branchRef = useRef<any>(null);
+	const selectedRepoRef = useRef<any>(null);
 	useUpdateEffect(() => {
 		form.setValue('repo.url', selectedRepo?.url ?? '');
 		form.setValue('repo.repoId', selectedRepo?.repoId!);
@@ -283,10 +280,10 @@ function RepositorySelect() {
 						<FormLabel>{t('container.source.repo')}</FormLabel>
 						<FormControl>
 							<MultiSelect
+								ref={selectedRepoRef}
 								options={repoOptions}
 								className='select-container'
 								classNamePrefix='select'
-								defaultValue={field.value ? { value: field.value, label: field.value } : null}
 								value={field.value ? { value: field.value, label: field.value } : null}
 								onChange={(selected) => {
 									// @ts-ignore
@@ -296,6 +293,7 @@ function RepositorySelect() {
 								components={{ ValueContainer }}
 								name='repo'
 								id={selectedProvider?.provider}
+								onMenuClose={() => selectedRepoRef?.current?.blur()}
 							/>
 						</FormControl>
 
@@ -312,16 +310,21 @@ function RepositorySelect() {
 							<FormLabel>{t('container.source.branch')}</FormLabel>
 							<FormControl>
 								<MultiSelect
+									ref={branchRef}
 									options={branchesOptions}
 									className='select-container'
 									classNamePrefix='select'
-									defaultValue={field.value ? { value: field.value, label: field.value } : null}
 									value={field.value ? { value: field.value, label: field.value } : null}
-									// @ts-ignore
-									onChange={(selected) => field.onChange(selected?.value)}
+									onChange={(selected) =>
+										// @ts-ignore
+										field.onChange(selected ? selected.value : null)
+									}
+									onFocus={() => console.log('focus')}
+									onBlur={() => console.log('blur')}
 									components={{ ValueContainer }}
 									isSearchable
 									name='branch'
+									onMenuClose={() => branchRef?.current?.blur()}
 								/>
 							</FormControl>
 							<FormMessage />

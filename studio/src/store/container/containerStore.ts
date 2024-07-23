@@ -71,6 +71,7 @@ type Actions = {
   ) => Promise<ContainerPipelineLogs[]>;
   getContainerTemplates: () => Promise<ContainerTemplate[]>;
   getContainerTemplate: (name: string, version: string) => Promise<Template>;
+  setSelectedPod: (pod: ContainerPod) => void;
   reset: () => void;
 };
 
@@ -112,6 +113,7 @@ const useContainerStore = create<ContainerState & Actions>()(
             container: null,
             selectedPipeline: undefined,
             template: undefined,
+            selectedPod: undefined,
           });
         },
         openDeleteContainerDialog: (container) => {
@@ -235,6 +237,9 @@ const useContainerStore = create<ContainerState & Actions>()(
           );
           set({ template });
           return template;
+        },
+        setSelectedPod: (pod) => {
+          set({ selectedPod: pod });
         },
         reset: () => set(initialState),
       }),

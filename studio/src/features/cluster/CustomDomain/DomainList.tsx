@@ -24,6 +24,7 @@ export default function DomainList() {
 			});
 		},
 	});
+
 	return cluster.domains.map((domain) => (
 		<div
 			className='flex items-center justify-between space-x-2 bg-wrapper-background-base p-3 rounded group'
@@ -34,7 +35,7 @@ export default function DomainList() {
 				align='end'
 				title={t('cluster.domain.delete')}
 				description={t('cluster.domain.delete_description')}
-				onConfirm={() =>
+				onConfirm={async () =>
 					deleteDomainMutate({
 						domain,
 					})

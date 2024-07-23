@@ -39,11 +39,12 @@ export default function NotificationFilter({
 	}
 
 	function onSubmit(data: z.infer<typeof NotificationFilterSchema>) {
+		console.log(data.action);
 		setSearchParams({
 			orgId: data.orgId,
 			...(data.projectId && { projectId: data.projectId }),
 			...(data.envId && { envId: data.envId }),
-			...(data.action && { a: data.action }),
+			...(data.action && { a: data.action.join(',') }),
 			...(data.actor && { actor: data.actor }),
 			...(data.start && { start: data.start }),
 			...(data.end && { end: data.end }),
