@@ -139,7 +139,7 @@ export const templates = [
 						"probes.startup.enabled": false,
 					},
 					secrets: {
-						username: "root",
+						username: "postgres",
 						password: "{{random:18}}",
 					},
 					variables: {

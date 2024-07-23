@@ -441,7 +441,7 @@ export const ContainerModel = mongoose.model(
 					},
 					timeoutSeconds: {
 						type: Number,
-						default: 60,
+						default: 10,
 					},
 					failureThreshold: {
 						type: Number,
@@ -472,15 +472,15 @@ export const ContainerModel = mongoose.model(
 					},
 					initialDelaySeconds: {
 						type: Number,
-						default: 0,
+						default: 30,
 					},
 					periodSeconds: {
 						type: Number,
-						default: 10,
+						default: 30,
 					},
 					timeoutSeconds: {
 						type: Number,
-						default: 1,
+						default: 10,
 					},
 					failureThreshold: {
 						type: Number,
@@ -519,7 +519,7 @@ export const ContainerModel = mongoose.model(
 					},
 					timeoutSeconds: {
 						type: Number,
-						default: 5,
+						default: 10,
 					},
 					failureThreshold: {
 						type: Number,

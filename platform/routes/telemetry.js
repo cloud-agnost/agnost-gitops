@@ -64,8 +64,8 @@ router.post(
 	authMasterToken,
 	async (req, res) => {
 		try {
-			const { containeriid, status } = req.body;
-			const container = await cntrCtrl.getOneByQuery({ iid: containeriid });
+			const { containerSlug, status } = req.body;
+			const container = await cntrCtrl.getOneByQuery({ slug: containerSlug });
 			if (!container) return res.json();
 
 			let updatedContainer = await cntrCtrl.updateOneByQuery(

@@ -51,6 +51,11 @@ spec:
             memory: {{podConfig.memoryLimit}}{{podConfig.memoryLimitType}}
             cpu: {{podConfig.cpuLimit}}{{podConfig.cpuLimitType}}
         env:
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: {{iid}}
+              key: username
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:

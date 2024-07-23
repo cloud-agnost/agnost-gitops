@@ -310,6 +310,7 @@ export const checkNetworking = (containerType, actionType) => {
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
 					.bail()
+					.toBoolean()
 					.custom(async (value) => {
 						const cluster = await getClusterRecord();
 						if (value && cluster.domains?.length === 0) {
@@ -318,8 +319,7 @@ export const checkNetworking = (containerType, actionType) => {
 							);
 						}
 						return true;
-					})
-					.toBoolean(),
+					}),
 				body("networking.ingress.type")
 					.if((value, { req }) => req.body.networking.ingress.enabled === true)
 					.trim()
@@ -337,6 +337,7 @@ export const checkNetworking = (containerType, actionType) => {
 					.isBoolean()
 					.withMessage("Not a valid boolean value")
 					.bail()
+					.toBoolean()
 					.custom(async (value) => {
 						const cluster = await getClusterRecord();
 						if (value && cluster.domains?.length === 0) {
@@ -345,8 +346,7 @@ export const checkNetworking = (containerType, actionType) => {
 							);
 						}
 						return true;
-					})
-					.toBoolean(),
+					}),
 				body("networking.customDomain.domain")
 					.if(
 						(value, { req }) =>

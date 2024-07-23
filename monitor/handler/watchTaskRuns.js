@@ -57,14 +57,12 @@ export async function watchBuildEvents() {
 								taskRunObj.metadata.labels["triggers.tekton.dev/eventlistener"];
 							if (!eventListenerName) return;
 
-							// Extract containeriid from the event listener name
-							const regex = /[a-zA-Z]+-[a-zA-Z0-9]+$/;
-							const match = eventListenerName.match(regex);
-							let containeriid = match ? match[0] : null;
-
-							if (containeriid) {
+							// Extract conteiner slug from the event listener name e.g., github-listener-lkv0ier4
+							let containerSlug = eventListenerName.split("-")[2];
+							console.log("***containerSlug", containerSlug);
+							if (containerSlug) {
 								console.info(
-									`Updating the build status of container ${containeriid}. ${event.reason?.replace(
+									`Updating the build status of container ${containerSlug}. ${event.reason?.replace(
 										"TaskRun",
 										""
 									)}`
@@ -74,7 +72,7 @@ export async function watchBuildEvents() {
 									.post(
 										helper.getPlatformUrl() + "/v1/telemetry/pipeline/status",
 										{
-											containeriid,
+											containerSlug,
 											status: event.reason?.replace("TaskRun", ""),
 										},
 										{
@@ -86,7 +84,7 @@ export async function watchBuildEvents() {
 									)
 									.catch((err) => {
 										console.error(
-											`Cannot send build pipeline run status data of container ${containeriid} to platform. ${
+											`Cannot send build pipeline run status data of container ${containerSlug} to platform. ${
 												err.response?.body?.message ?? err.message
 											}`
 										);
