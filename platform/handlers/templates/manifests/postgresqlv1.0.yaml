@@ -84,7 +84,7 @@ spec:
           timeoutSeconds: 6
         volumeMounts:
         - name: data
-          mountPath: /var/lib/postgresql/data/storage
+          mountPath: /var/lib/postgresql/dstore
   volumeClaimTemplates:
   - metadata:
       name: data

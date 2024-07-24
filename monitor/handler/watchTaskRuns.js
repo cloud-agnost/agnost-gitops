@@ -59,7 +59,6 @@ export async function watchBuildEvents() {
 
 							// Extract conteiner slug from the event listener name e.g., github-listener-lkv0ier4
 							let containerSlug = eventListenerName.split("-")[2];
-							console.log("***containerSlug", containerSlug);
 							if (containerSlug) {
 								console.info(
 									`Updating the build status of container ${containerSlug}. ${event.reason?.replace(

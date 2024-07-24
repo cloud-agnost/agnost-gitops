@@ -75,7 +75,10 @@ export async function getNewTCPPortNumber() {
  */
 export async function updateClusterContainerReleases(containerUpdates) {
 	const containerPromises = containerUpdates.map(async (containerUpdate) => {
-		const deploymentName = containerUpdate.containeriid;
+		const deploymentName =
+			containerUpdate.containeriid === "webhook"
+				? "agnost-webhook"
+				: containerUpdate.containeriid;
 		const image = containerUpdate.image;
 		const namespace = process.env.NAMESPACE;
 
@@ -84,20 +87,19 @@ export async function updateClusterContainerReleases(containerUpdates) {
 			namespace
 		);
 
-		deployment.body.spec.template.spec.containers[0].image = image;
+		const container = deployment.body.spec.template.spec.containers[0];
+		container.image = image;
 
 		let releaseUpdated = false;
-		container.env = deployment.body.spec.template.spec.containers[0].env.map(
-			(entry) => {
-				if (entry.name === "RELEASE_NUMBER") {
-					releaseUpdated = true;
-					return { ...entry, value: image.split(":")[1] };
-				} else return entry;
-			}
-		);
+		container.env = container.env.map((entry) => {
+			if (entry.name === "RELEASE_NUMBER") {
+				releaseUpdated = true;
+				return { ...entry, value: image.split(":")[1] };
+			} else return entry;
+		});
 
 		if (!releaseUpdated)
-			deployment.body.spec.template.spec.containers[0].env.push({
+			container.env.push({
 				name: "RELEASE_NUMBER",
 				value: image.split(":")[1],
 			});

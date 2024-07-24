@@ -5,12 +5,15 @@ import orgMemberCtrl from "./organizationMember.js";
 import prjCtrl from "./project.js";
 import prjEnvCtrl from "./environment.js";
 import regCtrl from "./registry.js";
+import cntrCtrl from "./container.js";
 import helper from "../util/helper.js";
 import { getClusterIPs } from "../handlers/cluster.js";
 import {
 	initializeClusterCertificateIssuerForHTTP01,
 	initializeClusterCertificateIssuerForDNS01,
 } from "../handlers/certificate.js";
+import { clusterContainers } from "../config/clusterContainers.js";
+import { getNewTCPPortNumber } from "../handlers/cluster.js";
 
 class ClusterController extends BaseController {
 	constructor() {
@@ -119,8 +122,20 @@ class ClusterController extends BaseController {
 			{ session, cacheKey: environmentId }
 		);
 
-		// Create cluster containers (e.g., platform, sync, monitor, webhook, mongodb, redis, minio, zot)
-		// TODO: Create cluster containers
+		// Create cluster containers (e.g., platform, sync, monitor, mongodb, redis, minio)
+		for (const container of clusterContainers) {
+			container.networking.tcpProxy.publicPort = await getNewTCPPortNumber();
+			await cntrCtrl.create(
+				{
+					...container,
+					orgId: org._id,
+					projectId: project._id,
+					environmentId: environment._id,
+					isClusterEntity: true,
+				},
+				{ session }
+			);
+		}
 	}
 }
 
