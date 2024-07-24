@@ -35,7 +35,7 @@ jobs:
             platform: 'platform/**'
             sync: 'sync/**'
             webhook: 'webhook/**'
-            #studio: 'studio/**'
+            studio: 'studio/**'
 
   generate_short_sha:
     runs-on: ubuntu-latest
