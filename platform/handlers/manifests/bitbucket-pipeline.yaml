@@ -135,7 +135,7 @@ spec:
 
               CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
               if [ ${CANCEL_PIPELINE} -eq 1 ]; then
-                echo "Pipeline cancelled..."
+                echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
                 exit 0
               fi
               export IMAGE=$(cat $(workspaces.ws.path)/image)
@@ -163,7 +163,7 @@ spec:
 
               CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
               if [ ${CANCEL_PIPELINE} -eq 1 ]; then
-                echo "Pipeline cancelled..."
+                echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
                 exit 0
               fi
 
@@ -183,7 +183,7 @@ spec:
 
               CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
               if [ ${CANCEL_PIPELINE} -eq 1 ]; then
-                echo "Pipeline cancelled..."
+                echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
                 exit 0
               fi
 
