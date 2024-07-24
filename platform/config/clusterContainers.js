@@ -2,6 +2,7 @@ export const clusterContainers = [
 	{
 		iid: "platform",
 		name: "platform",
+		slug: "platform",
 		type: "deployment",
 		pipelineStatus: "Disconnected",
 		variables: [
@@ -13,23 +14,33 @@ export const clusterContainers = [
 			{ name: "PASSPHRASE", value: process.env.PASSPHRASE },
 			{ name: "CLUSTER_ACCESS_TOKEN", value: process.env.CLUSTER_ACCESS_TOKEN },
 			{ name: "MASTER_TOKEN", value: process.env.MASTER_TOKEN },
+			{ name: "CLUSTER_SLUG", value: process.env.CLUSTER_SLUG },
+			{ name: "GROUP_NAME", value: process.env.GROUP_NAME },
+			{ name: "SOLVER_NAME", value: process.env.SOLVER_NAME },
 			{ name: "MINIO_ENDPOINT", value: process.env.MINIO_ENDPOINT },
 			{ name: "MINIO_PORT", value: process.env.MINIO_PORT },
 			{ name: "MINIO_ACCESS_KEY", value: process.env.MINIO_ACCESS_KEY },
 			{ name: "MINIO_SECRET_KEY", value: process.env.MINIO_SECRET_KEY },
+			{ name: "WEBHOOK_NAMESPACE", value: process.env.WEBHOOK_NAMESPACE },
+			{ name: "WEBHOOK_SERVICE", value: process.env.WEBHOOK_SERVICE },
 			{ name: "NAMESPACE", value: process.env.NAMESPACE },
+			{ name: "NGINX_NAMESPACE", value: process.env.NGINX_NAMESPACE },
+			{
+				name: "CERT_MANAGER_NAMESPACE",
+				value: process.env.CERT_MANAGER_NAMESPACE,
+			},
 			{ name: "RELEASE_NUMBER", value: process.env.RELEASE_NUMBER },
 		],
 		repoOrRegistry: "registry",
 		registry: {
-			imageName: "cloudagnost/platform",
-			imageTag: "1.0.0",
+			imageUrl: "europe-docker.pkg.dev/agnost-gitops/images/platform:latest",
 		},
 		networking: {
 			containerPort: 4000,
 			ingress: {
 				enabled: true,
-				name: "api",
+				type: "path",
+				path: "api",
 			},
 			customDomain: {
 				enabled: false,
@@ -42,12 +53,12 @@ export const clusterContainers = [
 			restartPolicy: "Always",
 			cpuRequest: 100,
 			cpuRequestType: "millicores",
-			cpuLimit: 1,
-			cpuLimitType: "cores",
+			cpuLimit: 500,
+			cpuLimitType: "millicores",
 			memoryRequest: 128,
 			memoryRequestType: "mebibyte",
-			memoryLimit: 1,
-			memoryLimitType: "gibibyte",
+			memoryLimit: 256,
+			memoryLimitType: "mebibyte",
 		},
 		storageConfig: {
 			enabled: false,
@@ -114,6 +125,7 @@ export const clusterContainers = [
 	{
 		iid: "sync",
 		name: "sync",
+		slug: "sync",
 		type: "deployment",
 		pipelineStatus: "Disconnected",
 		variables: [
@@ -124,14 +136,14 @@ export const clusterContainers = [
 		],
 		repoOrRegistry: "registry",
 		registry: {
-			imageName: "cloudagnost/sync",
-			imageTag: "1.0.0",
+			imageUrl: "europe-docker.pkg.dev/agnost-gitops/images/sync:latest",
 		},
 		networking: {
 			containerPort: 4000,
 			ingress: {
 				enabled: true,
-				name: "sync",
+				type: "path",
+				path: "sync",
 			},
 			customDomain: {
 				enabled: false,
@@ -144,12 +156,12 @@ export const clusterContainers = [
 			restartPolicy: "Always",
 			cpuRequest: 100,
 			cpuRequestType: "millicores",
-			cpuLimit: 1,
-			cpuLimitType: "cores",
+			cpuLimit: 500,
+			cpuLimitType: "millicores",
 			memoryRequest: 128,
 			memoryRequestType: "mebibyte",
-			memoryLimit: 1,
-			memoryLimitType: "gibibyte",
+			memoryLimit: 256,
+			memoryLimitType: "mebibyte",
 		},
 		storageConfig: {
 			enabled: false,
@@ -216,6 +228,7 @@ export const clusterContainers = [
 	{
 		iid: "studio",
 		name: "studio",
+		slug: "studio",
 		type: "deployment",
 		pipelineStatus: "Disconnected",
 		variables: [
@@ -224,14 +237,14 @@ export const clusterContainers = [
 		],
 		repoOrRegistry: "registry",
 		registry: {
-			imageName: "cloudagnost/studio",
-			imageTag: "1.0.0",
+			imageUrl: "europe-docker.pkg.dev/agnost-gitops/images/studio:latest",
 		},
 		networking: {
 			containerPort: 4000,
 			ingress: {
 				enabled: true,
-				name: "studio",
+				type: "path",
+				path: "studio",
 			},
 			customDomain: {
 				enabled: false,
@@ -244,8 +257,8 @@ export const clusterContainers = [
 			restartPolicy: "Always",
 			cpuRequest: 100,
 			cpuRequestType: "millicores",
-			cpuLimit: 1,
-			cpuLimitType: "cores",
+			cpuLimit: 500,
+			cpuLimitType: "millicores",
 			memoryRequest: 128,
 			memoryRequestType: "mebibyte",
 			memoryLimit: 256,
@@ -316,6 +329,7 @@ export const clusterContainers = [
 	{
 		iid: "monitor",
 		name: "monitor",
+		slug: "monitor",
 		type: "deployment",
 		pipelineStatus: "Disconnected",
 		variables: [
@@ -329,8 +343,7 @@ export const clusterContainers = [
 		],
 		repoOrRegistry: "registry",
 		registry: {
-			imageName: "cloudagnost/monitor",
-			imageTag: "1.0.0",
+			imageUrl: "europe-docker.pkg.dev/agnost-gitops/images/monitor:latest",
 		},
 		networking: {
 			containerPort: 4000,
@@ -348,8 +361,8 @@ export const clusterContainers = [
 			restartPolicy: "Always",
 			cpuRequest: 100,
 			cpuRequestType: "millicores",
-			cpuLimit: 1,
-			cpuLimitType: "cores",
+			cpuLimit: 500,
+			cpuLimitType: "millicores",
 			memoryRequest: 128,
 			memoryRequestType: "mebibyte",
 			memoryLimit: 256,
@@ -420,7 +433,13 @@ export const clusterContainers = [
 	{
 		iid: "minio",
 		name: "minio",
-		type: "deployment",
+		slug: "minio",
+		type: "statefulset",
+		template: {
+			name: "MinIO",
+			manifest: "miniov1.0.yaml",
+			version: "1.0",
+		},
 		pipelineStatus: "Disconnected",
 		variables: [
 			{ name: "MINIO_ROOT_USER", value: process.env.MINIO_ACCESS_KEY },
@@ -429,8 +448,7 @@ export const clusterContainers = [
 		],
 		repoOrRegistry: "registry",
 		registry: {
-			imageName: "quay.io/minio/minio",
-			imageTag: "RELEASE.2024-01-11T07-46-16Z",
+			imageUrl: "quay.io/minio/minio:RELEASE.2024-05-10T01-41-38Z",
 		},
 		networking: {
 			containerPort: 9000,
@@ -521,7 +539,13 @@ export const clusterContainers = [
 	{
 		iid: "redis",
 		name: "redis",
+		slug: "redis",
 		type: "statefulset",
+		template: {
+			name: "Redis",
+			manifest: "redisv1.0.yaml",
+			version: "1.0",
+		},
 		pipelineStatus: "Disconnected",
 		variables: [
 			{ name: "BITNAMI_DEBUG", value: "false" },
@@ -533,8 +557,7 @@ export const clusterContainers = [
 		],
 		repoOrRegistry: "registry",
 		registry: {
-			imageName: "docker.io/bitnami/redis",
-			imageTag: "7.0.11-debian-11-r0",
+			imageUrl: "docker.io/redis:7.2.5",
 		},
 		networking: {
 			containerPort: 6379,
@@ -617,13 +640,18 @@ export const clusterContainers = [
 	{
 		iid: "mongodb",
 		name: "mongodb",
+		slug: "mongodb",
 		type: "statefulset",
+		template: {
+			name: "MongoDB",
+			manifest: "mongodbv1.0.yaml",
+			version: "1.0",
+		},
 		pipelineStatus: "Disconnected",
 		variables: [],
 		repoOrRegistry: "registry",
 		registry: {
-			imageName: "docker.io/mongo",
-			imageTag: "6.0.11",
+			imageUrl: "docker.io/mongo:7.0.7",
 		},
 		networking: {
 			containerPort: 27017,
