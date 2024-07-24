@@ -119,7 +119,7 @@ class ClusterController extends BaseController {
 			{ session, cacheKey: environmentId }
 		);
 
-		// Create cluster containers (e.g., platform, sync, monitor, mongodb, redis, minio)
+		// Create cluster containers (e.g., platform, sync, monitor, webhook, mongodb, redis, minio, zot)
 		// TODO: Create cluster containers
 	}
 }

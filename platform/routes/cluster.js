@@ -291,7 +291,7 @@ router.put(
 					const entry = {
 						containeriid: `${key}`,
 						tag: newReleaseInfo.data.modules[key],
-						image: `gcr.io/agnost-gitops/${key}:${newReleaseInfo.data.modules[key]}`,
+						image: `europe-docker.pkg.dev/agnost-gitops/images/${key}:${newReleaseInfo.data.modules[key]}`,
 					};
 
 					requiredUpdates.push(entry);
