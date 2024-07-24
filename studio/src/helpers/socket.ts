@@ -1,8 +1,6 @@
 import { io } from "socket.io-client";
 
-const url = `${window.location.origin.replace(`:${window.location.port}`, "")}`;
-
-export const socket = io(url, {
+export const socket = io(window.location.hostname, {
   reconnection: true,
   reconnectionDelay: 500,
   transports: ["websocket", "polling"],
