@@ -9,7 +9,7 @@ on:
       - 'platform/**'
       - 'sync/**'
       - 'webhook/**'
-      #- 'studio/**'
+      - 'studio/**'
 
 env:
   # GAR: Google Artifact Registry
