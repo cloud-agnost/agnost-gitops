@@ -5,8 +5,7 @@ import { Github } from '@/components/icons';
 import { BADGE_COLOR_MAP } from '@/constants';
 import { useTable, useUpdateEffect } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
-import { ColumnDefWithClassName } from '@/types';
-import { ContainerPipeline } from '@/types';
+import { ColumnDefWithClassName, ContainerPipeline } from '@/types';
 import { cn, getRelativeTime, secondsToRelativeTime } from '@/utils';
 import { GitBranch, GitCommit } from '@phosphor-icons/react';
 import { File } from '@phosphor-icons/react/dist/ssr';
@@ -128,13 +127,13 @@ const PipelineColumns: ColumnDefWithClassName<ContainerPipeline>[] = [
 		header: 'Status',
 		accessorKey: 'status',
 		size: 100,
-		cell: ({ row }) => (
-			<Badge
-				variant={BADGE_COLOR_MAP[row.original.status.toUpperCase()]}
-				text={startCase(row.original.status)}
-				rounded
-			/>
-		),
+		cell: ({ row }) => {
+			const badgeColor =
+				row.original.status === 'Running'
+					? 'blue'
+					: BADGE_COLOR_MAP[row.original.status.toUpperCase()];
+			return <Badge variant={badgeColor} text={startCase(row.original.status)} rounded />;
+		},
 	},
 	{
 		id: 'duration',

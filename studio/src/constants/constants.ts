@@ -189,7 +189,7 @@ export const BADGE_COLOR_MAP: Record<string, BadgeColors> = {
   IDLE: "orange",
   TRUE: "green",
   FALSE: "red",
-  RUNNING: "blue",
+  RUNNING: "green",
   FAILED: "red",
   WARNING: "yellow",
   INITIALIZED: "green",

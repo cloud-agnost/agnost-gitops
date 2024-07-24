@@ -121,5 +121,5 @@ const useDefaultFormValues = () => {
 			'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled',
 			container?.statefulSetConfig?.persistentVolumeClaimRetentionPolicy?.whenScaled ?? 'Retain',
 		);
-	}, [container, form]);
+	}, [container]);
 };
