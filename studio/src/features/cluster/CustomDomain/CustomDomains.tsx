@@ -51,9 +51,7 @@ export default function CustomDomains() {
 
 	return (
 		<div className='space-y-6 max-w-2xl'>
-			<h2 className='text-lg font-semibold'>{t('cluster.custom_domain')}</h2>
-			<p className='text-subtle text-sm'>{t('cluster.custom_domain_description')}</p>
-			{!clusterDomainError ? (
+			{clusterDomainError ? (
 				<Alert variant='warning'>
 					<AlertDescription>
 						Your cluster is not accessible publicly through a public IP address or DNS hostname. For

@@ -24,7 +24,7 @@ export const UI_BASE_URL = window.location.origin;
 export const MENU_ITEMS = [
   {
     title: "Change Log",
-    url: "https://github.com/cloud-agnost/agnost-community/releases",
+    url: "https://github.com/cloud-agnost/agnost-gitops/releases",
     icon: ClockCounterClockwise,
   },
   {
@@ -189,7 +189,7 @@ export const BADGE_COLOR_MAP: Record<string, BadgeColors> = {
   IDLE: "orange",
   TRUE: "green",
   FALSE: "red",
-  RUNNING: "green",
+  RUNNING: "blue",
   FAILED: "red",
   WARNING: "yellow",
   INITIALIZED: "green",

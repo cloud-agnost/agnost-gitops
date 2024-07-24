@@ -66,7 +66,6 @@ function RepoOrRegistryField() {
 	const container = useContainerStore((state) => state.container);
 
 	function onChange(value: string) {
-		console.log(value);
 		form.setValue('repoOrRegistry', value as 'repo' | 'registry');
 		// if (value === 'registry') form.setValue('repo', undefined);
 	}
@@ -319,8 +318,6 @@ function RepositorySelect() {
 										// @ts-ignore
 										field.onChange(selected ? selected.value : null)
 									}
-									onFocus={() => console.log('focus')}
-									onBlur={() => console.log('blur')}
 									components={{ ValueContainer }}
 									isSearchable
 									name='branch'

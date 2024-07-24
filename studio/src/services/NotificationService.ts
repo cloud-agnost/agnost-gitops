@@ -5,7 +5,6 @@ export default class NotificationService {
   static url = "/v1/log/org";
 
   static async getAuditLogs({ orgId, ...rest }: GetAuditLogsRequest) {
-    console.log("orgId", orgId);
     return (
       await axios.get(`${this.url}/${orgId}`, {
         params: rest,

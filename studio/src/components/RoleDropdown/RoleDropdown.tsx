@@ -29,12 +29,12 @@ function RoleDropdown({ type, value, onChange }: Readonly<RoleDropdownProps>) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant='secondary'>
-					<Funnel size={16} weight='fill' className='members-filter-icon' />
+				<Button variant='outline'>
+					<Funnel size={16} weight='fill' className='members-filter-icon mr-2' />
 					{selectedRoles.length > 0
 						? t('general.selected', {
 								count: selectedRoles.length,
-							})
+						  })
 						: t('general.filter')}
 				</Button>
 			</DropdownMenuTrigger>

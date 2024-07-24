@@ -70,9 +70,14 @@ export default function ClusterManagement() {
 					>
 						<ReverseProxyURL />
 					</SettingsFormItem>
-					<div className='w-full'>
+					<SettingsFormItem
+						className='space-y-0 py-0 pb-6'
+						contentClassName='pt-6'
+						title={t('cluster.custom_domain')}
+						description={t('cluster.custom_domain_description')}
+					>
 						<CustomDomains />
-					</div>
+					</SettingsFormItem>
 				</div>
 			</DrawerContent>
 		</Drawer>

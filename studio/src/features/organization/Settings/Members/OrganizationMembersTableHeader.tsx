@@ -101,8 +101,8 @@ export default function OrganizationMembersTableHeader({ table }: { table: Table
 			<DropdownMenu>
 				<RoleDropdown type='org' onChange={setMemberRoleFilter} />
 				<DropdownMenuTrigger asChild>
-					<Button variant='secondary'>
-						<FunnelSimple size={16} className='members-filter-icon' />
+					<Button variant='outline'>
+						<FunnelSimple size={16} className='members-filter-icon mr-2' />
 						{selectedSort?.name}
 					</Button>
 				</DropdownMenuTrigger>

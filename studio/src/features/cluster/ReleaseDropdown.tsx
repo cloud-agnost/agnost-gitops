@@ -38,21 +38,13 @@ export default function ReleaseDropdown() {
 	const { getClusterAndReleaseInfo, clusterReleaseInfo } = useClusterStore();
 	const classes = CLUSTER_RELEASE_CLASS_MAP[getReleaseStatus()];
 	const hasUpdate = clusterReleaseInfo?.latest?.release !== clusterReleaseInfo?.current?.release;
-	const { isFetching, refetch } = useQuery({
+	const { isPending, refetch } = useQuery({
 		queryFn: getClusterAndReleaseInfo,
 		queryKey: ['getClusterAndReleaseInfo'],
 		refetchOnWindowFocus: false,
-		refetchInterval: 15 * 60 * 1000,
+		refetchInterval: 15 * 60 * 1000, // 15 minutes
 	});
-
 	function getReleaseStatus(): string {
-		if (clusterReleaseInfo?.cluster?.clusterResourceStatus.some((item) => item.status === 'Error'))
-			return 'Error';
-		if (
-			clusterReleaseInfo?.cluster?.clusterResourceStatus.some((item) => item.status === 'Updating')
-		)
-			return 'Updating';
-
 		if (clusterReleaseInfo?.latest?.release !== clusterReleaseInfo?.current?.release)
 			return 'Has update';
 		return 'OK';
@@ -100,7 +92,7 @@ export default function ReleaseDropdown() {
 					</Alert>
 				</DropdownMenuLabel>
 
-				<ReleaseInfo loading={isFetching} />
+				<ReleaseInfo loading={isPending} />
 				<Separator />
 				<ReleaseSettings />
 			</DropdownMenuContent>
@@ -115,7 +107,6 @@ function ReleaseInfo({ loading = false }: { loading: boolean }) {
 		columns: ReleaseColumns,
 		data: clusterComponentsReleaseInfo,
 	});
-
 	return loading && _.isEmpty(clusterComponentsReleaseInfo) ? (
 		<div className='h-96 relative'>
 			<Loading loading={loading && _.isEmpty(clusterComponentsReleaseInfo)} />
@@ -155,7 +146,7 @@ function ReleaseSettings() {
 		<DropdownMenuItemContainer>
 			{hasUpdate && (
 				<>
-					<DropdownMenuItem onClick={mutateAsync} disabled={!user?.isClusterOwner}>
+					<DropdownMenuItem onClick={async () => mutateAsync} disabled={!user?.isClusterOwner}>
 						<ArrowCounterClockwise className={cn('mr-2', isPending && 'animate-spin')} />
 						{t('cluster.update', {
 							release: clusterReleaseInfo?.latest?.release,
@@ -172,7 +163,7 @@ function ReleaseSettings() {
 			<DropdownMenuItem>
 				<Link
 					className='flex items-center'
-					to={`https://github.com/cloud-agnost/agnost-community/releases/tag/${clusterReleaseInfo?.latest?.release}`}
+					to={`https://github.com/cloud-agnost/agnost-gitops/releases/tag/${clusterReleaseInfo?.latest?.release}`}
 					rel='noopener noreferrer'
 					target='_blank'
 				>

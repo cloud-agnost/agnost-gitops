@@ -3,6 +3,7 @@ import { Checkbox } from '@/components/Checkbox';
 import { DateText } from '@/components/DateText';
 import { RoleSelect } from '@/components/RoleDropdown';
 import { TableConfirmation } from '@/components/Table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { toast } from '@/hooks/useToast';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { APIError, Invitation } from '@/types';
@@ -101,14 +102,20 @@ export const OrganizationInvitationsColumns: ColumnDef<Invitation>[] = [
 			const canDelete = getOrgPermission('invite.delete');
 			return (
 				<div className='flex items-center justify-end'>
-					<Button
-						onClick={() => copyToClipboard(row.original.link)}
-						variant='icon'
-						size='sm'
-						rounded
-					>
-						<Copy size={14} />
-					</Button>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								onClick={() => copyToClipboard(row.original.link)}
+								variant='icon'
+								size='sm'
+								rounded
+							>
+								<Copy size={14} />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Copy</TooltipContent>
+					</Tooltip>
+
 					<TableConfirmation
 						title={translate('organization.settings.members.invite.delete')}
 						description={translate('organization.settings.members.invite.deleteDesc')}

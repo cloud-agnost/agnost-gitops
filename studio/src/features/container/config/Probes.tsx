@@ -227,7 +227,7 @@ export default function Probes() {
 															<FormLabel>{t(`container.probes.${f}`)}</FormLabel>
 															<TooltipProvider>
 																<Tooltip>
-																	<TooltipTrigger>
+																	<TooltipTrigger type='button'>
 																		<Info size={16} />
 																	</TooltipTrigger>
 																	<TooltipContent align='end'>

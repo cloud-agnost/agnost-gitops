@@ -1,18 +1,11 @@
 import { Button } from '@/components/Button';
 import { DrawerClose, DrawerFooter } from '@/components/Drawer';
-import {
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from '@/components/Form';
+import { FormControl, FormDescription, FormField, FormItem, FormMessage } from '@/components/Form';
 import { Input } from '@/components/Input';
+import useClusterStore from '@/store/cluster/clusterStore';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import DnsSettings from './DnsSettings';
-import useClusterStore from '@/store/cluster/clusterStore';
 
 interface CustomDomainFormProps {
 	loading?: boolean;
@@ -37,7 +30,6 @@ export default function CustomDomainForm({ loading, modal }: CustomDomainFormPro
 				name='domain'
 				render={({ field }) => (
 					<FormItem className='flex-1'>
-						<FormLabel>{t('cluster.add_domain')}</FormLabel>
 						<FormControl>
 							<Input
 								error={!!form.formState.errors.domain}

@@ -46,15 +46,11 @@ export interface ClusterSetupResponse {
 }
 
 export interface ModuleVersions {
-  "engine-core": string;
-  "engine-monitor": string;
-  "engine-realtime": string;
-  "engine-scheduler": string;
-  "engine-worker": string;
-  "platform-core": string;
-  "platform-sync": string;
-  "platform-worker": string;
+  monitor: string;
+  platform: string;
   studio: string;
+  sync: string;
+  webhooks: string;
 }
 
 interface ReleaseInfo {
@@ -104,7 +100,6 @@ export interface ClusterReleaseInfo {
 export interface ClusterComponentReleaseInfo {
   module: string;
   version: string;
-  status: string;
   latest: string;
 }
 

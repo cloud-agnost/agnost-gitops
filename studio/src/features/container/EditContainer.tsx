@@ -16,6 +16,7 @@ import { cn } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Warning } from '@phosphor-icons/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import _ from 'lodash';
 import { useEffect, useMemo } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +26,6 @@ import { Builds, Events, Logs, Pods, Variables } from './config';
 import CronJobForm from './CreateForms/CronJobFrom';
 import DeploymentForm from './CreateForms/DeploymentForm';
 import StatefulForm from './CreateForms/StatefulForm';
-import _ from 'lodash';
 
 export default function EditContainer() {
 	const { t } = useTranslation();
@@ -42,7 +42,6 @@ export default function EditContainer() {
 	const form = useForm<CreateContainerParams>({
 		resolver: zodResolver(ContainerSchema),
 	});
-
 	const { mutateAsync: createContainerHandler, isPending } = useMutation({
 		mutationFn: updateContainer,
 		onSuccess: onClose,

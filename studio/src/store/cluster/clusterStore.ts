@@ -208,22 +208,18 @@ const useClusterStore = create<ClusterStore & Actions>()(
     getClusterAndReleaseInfo: async () => {
       const clusterReleaseInfo = await ClusterService.getClusterAndReleaseInfo();
       set({
-        clusterReleaseInfo,
+        clusterReleaseInfo: clusterReleaseInfo,
         clusterComponentsReleaseInfo: Object.entries(
           clusterReleaseInfo?.current?.modules ?? {}
-        )
-          .filter(([module]) => module !== "engine-core")
-          .map(([module, version]) => ({
-            module,
-            version,
-            status: clusterReleaseInfo?.cluster.clusterResourceStatus.find(
-              (item) => item.name.includes(module)
-            )?.status as string,
-            latest:
-              clusterReleaseInfo?.latest?.modules?.[
-                module as keyof ModuleVersions
-              ] ?? "",
-          })),
+        ).map(([module, version]) => ({
+          module,
+          version,
+
+          latest:
+            clusterReleaseInfo?.latest?.modules?.[
+              module as keyof ModuleVersions
+            ] ?? "",
+        })),
       });
       return clusterReleaseInfo;
     },

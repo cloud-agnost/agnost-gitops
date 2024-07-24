@@ -16,10 +16,15 @@ import * as z from 'zod';
 export const InviteMemberSchema = z.object({
 	member: z.array(
 		z.object({
-			name: z.string().optional(),
-			role: z.string({
-				required_error: 'Role is required',
-			}),
+			name: z.string(),
+			role: z
+				.string({
+					required_error: 'Role is required',
+				})
+				.trim()
+				.refine((val) => val !== '', {
+					message: 'Role is required',
+				}),
 		}),
 	),
 });
@@ -74,6 +79,7 @@ export default function InviteMemberForm({
 			append({ name: '', role: '' });
 		}
 	}, []);
+
 	return (
 		<div className='max-w-2xl space-y-12'>
 			{title && <Description title={title}>{description}</Description>}
@@ -123,7 +129,6 @@ export default function InviteMemberForm({
 											</div>
 										</SelectContent>
 									</Select>
-
 									<FormMessage />
 								</FormItem>
 							)}

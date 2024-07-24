@@ -16,10 +16,15 @@ import { Link, useParams } from 'react-router-dom';
 import BuildLogs from './BuildLogs';
 
 export default function Builds() {
-	const { getContainerPipelines, container, selectPipeline, selectedPipeline } =
-		useContainerStore();
+	const {
+		getContainerPipelines,
+		container,
+		selectPipeline,
+		selectedPipeline,
+		containerPipelines: pipelines,
+	} = useContainerStore();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
-	const { data: pipelines } = useQuery<ContainerPipeline[]>({
+	useQuery<ContainerPipeline[]>({
 		queryKey: ['containerPipelines'],
 		queryFn: () =>
 			getContainerPipelines({

@@ -2,22 +2,26 @@ import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { DataTable } from '@/components/DataTable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/Dialog';
-import { Loading } from '@/components/Loading';
 import { BADGE_COLOR_MAP } from '@/constants';
 import { useTable } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
-import { ColumnDefWithClassName } from '@/types';
-import { ContainerPod, PodCondition } from '@/types';
+import { ColumnDefWithClassName, ContainerPod, PodCondition } from '@/types';
 import { DATE_TIME_FORMAT, cn, formatDate, getRelativeTime } from '@/utils';
 import { Info } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 
 export default function Pods() {
-	const { getContainerPods, container, isPodInfoOpen, closePodInfo, selectedPod } =
-		useContainerStore();
+	const {
+		getContainerPods,
+		container,
+		isPodInfoOpen,
+		closePodInfo,
+		selectedPod,
+		containerPods: pods,
+	} = useContainerStore();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
-	const { data: pods, isPending } = useQuery<ContainerPod[]>({
+	useQuery<ContainerPod[]>({
 		queryKey: ['containerPods'],
 		queryFn: () =>
 			getContainerPods({
@@ -37,9 +41,6 @@ export default function Pods() {
 		data: selectedPod?.conditions || [],
 	});
 
-	if (isPending && !pods) {
-		return <Loading />;
-	}
 	return (
 		<div
 			className={cn('table-container overflow-auto', pods?.length! > 13 && 'h-full')}
@@ -52,7 +53,7 @@ export default function Pods() {
 				containerClassName='!border-none h-full'
 			/>
 			<Dialog open={isPodInfoOpen} onOpenChange={closePodInfo}>
-				<DialogContent>
+				<DialogContent className='sm:max-w-4xl'>
 					<DialogHeader>
 						<DialogTitle>{selectedPod?.name}</DialogTitle>
 					</DialogHeader>
@@ -128,15 +129,12 @@ const PodInfoColumns: ColumnDefWithClassName<PodCondition>[] = [
 		id: 'lastTransitionTime',
 		header: 'Last Transition Time',
 		accessorKey: 'lastTransitionTime',
-
-		size: 300,
 		cell: ({ row }) => formatDate(row.original.lastTransitionTime, DATE_TIME_FORMAT),
 	},
 	{
 		id: 'type',
 		header: 'Type',
 		accessorKey: 'type',
-
 		cell: ({ row }) => <Badge text={row.original.type} />,
 	},
 	{
@@ -148,5 +146,6 @@ const PodInfoColumns: ColumnDefWithClassName<PodCondition>[] = [
 		id: 'message',
 		header: 'Message',
 		accessorKey: 'message',
+		size: 260,
 	},
 ];

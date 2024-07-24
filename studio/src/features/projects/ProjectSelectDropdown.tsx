@@ -4,7 +4,7 @@ import { PROJECT_SETTINGS } from '@/constants';
 import useProjectStore from '@/store/project/projectStore';
 import { Project } from '@/types/project';
 import _ from 'lodash';
-import { useEffect } from 'react';
+import { Fragment, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import CreateProject from './CreateProject';
 
@@ -31,17 +31,16 @@ export default function ProjectSelectDropdown() {
 		>
 			<CreateProject className='!w-full justify-start' dropdown />
 			{PROJECT_SETTINGS.map((setting, index) => (
-				<>
+				<Fragment key={setting.name}>
 					<DropdownMenuItem
 						onClick={() => setting.onClick(project)}
-						key={index}
 						disabled={setting.isDisabled(project.role, project)}
 					>
 						<setting.icon className='w-5 h-5 mr-2' />
 						{setting.name}
 					</DropdownMenuItem>
 					{index === PROJECT_SETTINGS.length - 3 && <DropdownMenuSeparator key={setting.name} />}
-				</>
+				</Fragment>
 			))}
 		</SelectionDropdown>
 	);

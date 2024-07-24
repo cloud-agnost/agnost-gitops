@@ -8,7 +8,6 @@ import {
 } from '@/components/Drawer';
 import { Form } from '@/components/Form';
 import { InviteMemberForm, InviteMemberSchema } from '@/components/InviteMemberForm';
-import { useToast } from '@/hooks';
 import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { cn } from '@/utils';
@@ -17,11 +16,12 @@ import { Envelope } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
 export default function InviteOrganization({ dropdown }: { dropdown?: boolean }) {
 	const canInvite = useAuthorizeOrg('invite.create');
-	const { toast } = useToast();
+	const [_, setSearchParams] = useSearchParams();
 	const { t } = useTranslation();
 
 	const { inviteUsersToOrganization, organization } = useOrganizationStore();
@@ -31,10 +31,7 @@ export default function InviteOrganization({ dropdown }: { dropdown?: boolean })
 	const { mutateAsync: inviteMutate, isPending } = useMutation({
 		mutationFn: inviteUsersToOrganization,
 		onSuccess: () => {
-			toast({
-				title: t('general.invitation.success') as string,
-				action: 'success',
-			});
+			setSearchParams({ ot: 'invitations' });
 			form.reset({
 				member: [
 					{

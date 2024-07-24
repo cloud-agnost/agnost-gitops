@@ -241,6 +241,7 @@ export const NetworkingSchema = z
       .object({
         enabled: z.boolean().optional(),
         url: z.string().optional(),
+        type: z.string().optional(),
       })
       .optional(),
     customDomain: z

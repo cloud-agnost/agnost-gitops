@@ -109,7 +109,10 @@ export default function TransferOwnership({ transferFn, type, disabled }: Transf
 										disabled={disabled}
 									>
 										<FormControl>
-											<SelectTrigger error={error} className='w-full  [&>span]:!max-w-full'>
+											<SelectTrigger
+												error={Boolean(error)}
+												className='w-full  [&>span]:!max-w-full'
+											>
 												<SelectValue
 													placeholder={`${t('general.select')} ${t('general.member.title')}`}
 												>

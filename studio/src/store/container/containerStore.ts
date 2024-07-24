@@ -39,6 +39,11 @@ type ContainerState = {
   selectedPipeline?: ContainerPipeline;
   templates?: ContainerTemplate[];
   template?: Template;
+  containerPods?: ContainerPod[];
+  containerLogs?: ContainerLog;
+  containerEvents?: ContainerEvent[];
+  containerPipelines?: ContainerPipeline[];
+  containerPipelineLogs?: ContainerPipelineLogs[];
 };
 
 type Actions = {
@@ -114,6 +119,11 @@ const useContainerStore = create<ContainerState & Actions>()(
             selectedPipeline: undefined,
             template: undefined,
             selectedPod: undefined,
+            containerPods: undefined,
+            containerLogs: undefined,
+            containerEvents: undefined,
+            containerPipelines: undefined,
+            containerPipelineLogs: undefined,
           });
         },
         openDeleteContainerDialog: (container) => {
@@ -209,19 +219,31 @@ const useContainerStore = create<ContainerState & Actions>()(
           }));
         },
         getContainerPods: async (req) => {
-          return await ContainerService.getContainerPods(req);
+          const pods = await ContainerService.getContainerPods(req);
+          set({ containerPods: pods });
+          return pods;
         },
         getContainerLogs: async (req) => {
-          return await ContainerService.getContainerLogs(req);
+          const logs = await ContainerService.getContainerLogs(req);
+          set({ containerLogs: logs });
+          return logs;
         },
         getContainerEvents: async (req) => {
-          return await ContainerService.getContainerEvents(req);
+          const events = await ContainerService.getContainerEvents(req);
+          set({ containerEvents: events });
+          return events;
         },
         getContainerPipelines: async (req) => {
-          return await ContainerService.getContainerPipelines(req);
+          const pipelines = await ContainerService.getContainerPipelines(req);
+          set({ containerPipelines: pipelines });
+          return pipelines;
         },
         getContainerPipelineLogs: async (req) => {
-          return await ContainerService.getContainerPipelineLogs(req);
+          const pipelinelogs = await ContainerService.getContainerPipelineLogs(
+            req
+          );
+          set({ containerPipelineLogs: pipelinelogs });
+          return pipelinelogs;
         },
         getContainerTemplates: async () => {
           const templates = await ClusterService.getContainerTemplates();

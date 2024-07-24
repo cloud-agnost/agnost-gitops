@@ -214,6 +214,7 @@ export type ColumnDefWithClassName<TData> = ColumnDef<TData> & {
 };
 
 declare module "@tanstack/react-query" {
+  //@ts-ignore
   export interface UseBaseMutationResult<D, APIError, V, C> {
     error: APIError | null;
   }

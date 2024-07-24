@@ -10,7 +10,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
 export default function ProjectInviteMember() {
@@ -20,17 +20,14 @@ export default function ProjectInviteMember() {
 	const { toast } = useToast();
 	const { orgId } = useParams() as Record<string, string>;
 	const canInvite = useAuthorizeProject('invite.create');
-
+	const [_, setSearchParams] = useSearchParams();
 	const form = useForm<z.infer<typeof InviteMemberSchema>>({
 		resolver: zodResolver(InviteMemberSchema),
 	});
 	const { mutateAsync: inviteMutate, isPending } = useMutation({
 		mutationFn: inviteUsersToProject,
 		onSuccess: () => {
-			toast({
-				title: t('general.invitation.success') as string,
-				action: 'success',
-			});
+			setSearchParams({ st: 'invitations' });
 			handleCloseDrawer();
 		},
 		onError: (err: APIError) => {

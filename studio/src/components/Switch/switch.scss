@@ -34,11 +34,23 @@
 		@apply cursor-not-allowed dark:bg-border bg-border;
 
 		.switch-lock {
-			@apply block absolute right-0 dark:text-icon-base text-border;
+			@apply block absolute dark:text-icon-base text-border;
 		}
 
 		.switch-thumb {
 			@apply bg-icon-disabled;
+		}
+
+		&[data-state='checked'] {
+			@apply bg-green-800;
+			.switch-lock {
+				@apply left-0;
+			}
+		}
+		&[data-state='unchecked'] {
+			.switch-lock {
+				@apply right-0;
+			}
 		}
 	}
 }

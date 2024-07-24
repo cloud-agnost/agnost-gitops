@@ -19,12 +19,17 @@ import { useParams } from 'react-router-dom';
 export default function BuildLogs() {
 	const { t } = useTranslation();
 
-	const { getContainerPipelineLogs, container, selectPipeline, selectedPipeline } =
-		useContainerStore();
+	const {
+		getContainerPipelineLogs,
+		container,
+		selectPipeline,
+		selectedPipeline,
+		containerPipelineLogs: pipelineLogs,
+	} = useContainerStore();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
 	const [selectedStep, setSelectedStep] = useState('setup');
 	const [logs, setLogs] = useState<string[]>([]);
-	const { data: pipelineLogs } = useQuery<ContainerPipelineLogs[]>({
+	useQuery<ContainerPipelineLogs[]>({
 		queryKey: ['containerPipelineLogs'],
 		queryFn: () =>
 			getContainerPipelineLogs({

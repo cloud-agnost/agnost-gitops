@@ -26,7 +26,7 @@ export default function DnsSettings({
 		<div className='space-y-6 text-default'>
 			<Description title={t('cluster.dns_settings')}>{description}</Description>
 			<div className='text-default  space-y-4'>
-				<div className='grid grid-cols-[3fr_2fr_7fr_1fr] gap-4'>
+				<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4'>
 					<p>{isIp ? t('general.name') : 'Name/Hostname'}</p>
 					<p>{t('general.type')}</p>
 					<p>{isIp ? t('cluster.ip') : t('cluster.target')}</p>
@@ -34,7 +34,7 @@ export default function DnsSettings({
 				</div>
 				<Separator />
 				{ips.map((ip) => (
-					<div className='grid grid-cols-[3fr_2fr_7fr_1fr] gap-4' key={ip}>
+					<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4' key={ip}>
 						<p className='mt-1'>{isWildcard ? '*' : '@'}</p>
 						<p className='mt-1'>{isIp ? t('cluster.at') : t('cluster.cname')}</p>
 						<div className='flex items-center gap-3 group'>
@@ -46,7 +46,7 @@ export default function DnsSettings({
 				))}
 
 				{(!isContainer || isWildcard) && (
-					<div className='grid grid-cols-[3fr_2fr_7fr_1fr] gap-4'>
+					<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4'>
 						<p className='mt-1'>_acme-challenge</p>
 						<p className='mt-1'> {t('cluster.cname')}</p>
 						<div className='flex items-center gap-3 group'>

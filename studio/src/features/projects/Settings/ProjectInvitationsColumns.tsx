@@ -10,6 +10,7 @@ import { RoleSelect } from '@/components/RoleDropdown';
 import { QueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/Button';
 import { Copy } from '@phosphor-icons/react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 const queryClient = new QueryClient();
 
@@ -126,14 +127,19 @@ export const ProjectInvitationsColumns: ColumnDefWithClassName<Invitation>[] = [
 			const { token } = row.original;
 			return (
 				<div className='flex items-center justify-end'>
-					<Button
-						onClick={() => copyToClipboard(row.original.link)}
-						variant='icon'
-						size='sm'
-						rounded
-					>
-						<Copy size={14} />
-					</Button>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								onClick={() => copyToClipboard(row.original.link)}
+								variant='icon'
+								size='sm'
+								rounded
+							>
+								<Copy size={14} />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Copy</TooltipContent>
+					</Tooltip>
 					<TableConfirmation
 						title={translate('project.invite.delete')}
 						description={translate('project.invite.deleteDesc')}

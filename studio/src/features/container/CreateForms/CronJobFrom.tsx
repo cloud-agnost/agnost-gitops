@@ -31,7 +31,7 @@ export default function CronJobFrom() {
 		form.setValue('cronJobConfig.timeZone', 'UTC');
 		form.setValue('cronJobConfig.concurrencyPolicy', 'Allow');
 		form.setValue('cronJobConfig.suspend', false);
-	}, [form]);
+	}, []);
 
 	return (
 		<>
@@ -107,7 +107,12 @@ export default function CronJobFrom() {
 								<FormLabel>{t('container.cronjob.schedule')}</FormLabel>
 
 								<CronExamples
-									selectCron={(cron: string) => form.setValue('cronJobConfig.schedule', cron)}
+									selectCron={(cron: string) =>
+										form.setValue('cronJobConfig.schedule', cron, {
+											shouldValidate: true,
+											shouldDirty: true,
+										})
+									}
 								>
 									<FormControl>
 										<Input

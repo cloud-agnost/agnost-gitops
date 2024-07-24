@@ -9,9 +9,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 
 export default function Events() {
-	const { getContainerEvents, container } = useContainerStore();
+	const { getContainerEvents, container, containerEvents } = useContainerStore();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
-	const { data: events } = useQuery<ContainerEvent[]>({
+	useQuery<ContainerEvent[]>({
 		queryKey: ['containerEvents'],
 		queryFn: () =>
 			getContainerEvents({
@@ -24,10 +24,15 @@ export default function Events() {
 	});
 	const table = useTable<ContainerEvent>({
 		columns: EventColumns,
-		data: events || [],
+		data: containerEvents || [],
 	});
 	return (
-		<div className={cn('table-container overflow-auto', events && events.length > 6 && 'h-full')}>
+		<div
+			className={cn(
+				'table-container overflow-auto',
+				containerEvents && containerEvents.length > 6 && 'h-full',
+			)}
+		>
 			<div className='h-full'>
 				<DataTable
 					table={table}

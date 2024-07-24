@@ -45,6 +45,7 @@ const useNotificationStore = create<NotificationStore & NotificationActions>(
       set({
         notificationsPreview: notifications,
       });
+      return notifications;
     },
     async getNotifications(params: GetAuditLogsRequest) {
       const notifications = await NotificationService.getAuditLogs(params);

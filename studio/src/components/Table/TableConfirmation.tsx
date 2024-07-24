@@ -84,7 +84,12 @@ export function TableConfirmation({
 										<Button variant='text' size='lg' onClick={() => setOpen(false)}>
 											{t('general.cancel')}
 										</Button>
-										<Button variant='primary' size='lg' onClick={mutateAsync} loading={isPending}>
+										<Button
+											variant='primary'
+											size='lg'
+											onClick={async () => mutateAsync()}
+											loading={isPending}
+										>
 											{t('general.ok')}
 										</Button>
 									</div>

@@ -23,11 +23,7 @@ export const NotificationFilterSchema = z.object({
 	actor: z.array(z.string()).optional(),
 });
 
-export default function NotificationFilter({
-	fetchNotifications,
-}: {
-	fetchNotifications: () => void;
-}) {
+export default function NotificationFilter() {
 	const [_, setSearchParams] = useSearchParams();
 	const form = useForm<z.infer<typeof NotificationFilterSchema>>({
 		resolver: zodResolver(NotificationFilterSchema),
@@ -39,7 +35,6 @@ export default function NotificationFilter({
 	}
 
 	function onSubmit(data: z.infer<typeof NotificationFilterSchema>) {
-		console.log(data.action);
 		setSearchParams({
 			orgId: data.orgId,
 			...(data.projectId && { projectId: data.projectId }),
@@ -49,7 +44,6 @@ export default function NotificationFilter({
 			...(data.start && { start: data.start }),
 			...(data.end && { end: data.end }),
 		});
-		fetchNotifications();
 	}
 	return (
 		<div className='p-6 bg-subtle rounded-lg space-y-6'>

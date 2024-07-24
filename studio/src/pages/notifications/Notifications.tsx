@@ -17,7 +17,7 @@ export default function Notifications() {
 
 	const { notifications, getNotifications, notificationLastFetchedPage } = useNotificationStore();
 	const [searchParams] = useSearchParams();
-	const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, refetch } = useInfiniteQuery({
+	const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } = useInfiniteQuery({
 		queryFn: ({ pageParam = 0 }) =>
 			getNotifications({
 				page: pageParam,
@@ -49,7 +49,7 @@ export default function Notifications() {
 	return (
 		<Layout>
 			<div className='flex gap-6 h-full p-6'>
-				<NotificationFilter fetchNotifications={refetch} />
+				<NotificationFilter />
 				<div className='border border-border rounded-lg flex-1 relative'>
 					<div className='bg-subtle p-6 border-b border-border'>
 						<h1 className='text-default text-xl'>{t('organization.notifications')}</h1>

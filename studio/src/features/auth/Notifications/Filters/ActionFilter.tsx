@@ -58,7 +58,6 @@ export default function ActionFilter() {
 												<Checkbox
 													checked={field.value?.includes(action)}
 													onCheckedChange={(checked) => {
-														console.log('checked', field.value);
 														if (checked) {
 															field.onChange([...(field.value ?? []), action]);
 														} else {
