@@ -187,6 +187,8 @@ export async function createCustomDomainIngress(
 	namespace,
 	slug
 ) {
+	// Set the issuer of the certifiate
+	const isWildcard = definition.customDomain.domain.startsWith("*");
 	const ingress = {
 		apiVersion: "networking.k8s.io/v1",
 		kind: "Ingress",
@@ -207,7 +209,12 @@ export async function createCustomDomainIngress(
 		spec: {
 			tls: [
 				{
-					hosts: [definition.customDomain.domain],
+					hosts: isWildcard
+						? [definition.customDomain.domain]
+						: [
+								definition.customDomain.domain,
+								`www.${definition.customDomain.domain}`,
+						  ],
 					secretName: `${name}-tls`,
 				},
 			],
@@ -233,8 +240,6 @@ export async function createCustomDomainIngress(
 		},
 	};
 
-	// Set the issuer of the certifiate
-	const isWildcard = definition.customDomain.domain.startsWith("*");
 	if (isWildcard) {
 		// In case of wildcard domain we need to create the issuer with DNS01 solver
 		// Create the namespace scoped issuer
@@ -242,6 +247,24 @@ export async function createCustomDomainIngress(
 		// Assign issuer as annotation
 		ingress.metadata.annotations["cert-manager.io/issuer"] = name;
 	} else {
+		// We are also adding a rule for www subdomain
+		ingress.spec.rules.push({
+			host: `www.${definition.customDomain.domain}`,
+			http: {
+				paths: [
+					{
+						path: "/",
+						pathType: "Prefix",
+						backend: {
+							service: {
+								name: `${name}`,
+								port: { number: definition.containerPort },
+							},
+						},
+					},
+				],
+			},
+		});
 		// In case of non-wildcard domain we can use the default cluster scoped http01 solver
 		ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
 			"agnost-http01";
@@ -288,7 +311,6 @@ export async function updateCustomDomainIngress(
 				// Update the ingress
 				const { spec } = payload.body;
 				spec.rules = spec.rules.map((entry) => {
-					entry.host = definition.customDomain.domain;
 					entry.http.paths = entry.http.paths.map((path) => {
 						path.backend.service.port.number = definition.containerPort;
 						return path;
