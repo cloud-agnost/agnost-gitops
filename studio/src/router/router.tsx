@@ -10,6 +10,7 @@ import { Navigate, createBrowserRouter, useLocation } from 'react-router-dom';
 import AuthLoader from './loader/AuthLoader';
 import homeLoaders from './loader/HomeLoader';
 import onboardingLoaders from './loader/OnboardingLoader';
+import Health from '@/pages/home/Health';
 export function Fallback(): JSX.Element {
 	return (
 		<div className='relative h-screen'>
@@ -148,6 +149,10 @@ const router = createBrowserRouter(
 					index: true,
 					element: <HomeLoadable />,
 					loader: homeLoaders.homeLoader,
+				},
+				{
+					path: '/health',
+					element: <Health />,
 				},
 				{
 					path: '/login',

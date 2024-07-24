@@ -146,7 +146,7 @@ function ReleaseSettings() {
 		<DropdownMenuItemContainer>
 			{hasUpdate && (
 				<>
-					<DropdownMenuItem onClick={async () => mutateAsync} disabled={!user?.isClusterOwner}>
+					<DropdownMenuItem onClick={async () => mutateAsync()} disabled={!user?.isClusterOwner}>
 						<ArrowCounterClockwise className={cn('mr-2', isPending && 'animate-spin')} />
 						{t('cluster.update', {
 							release: clusterReleaseInfo?.latest?.release,

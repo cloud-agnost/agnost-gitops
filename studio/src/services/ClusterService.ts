@@ -85,4 +85,8 @@ export default class ClusterService {
       await axios.put(`${this.url}/reverse-proxy-url`, { reverseProxyURL })
     ).data;
   }
+
+  static async healthCheck() {
+    return (await axios.get(`/health`)).data;
+  }
 }
