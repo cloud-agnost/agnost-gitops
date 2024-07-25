@@ -25,7 +25,7 @@ export const ContainerModel = mongoose.model(
 			},
 			environmentId: {
 				type: mongoose.Schema.Types.ObjectId,
-				ref: "project_environment",
+				ref: "environment",
 				index: true,
 			},
 			iid: {
