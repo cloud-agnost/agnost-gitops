@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { body, query } from "express-validator";
 import domainCtrl from "../controllers/domain.js";
 import cntrCtrl from "../controllers/container.js";
+import { certificateStatus } from "../config/constants.js";
 
 /**
  * Account is the top level model which will hold the list of organizations, under organization there will be users and apps etc.
@@ -51,6 +52,11 @@ export const ClusterModel = mongoose.model(
 			reverseProxyURL: {
 				type: String,
 				index: true,
+			},
+			// If the kubernetes cluster is running locally without a public access then it is possible to use a reverse proxy to expose the services such as ngrok
+			certificateStatus: {
+				type: String,
+				enum: certificateStatus,
 			},
 			// The ip addresses or hostnames of the cluster
 			ips: {

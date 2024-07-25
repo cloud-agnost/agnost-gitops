@@ -8,7 +8,7 @@
 	"rateLimiters": [
 		{
 			"rateLimitWindowSec": 10,
-			"rateLimitMaxHits": 500
+			"rateLimitMaxHits": 1000
 		}
 	],
 	"session": {
@@ -29,6 +29,8 @@
 		"port": 6379
 	},
 	"general": {
+		"clusterCertificateCheckIntervalMs": 3000,
+		"clusterCertificateCheckTimeoutMs": 3600000,
 		"clusterDomainSecret": "agnost-cluster-tls",
 		"storageBucket": "cluster-storage",
 		"minNameLength": 2,

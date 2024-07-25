@@ -20,9 +20,6 @@ func main() {
 		panic("GROUP_NAME must be specified")
 	}
 
-	fmt.Println("GroupName -", GroupName);
-	fmt.Println("SolverName -", SolverName);
-
 	// This will register our custom DNS provider with the webhook serving
 	// library, making it available as an API under the provided GroupName.
 	// You can register multiple DNS provider implementations with a single
@@ -88,7 +85,6 @@ func (c *agnostDNSProviderSolver) Name() string {
 // cert-manager itself will later perform a self check to ensure that the
 // solver has correctly configured the DNS provider.
 func (c *agnostDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
-	fmt.Println("Present - start");
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
 		return fmt.Errorf("agnost.dev: cannot load config for domain add: %v", err)
@@ -105,14 +101,11 @@ func (c *agnostDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 		return fmt.Errorf("agnost.dev: error getting record json: %v", err)
 	}
 
-	fmt.Println("Present JSON String:", string(recordJSON))
-
 	_, err = c.makeAgnostRequest("POST", "https://api.agnost.dev/domains/records/add", recordJSON)
 	if err != nil {
 		return fmt.Errorf("agnost.dev: error adding domain record: %v", err)
 	}
 
-	fmt.Println("Present - end");
 	return nil
 }
 
@@ -123,7 +116,6 @@ func (c *agnostDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *agnostDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	fmt.Println("CleanUp - start");
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
 		return fmt.Errorf("agnost.dev: cannot load config for domain cleanup: %v", err)
@@ -141,14 +133,10 @@ func (c *agnostDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		return fmt.Errorf("agnost.dev: error getting record json: %v", err)
 	}
 
-	fmt.Println("CleanUp JSON String:", string(recordJSON))
-
 	_, err = c.makeAgnostRequest("POST", "https://api.agnost.dev/domains/records/remove", recordJSON)
 	if err != nil {
 		return fmt.Errorf("agnost.dev: error cleaning domain record: %v", err)
 	}
-
-	fmt.Println("CleanUp - end");
 
 	return nil
 }

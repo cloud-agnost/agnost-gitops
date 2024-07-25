@@ -1,4 +1,3 @@
-import config from "config";
 import axios from "axios";
 import express from "express";
 import userCtrl from "../controllers/user.js";
@@ -11,10 +10,7 @@ import { validate } from "../middlewares/validate.js";
 import { validateCluster } from "../middlewares/validateCluster.js";
 import { validateClusterIPs } from "../middlewares/validateClusterIPs.js";
 import { checkContentType } from "../middlewares/contentType.js";
-import {
-	addClusterDomainToIngresses,
-	removeClusterDomainFromIngresses,
-} from "../handlers/ingress.js";
+import { removeClusterDomainFromIngresses } from "../handlers/ingress.js";
 import { updateClusterContainerReleases } from "../handlers/cluster.js";
 import {
 	createClusterDomainCertificate,
@@ -22,11 +18,6 @@ import {
 } from "../handlers/certificate.js";
 import helper from "../util/helper.js";
 import { templates } from "../handlers/templates/index.js";
-
-import {
-	initializeClusterCertificateIssuerForHTTP01,
-	initializeClusterCertificateIssuerForDNS01,
-} from "../handlers/certificate.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
 
@@ -40,8 +31,6 @@ const router = express.Router({ mergeParams: true });
 */
 router.get("/setup-status", async (req, res) => {
 	try {
-		await initializeClusterCertificateIssuerForHTTP01();
-		await initializeClusterCertificateIssuerForDNS01();
 		// Get cluster owner
 		let user = await userCtrl.getOneByQuery({ isClusterOwner: true });
 		res.status(200).json({ status: user ? true : false });
@@ -69,14 +58,9 @@ router.get("/info", authSession, async (req, res) => {
 		}
 
 		// Get cluster configuration
-		let cluster = await clsCtrl.getOneByQuery(
-			{
-				clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
-			},
-			{
-				cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
-			}
-		);
+		let cluster = await clsCtrl.getOneByQuery({
+			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+		});
 
 		res.json(cluster);
 	} catch (error) {
@@ -446,25 +430,12 @@ router.post(
 			// Create the certificate for the domain
 			await createClusterDomainCertificate(domain);
 
-			// Get all container ingresses that will be impacted
-			// The impacted ones will be the ingresses of "platform" and "sync" container.
-			// Subdomain based ingresses will not be impacted since we cannot add a subdomain based ingress if we do not have a cluster domain
-			let containers = await cntrCtrl.getManyByQuery(
-				{
-					"networking.ingress.enabled": true,
-					"networking.ingress.type": "path",
-				},
-				{ lookup: "environmentId" }
-			);
-
-			// Add the domain to the container ingresses
-			await addClusterDomainToIngresses(containers, domain);
-
 			// Update cluster domains information
 			let updatedCluster = await clsCtrl.updateOneById(
 				cluster._id,
 				{
 					domains: [...domains, domain],
+					certificateStatus: "Issuing",
 				},
 				{},
 				{
@@ -542,7 +513,9 @@ router.delete(
 				{
 					domains: updatedList,
 				},
-				{},
+				{
+					certificateStatus: "",
+				},
 				{
 					cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
 				}

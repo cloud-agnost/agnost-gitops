@@ -20,9 +20,11 @@ export async function getClusterIPs() {
 			process.env.NAMESPACE
 		);
 		const ingress = result.body;
-		return ingress.status.loadBalancer?.ingress?.map(
-			(ing) => ing.ip || ing.hostname
-		);
+		return ingress.status.loadBalancer?.ingress
+			? ingress.status.loadBalancer?.ingress?.map(
+					(ing) => ing.ip || ing.hostname
+			  )
+			: [];
 	} catch (err) {
 		console.error(
 			`Cannot fetch cluster ips. ${err.response?.body?.message ?? err.message}`

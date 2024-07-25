@@ -1,12 +1,20 @@
 import k8s from "@kubernetes/client-node";
 import config from "config";
+import cntrCtrl from "../controllers/container.js";
+import clsCtrl from "../controllers/cluster.js";
 import { getNginxIngressControllerDeployment } from "./util.js";
+import { addClusterDomainToIngresses } from "./ingress.js";
+import { sendMessage } from "../init/sync.js";
 
 // Create a Kubernetes core API client
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 const k8sCustomObjectApi = kc.makeApiClient(k8s.CustomObjectsApi);
+// Interval ID for the certificate renewal
+let intervalId = null;
+// Timeout ID for the certificate renewal
+let timeoutId = null;
 
 /**
  * Initializes the certificate issuer available across all namespaces for HTTP01 challenge which is used for root domains.
@@ -279,7 +287,61 @@ export async function createClusterDomainCertificate(domain) {
 			`Created the cluster domain '${domain}' and '*.${domain}' certificate.`
 		);
 
-		// Update the nginx-controller to use the new certificate as the default
+		// Create an interval that runs periodically to check the status of the certificate
+		intervalId = setInterval(
+			processCertificateStatus,
+			config.get("general.clusterCertificateCheckIntervalMs")
+		);
+
+		// Set a timeout to clear the interval
+		timeoutId = setTimeout(() => {
+			if (intervalId) {
+				clearInterval(intervalId);
+				intervalId = null;
+			}
+			timeoutId = null;
+		}, config.get("general.clusterCertificateCheckTimeoutMs"));
+	} catch (err) {
+		console.error(
+			`Cannot create cluster level domain certificates. ${
+				err.response?.body?.message ?? err.message
+			}`
+		);
+	}
+}
+
+/**
+ * Checks the status of the certificate and updates the ingress controller and platform ingresses if the certificate is issued.
+ * @returns {Promise<void>} A Promise that resolves when the certificate status is checked and the ingress controller is updated.
+ */
+async function processCertificateStatus() {
+	// Get the cluster object to get the domain
+	const cluster = await clsCtrl.getOneByQuery(
+		{
+			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
+		},
+		{
+			cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+		}
+	);
+	const secretName = config.get("general.clusterDomainSecret");
+	// Get the status of the certificate
+	const certificateStatus = await getCertificateStatus(secretName);
+	// If the certificate is issued, update the ingress controller to use the new certificate
+	if (certificateStatus === "Issued") {
+		// Clear the interval for certificate status check
+		if (intervalId) {
+			clearInterval(intervalId);
+			intervalId = null;
+		}
+
+		// Clear the timeout for certificate status check
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+			timeoutId = null;
+		}
+
+		// Update the ingress controller to use the new certificate as the default
 		const ingressDeployment = await getNginxIngressControllerDeployment();
 		if (ingressDeployment) {
 			try {
@@ -301,6 +363,20 @@ export async function createClusterDomainCertificate(domain) {
 				console.info(
 					`Updated ingress controller to use the cluster domain '${domain}' and '*.${domain}' certificate as the default certificate.`
 				);
+
+				// Get all container ingresses that will be impacted
+				// The impacted ones will be the ingresses of "platform" and "sync" container.
+				// Subdomain based ingresses will not be impacted since we cannot add a subdomain based ingress if we do not have a cluster domain
+				let containers = await cntrCtrl.getManyByQuery(
+					{
+						"networking.ingress.enabled": true,
+						"networking.ingress.type": "path",
+					},
+					{ lookup: "environmentId" }
+				);
+
+				// Add the domain to the container ingresses
+				await addClusterDomainToIngresses(containers, cluster.domains[0]);
 			} catch (err) {
 				console.error(
 					`Cannot update ingress-nginx-controller to use the cluster certificate as the default tls certificate. ${
@@ -313,14 +389,74 @@ export async function createClusterDomainCertificate(domain) {
 				`Cannot retrive the ingress-nginx-controller deployment to patch for default certificate.`
 			);
 		}
+	}
 
-		// Patch the deployment to use the new certificate as the default
+	// Update cluster certificate status
+	let updatedCluster = await clsCtrl.updateOneById(
+		cluster._id,
+		{ certificateStatus: certificateStatus },
+		{},
+		{
+			cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
+		}
+	);
+
+	// Send realtime message about the certificate status of the cluster
+	sendMessage("cluster", {
+		actor: null,
+		action: "telemetry",
+		object: "cluster",
+		description: `Cluster domain certificate status updated to '${certificateStatus}'`,
+		timestamp: Date.now(),
+		data: updatedCluster,
+		identifiers: null,
+	});
+}
+
+/**
+ * Retrieves the status of a certificate.
+ *
+ * @param {string} certificateName - The name of the certificate.
+ * @returns {string} The status of the certificate. Possible values are "Issued", "Not Ready", "Issuing", or "Error".
+ */
+async function getCertificateStatus(certificateName) {
+	try {
+		const res = await k8sCustomObjectApi.getNamespacedCustomObject(
+			"cert-manager.io", // Group
+			"v1", // Version
+			process.env.NAMESPACE, // Namespace
+			"certificates", // Plural of the resource
+			certificateName // Name of the resource
+		);
+
+		const certificate = res.body;
+
+		// Check the status of the certificate
+		if (certificate.status && certificate.status.conditions) {
+			const conditions = certificate.status.conditions;
+			const readyCondition = conditions.find(
+				(condition) => condition.type === "Ready"
+			);
+
+			if (readyCondition) {
+				if (readyCondition.status === "True") {
+					return "Issued";
+				} else {
+					return "Not Ready";
+				}
+			} else {
+				return "Issuing";
+			}
+		} else {
+			return "Error";
+		}
 	} catch (err) {
 		console.error(
-			`Cannot create cluster level domain certificates. ${
+			`Error fetching cluster domain certificate. ${
 				err.response?.body?.message ?? err.message
 			}`
 		);
+		return "Error";
 	}
 }
 
@@ -329,8 +465,52 @@ export async function createClusterDomainCertificate(domain) {
  * @returns {Promise<void>} A promise that resolves when the certificates are deleted.
  */
 export async function deleteClusterDomainCertificate() {
+	// Clear the interval for certificate status check
+	if (intervalId) {
+		clearInterval(intervalId);
+		intervalId = null;
+	}
+
+	// Clear the timeout for certificate status check
+	if (timeoutId) {
+		clearTimeout(timeoutId);
+		timeoutId = null;
+	}
+
 	const secretName = config.get("general.clusterDomainSecret");
 	await deleteCertificate(secretName, process.env.NAMESPACE);
+
+	// Update the nginx-controller to remove certificate as the default
+	const ingressDeployment = await getNginxIngressControllerDeployment();
+	if (ingressDeployment) {
+		try {
+			// Remove existing entry if any
+			ingressDeployment.spec.template.spec.containers[0].args =
+				ingressDeployment.spec.template.spec.containers[0].args.filter(
+					(entry) => !entry.startsWith("--default-ssl-certificate=")
+				);
+
+			await k8sAppsApi.replaceNamespacedDeployment(
+				ingressDeployment.metadata.name,
+				process.env.NGINX_NAMESPACE,
+				ingressDeployment
+			);
+
+			console.info(
+				`Updated ingress controller to remove the cluster domain '${domain}' and '*.${domain}' certificate as the default certificate.`
+			);
+		} catch (err) {
+			console.error(
+				`Cannot update ingress-nginx-controller to remove the cluster certificate as the default tls certificate. ${
+					err.response?.body?.message ?? err.message
+				}`
+			);
+		}
+	} else {
+		console.error(
+			`Cannot retrive the ingress-nginx-controller deployment to patch for default certificate.`
+		);
+	}
 }
 
 /**

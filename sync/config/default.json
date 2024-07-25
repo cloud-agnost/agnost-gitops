@@ -7,7 +7,7 @@
 	"rateLimiters": [
 		{
 			"rateLimitWindowSec": 30,
-			"rateLimitMaxHits": 300
+			"rateLimitMaxHits": 1000
 		}
 	],
 	"sync": {

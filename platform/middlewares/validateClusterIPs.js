@@ -17,7 +17,7 @@ export const validateClusterIPs = async (req, res, next) => {
 					req.cluster._id,
 					{ ips: clusterIPs },
 					{},
-					{ cacheKey: req.cluster.clusterAccessToken }
+					{ cacheKey: process.env.CLUSTER_ACCESS_TOKEN }
 				);
 			}
 		}

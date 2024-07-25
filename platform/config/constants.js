@@ -45,3 +45,6 @@ export const containerTypes = ["deployment", "statefulset", "cronjob"];
 
 // Invitation statuses
 export const invitationStatus = ["Pending", "Accepted", "Rejected"];
+
+// Certificate issue statuses
+export const certificateStatus = ["Issuing", "Issued", "Not Ready", "Error"];

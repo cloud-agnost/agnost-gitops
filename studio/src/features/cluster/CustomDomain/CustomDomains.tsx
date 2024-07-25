@@ -1,6 +1,5 @@
 import { Alert, AlertDescription } from '@/components/Alert';
 import { Button } from '@/components/Button';
-import { Description } from '@/components/Description';
 import { Form } from '@/components/Form';
 import { useToast } from '@/hooks';
 import useAuthStore from '@/store/auth/authStore';
@@ -51,26 +50,24 @@ export default function CustomDomains() {
 
 	return (
 		<div className='space-y-6 max-w-2xl'>
-			{clusterDomainError ? (
+			{false ? (
 				<Alert variant='warning'>
 					<AlertDescription>
-						Your cluster is not accessible publicly through a public IP address or DNS hostname. For
-						this reason you cannot define the cluster domain.
+						Your cluster is not accessible publicly through a public IP address or DNS hostname. You Agnost cluster needs to be publicly accessible to set a custom domain to issue SSL certificates.
 					</AlertDescription>
 				</Alert>
 			) : (
 				<>
 					<div className='space-y-4'>
-						<Description title={t('cluster.domains')} />
 						<DomainList />
 						{!cluster?.domains.length && (
 							<Form {...form}>
 								<form
-									className='flex items-center justify-center gap-2'
+									className='flex items-start justify-center gap-2'
 									onSubmit={form.handleSubmit(onSubmit)}
 								>
 									<CustomDomainForm />
-									<div className='flex justify-end'>
+									<div className='flex justify-top'>
 										<Button
 											type='submit'
 											variant='primary'
@@ -84,13 +81,11 @@ export default function CustomDomains() {
 							</Form>
 						)}
 					</div>
-					{!!cluster.domains.length && (
-						<DnsSettings
-							description={t('cluster.dns_settings_description')}
-							ips={cluster.ips}
-							slug={cluster?.slug ?? ''}
-						/>
-					)}
+					<DnsSettings
+						description={t('cluster.dns_settings_description')}
+						ips={cluster.ips}
+						slug={cluster?.slug ?? ''}
+					/>
 				</>
 			)}
 		</div>

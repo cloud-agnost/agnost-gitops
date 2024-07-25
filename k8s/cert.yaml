@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: agnost-cluster-tls
+  namespace: agnost
+spec:
+  secretName: agnost-cluster-tls
+  dnsNames:
+    - cloudflex.dev
+    - "*.cloudflex.dev"
+  issuerRef:
+    name: agnost-dns01
+    # We can reference ClusterIssuers by changing the kind here.
+    # The default value is Issuer (i.e. a locally namespaced Issuer)
+    kind: ClusterIssuer

@@ -63,7 +63,7 @@ export default function ReverseProxyURL() {
 								<Input
 									error={!!form.formState.errors.reverseProxyURL}
 									placeholder={t('forms.placeholder', {
-										label: t('cluster.domain.title'),
+										label: t('cluster.domain.urlTitle'),
 									}).toString()}
 									{...field}
 								/>

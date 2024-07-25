@@ -25,8 +25,8 @@ export default function DnsSettings({
 	return (
 		<div className='space-y-6 text-default'>
 			<Description title={t('cluster.dns_settings')}>{description}</Description>
-			<div className='text-default  space-y-4'>
-				<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4'>
+			<div className='text-xs space-y-4'>
+				<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4 font-bold'>
 					<p>{isIp ? t('general.name') : 'Name/Hostname'}</p>
 					<p>{t('general.type')}</p>
 					<p>{isIp ? t('cluster.ip') : t('cluster.target')}</p>
@@ -34,15 +34,26 @@ export default function DnsSettings({
 				</div>
 				<Separator />
 				{ips.map((ip) => (
-					<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4' key={ip}>
-						<p className='mt-1'>{isWildcard ? '*' : '@'}</p>
-						<p className='mt-1'>{isIp ? t('cluster.at') : t('cluster.cname')}</p>
-						<div className='flex items-center gap-3 group'>
-							<div className='truncate font-mono'>{ip}</div>
-							<CopyButton text={ip} className='invisible group-hover:visible' />
+					<>
+						<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4' key={ip}>
+							<p className='mt-1'>{'@'}</p>
+							<p className='mt-1'>{isIp ? t('cluster.at') : t('cluster.cname')}</p>
+							<div className='flex items-center gap-3 group font-mono'>
+								<div className='truncate font-mono'>{ip}</div>
+								<CopyButton text={ip} className='invisible group-hover:visible' />
+							</div>
+							<p className='mt-1'>1 {t('general.hour')}</p>
 						</div>
-						<p className='mt-1'>1 {t('general.hour')}</p>
-					</div>
+						<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4' key={ip}>
+							<p className='mt-1 font-mono'>{'*'}</p>
+							<p className='mt-1'>{isIp ? t('cluster.at') : t('cluster.cname')}</p>
+							<div className='flex items-center gap-3 group font-mono'>
+								<div className='truncate font-mono'>{ip}</div>
+								<CopyButton text={ip} className='invisible group-hover:visible' />
+							</div>
+							<p className='mt-1'>1 {t('general.hour')}</p>
+						</div>
+					</>
 				))}
 
 				{(!isContainer || isWildcard) && (
