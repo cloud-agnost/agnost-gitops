@@ -393,12 +393,12 @@ export async function addClusterDomainToIngresses(containers, domain) {
 			);
 			if (!ingress) return;
 
-			ingress.body.metadata.annotations[
+			/* 			ingress.body.metadata.annotations[
 				"nginx.ingress.kubernetes.io/ssl-redirect"
 			] = "true";
 			ingress.body.metadata.annotations[
 				"nginx.ingress.kubernetes.io/force-ssl-redirect"
-			] = "true";
+			] = "true"; */
 
 			ingress.body.metadata.annotations["kubernetes.io/ingress.class"] =
 				"nginx";

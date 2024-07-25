@@ -20,6 +20,9 @@ func main() {
 		panic("GROUP_NAME must be specified")
 	}
 
+	fmt.Println("GroupName -", GroupName);
+	fmt.Println("SolverName -", SolverName);
+
 	// This will register our custom DNS provider with the webhook serving
 	// library, making it available as an API under the provided GroupName.
 	// You can register multiple DNS provider implementations with a single
