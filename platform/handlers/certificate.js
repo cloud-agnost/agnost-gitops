@@ -297,6 +297,10 @@ export async function createClusterDomainCertificate(domain) {
 					process.env.NGINX_NAMESPACE,
 					ingressDeployment
 				);
+
+				console.info(
+					`Updated ingress controller to use the cluster domain '${domain}' and '*.${domain}' certificate as the default certificate.`
+				);
 			} catch (err) {
 				console.error(
 					`Cannot update ingress-nginx-controller to use the cluster certificate as the default tls certificate. ${
