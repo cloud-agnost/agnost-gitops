@@ -324,6 +324,7 @@ async function processCertificateStatus() {
 			cacheKey: process.env.CLUSTER_ACCESS_TOKEN,
 		}
 	);
+	const domain = cluster.domains[0];
 	const secretName = config.get("general.clusterDomainSecret");
 	// Get the status of the certificate
 	const certificateStatus = await getCertificateStatus(secretName);
@@ -376,7 +377,7 @@ async function processCertificateStatus() {
 				);
 
 				// Add the domain to the container ingresses
-				await addClusterDomainToIngresses(containers, cluster.domains[0]);
+				await addClusterDomainToIngresses(containers, domain);
 			} catch (err) {
 				console.error(
 					`Cannot update ingress-nginx-controller to use the cluster certificate as the default tls certificate. ${
