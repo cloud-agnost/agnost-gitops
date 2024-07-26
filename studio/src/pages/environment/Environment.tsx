@@ -1,6 +1,8 @@
+import useClusterStore from '@/store/cluster/clusterStore';
 import useEnvironmentStore from '@/store/environment/environmentStore';
 import useProjectStore from '@/store/project/projectStore';
 import { joinChannel } from '@/utils';
+import { useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useEffect } from 'react';
 import { Outlet, useParams } from 'react-router-dom';
@@ -9,6 +11,12 @@ export default function Environment() {
 	const { projectId, orgId, envId } = useParams() as Record<string, string>;
 	const { project, getProjectById } = useProjectStore();
 	const { getEnvironmentById } = useEnvironmentStore();
+	const { getClusterInfo } = useClusterStore();
+
+	useQuery({
+		queryFn: getClusterInfo,
+		queryKey: ['getClusterInfo'],
+	});
 
 	useEffect(() => {
 		if (_.isEmpty(project)) {
