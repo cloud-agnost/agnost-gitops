@@ -416,19 +416,33 @@ export async function addClusterDomainToIngresses(containers, domain) {
 				host: domain,
 				http: {
 					paths: [
-						{
-							// If he container has a custom path then use it, otherwise use the container iid and namespace concatenated
-							path: `/${
-								ingressPath ?? container.iid + "-" + namespace
-							}(/|$)(.*)`,
-							pathType: "Prefix",
-							backend: {
-								service: {
-									name: `${container.iid}`,
-									port: { number: containerPort },
-								},
-							},
-						},
+						ingressPath === "studio"
+							? {
+									// If he container has a custom path then use it, otherwise use the container iid and namespace concatenated
+									path: `/${
+										ingressPath ?? container.iid + "-" + namespace
+									}(/|$)(.*)`,
+									pathType: "Prefix",
+									backend: {
+										service: {
+											name: `${container.iid}`,
+											port: { number: containerPort },
+										},
+									},
+							  }
+							: {
+									// If he container has a custom path then use it, otherwise use the container iid and namespace concatenated
+									path: `/${
+										ingressPath ?? container.iid + "-" + namespace
+									}/(.*)`,
+									pathType: "ImplementationSpecific",
+									backend: {
+										service: {
+											name: `${container.iid}`,
+											port: { number: containerPort },
+										},
+									},
+							  },
 					],
 				},
 			});

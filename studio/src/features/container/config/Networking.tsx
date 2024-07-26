@@ -111,7 +111,8 @@ export default function Networking() {
 									checked={field.value}
 									onCheckedChange={field.onChange}
 									disabled={
-										!cluster.domains?.length ||
+										!cluster?.domains ||
+										cluster.domains.length === 0 ||
 										disabledFields.includes('networking.customDomain.enabled')
 									}
 								/>
@@ -263,7 +264,8 @@ export default function Networking() {
 											}
 										}}
 										disabled={
-											!cluster.domains?.length ||
+											!cluster?.domains ||
+											cluster.domains.length === 0 ||
 											disabledFields.includes('networking.ingress.enabled')
 										}
 									/>
