@@ -483,7 +483,7 @@ export async function removeClusterDomainFromIngresses(containers, domain) {
 			if (!ingress) return;
 
 			// Remove tls entry associated with the domain
-			ingress.body.spec.tls = ingress.body.spec.tls.filter(
+			ingress.body.spec.tls = ingress.body.spec.tls?.filter(
 				(tls) => tls.hosts[0] !== domain
 			);
 
@@ -499,7 +499,7 @@ export async function removeClusterDomainFromIngresses(containers, domain) {
 			}
 
 			// Remove the domain entry from ingress rules
-			ingress.body.spec.rules = ingress.body.spec.rules.filter(
+			ingress.body.spec.rules = ingress.body.spec.rules?.filter(
 				(rule) => rule.host !== domain
 			);
 
