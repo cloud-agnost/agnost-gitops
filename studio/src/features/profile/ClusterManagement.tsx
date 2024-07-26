@@ -19,12 +19,7 @@ import ReverseProxyURL from '../cluster/CustomDomain/ReverseProxyURL';
 
 export default function ClusterManagement() {
 	const { t } = useTranslation();
-	const { getClusterInfo, checkDomainStatus, clusterDomainError, cluster } = useClusterStore();
-
-	useQuery({
-		queryFn: getClusterInfo,
-		queryKey: ['getClusterInfo'],
-	});
+	const { checkDomainStatus, clusterDomainError, cluster } = useClusterStore();
 
 	useQuery({
 		queryFn: checkDomainStatus,

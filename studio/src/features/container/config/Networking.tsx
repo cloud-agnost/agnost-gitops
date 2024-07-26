@@ -110,10 +110,10 @@ export default function Networking() {
 								<Switch
 									checked={field.value}
 									onCheckedChange={field.onChange}
-									disabled={false
- 										/* !cluster?.domains ||
+									disabled={
+										!cluster?.domains ||
 										cluster.domains.length === 0 ||
-										disabledFields.includes('networking.customDomain.enabled')  */
+										disabledFields.includes('networking.customDomain.enabled')
 									}
 								/>
 							</FormControl>
@@ -263,10 +263,10 @@ export default function Networking() {
 												form.setValue('networking.ingress.type', 'subdomain');
 											}
 										}}
-										disabled={ false
-											/* !cluster?.domains ||
+										disabled={
+											!cluster?.domains ||
 											cluster.domains.length === 0 ||
-											disabledFields.includes('networking.ingress.enabled') */
+											disabledFields.includes('networking.ingress.enabled')
 										}
 									/>
 								</FormControl>

@@ -8,6 +8,7 @@ import useAuthStore from '@/store/auth/authStore.ts';
 import useClusterStore from '@/store/cluster/clusterStore.ts';
 import useOrganizationStore from '@/store/organization/organizationStore.ts';
 import { history, joinChannel } from '@/utils';
+import { useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -18,10 +19,15 @@ export default function Root() {
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
 	const { orgId } = useParams();
-	const { checkClusterSetup } = useClusterStore();
+	const { checkClusterSetup, getClusterInfo } = useClusterStore();
 	const { getOrganizationMembers, getOrganizationById, members, organization } =
 		useOrganizationStore();
 	const { getUser, isAuthenticated } = useAuthStore();
+
+	useQuery({
+		queryFn: getClusterInfo,
+		queryKey: ['getClusterInfo'],
+	});
 
 	useEffect(() => {
 		if (orgId) {
