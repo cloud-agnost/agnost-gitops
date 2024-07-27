@@ -119,7 +119,7 @@ export const applyRules = (type) => {
 						});
 
 						const namespace = await getK8SResource("Namespace", value);
-						if (namespace) {
+						if (namespace && type === "create") {
 							throw new Error(
 								"A Kubernetes namespace with the provided environment name already exists within the cluster"
 							);

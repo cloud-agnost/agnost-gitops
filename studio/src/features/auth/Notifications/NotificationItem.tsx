@@ -15,7 +15,7 @@ export default function NotificationItem({
 
 	return (
 		<label className='flex justify-between gap-4 cursor-pointer hover:bg-subtle p-2 -ml-2 transition rounded-sm'>
-			<span className='text-default text-sm  font-medium leading-6 select-none'>
+			<span className='text-default text-xs  font-medium leading-6 select-none'>
 				{t(`profileSettings.${notification}_notification`)}
 			</span>
 			<Switch

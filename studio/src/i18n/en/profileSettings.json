@@ -23,7 +23,7 @@
 	"your_password_description": "You use your email and password to login to Agnost cluster.",
 	"your_avatar_description": "This is your team's avatar. Click on the avatar to upload a custom one from your files. An avatar is optional but strongly recommended.",
 	"your_providers_description": "You can sign in to Agnost cluster using any of the following providers.",
-	"delete_account_description": "Permanently remove your Organization and all of its apps and associated app data from deployed environments. This action is not reversible. Please continue with caution.",
+	"delete_account_description": "Permanently remove your organizations and all of their projects and associated environments. This action is not reversible. Please continue with caution.",
 	"reset_password_by_email": "Reset Password By Email",
 	"cant_remember_password": "Can't remember your current password?",
 	"delete": "Delete",

@@ -79,7 +79,7 @@ export const checkRepoOrRegistry = (containerType) => {
 				const cluster = await getClusterRecord();
 				if (cluster.domains?.length === 0 && !cluster.reverseProxyURL) {
 					throw new Error(
-						`You have neither set your cluster's domain nor the reverse proxy URL. A repository source can only be assigned if the cluster domain or reverse proxy URL has been set.`
+						`You have neither set your cluster's domain nor the reverse proxy URL. A repository source cannot be used unless the cluster domain or reverse proxy URL is set. To set your cluster domain, or reverse proxy URL go to the cluster management section. Please note that only cluster owners can set the cluster domain or reverse proxy URL.`
 					);
 				}
 				return true;

@@ -23,7 +23,7 @@
 			"deleteDesc": "Are you sure you want to delete this member? This action cannot be undone. The user will not be able to join the organization.",
 			"invite": {
 				"title": "Invite Organization Members",
-				"desc": "Each organization member can have different role assigned to authorize certain actions within the organization itself. Organization members can also be added to app teams.",
+				"desc": "Each organization member can have different role assigned to authorize certain actions within the organization itself. Organization members can also be added to project teams.\n\nWhen you invite a new member to your organization Agnost will create a unique link that you can share with the user. The user will be able to join the organization by clicking on the link. You can view and copy the generated link from the pending invitations section and also revoke the invitation at any time.",
 				"button": "Invite",
 				"delete": "Delete Invitation",
 				"deleteAll": "Delete All",
@@ -50,7 +50,7 @@
 		},
 		"delete": {
 			"title": "Delete Organization",
-			"desc": "Permanently remove your Organization and all of its apps and associated app data from deployed environments. This action is not reversible — please continue with caution.",
+			"desc": "Permanently delete your organization and all of its projects and associated environments. This action is not reversible — please continue with caution.",
 			"confirm": {
 				"title": "Are you sure to delete your organization?",
 				"desc": "All organization apps and managed resource and associated data will be deleted. This action is not reversible — please continue with caution.",

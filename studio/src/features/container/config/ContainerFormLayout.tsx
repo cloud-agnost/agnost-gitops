@@ -41,7 +41,7 @@ export default function ContainerFormTitle({
 					<AccordionContent className='overflow-visible'>
 						<div className='space-y-6'>
 							{' '}
-							<div className='text-xs text-subtle font-normal leading-6 '>
+							<div className='text-xs text-subtle font-normal'>
 								{descriptionI18nKey && (
 									<Trans i18nKey={descriptionI18nKey} components={{ 1: <br /> }} />
 								)}
