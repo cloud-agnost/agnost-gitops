@@ -27,6 +27,7 @@ export default function Root() {
 	useQuery({
 		queryFn: getClusterInfo,
 		queryKey: ['getClusterInfo'],
+		enabled: isAuthenticated(),
 	});
 
 	useEffect(() => {
