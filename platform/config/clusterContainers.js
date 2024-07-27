@@ -559,7 +559,6 @@ export const clusterContainers = [
 			containerPort: 9000,
 			tcpProxy: {
 				enabled: false,
-				publicPort: 35004,
 			},
 			ingress: {
 				enabled: false,
@@ -771,6 +770,86 @@ export const clusterContainers = [
 			enabled: true,
 			mountPath: "/data/db",
 			size: 1,
+			sizeType: "gibibyte",
+			accessModes: ["ReadWriteOnce"],
+		},
+		statefulSetConfig: {
+			desiredReplicas: 1,
+			persistentVolumeClaimRetentionPolicy: {
+				whenDeleted: "Retain",
+				whenScaled: "Retain",
+			},
+			strategy: "RollingUpdate",
+			rollingUpdate: {
+				maxUnavailable: 1,
+				maxUnavailableType: "number",
+				partition: 0,
+			},
+			revisionHistoryLimit: 10,
+			podManagementPolicy: "OrderedReady",
+		},
+		probes: {
+			startup: {
+				enabled: false,
+				initialDelaySeconds: 30,
+				periodSeconds: 30,
+				timeoutSeconds: 10,
+				failureThreshold: 3,
+			},
+			readiness: {
+				enabled: false,
+				initialDelaySeconds: 30,
+				periodSeconds: 30,
+				timeoutSeconds: 10,
+				failureThreshold: 3,
+			},
+			liveness: {
+				enabled: false,
+				initialDelaySeconds: 30,
+				periodSeconds: 30,
+				timeoutSeconds: 10,
+				failureThreshold: 3,
+			},
+		},
+	},
+	{
+		iid: "zot",
+		slug: "zot",
+		name: "zot",
+		type: "statefulset",
+		pipelineStatus: "N/A",
+		variables: [],
+		repoOrRegistry: "registry",
+		registry: {
+			imageUrl: "ghcr.io/project-zot/zot-linux-amd64:v2.0.4",
+		},
+		networking: {
+			containerPort: 5000,
+			tcpProxy: {
+				enabled: false,
+			},
+			ingress: {
+				enabled: false,
+			},
+			customDomain: {
+				enabled: false,
+			},
+		},
+		podConfig: {
+			restartPolicy: "Always",
+			cpuRequest: 100,
+			cpuRequestType: "millicores",
+			memoryRequest: 256,
+			memoryRequestType: "mebibyte",
+			cpuLimit: 1,
+			cpuLimitType: "cores",
+			memoryLimit: 1,
+			memoryLimitType: "gibibyte",
+		},
+		storageConfig: {
+			enabled: true,
+			mountPath: "/data",
+			size: 50,
 			sizeType: "gibibyte",
 			accessModes: ["ReadWriteOnce"],
 		},
