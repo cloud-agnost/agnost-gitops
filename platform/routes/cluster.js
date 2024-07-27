@@ -47,16 +47,6 @@ router.get("/setup-status", async (req, res) => {
 */
 router.get("/info", authSession, async (req, res) => {
 	try {
-		const { user } = req;
-		if (!user.isClusterOwner) {
-			return res.status(401).json({
-				error: "Not Authorized",
-				details:
-					"You are not authorized to view cluster information. Only the cluster owner can view and manage cluster info.",
-				code: ERROR_CODES.unauthorized,
-			});
-		}
-
 		// Get cluster configuration
 		let cluster = await clsCtrl.getOneByQuery({
 			clusterAccesssToken: process.env.CLUSTER_ACCESS_TOKEN,
