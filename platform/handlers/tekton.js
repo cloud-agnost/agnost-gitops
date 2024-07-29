@@ -431,6 +431,193 @@ export async function deleteTektonPipelines(containers) {
 }
 
 /**
+ * Manually triggers a Tekton pipeline for the given container, environment, and git provider.
+ * @param {object} container - The container object.
+ * @param {object} environment - The environment object.
+ * @param {object} gitProvider - The git provider object.
+ * @param {object} session - The session object of the database transaction.
+ * @returns {Promise<void>} - A promise that resolves when the Tekton pipeline is created.
+ */
+export async function triggerTektonPipeline(
+	container,
+	environment,
+	gitProvider,
+	session = null
+) {
+	// If the repo is not connected then return
+	if (!container.repo?.connected || !gitProvider) return;
+
+	const { repo } = container;
+	const namespace = environment.iid;
+	const gitRepoType = repo.type;
+	const pipelineId = container.slug;
+	const gitRepoUrl = repo.url;
+	const gitPat = gitProvider.accessToken;
+	const gitBranch = repo.branch;
+	const gitSubPath = repo.path;
+	const appKind = formatKubernetesName(container.type);
+	const appName = container.iid;
+	const dockerfile = repo.dockerfile;
+	const containerImageName = container.slug;
+	const manifest = fs.readFileSync(
+		`${__dirname}/manifests/${gitRepoType}-pipeline.yaml`,
+		"utf8"
+	);
+
+	const resources = k8s.loadAllYaml(manifest);
+
+	for (const resource of resources) {
+		const { kind, metadata } = resource;
+		var resourceNameSuffix = "-" + pipelineId;
+		resource.metadata.name += resourceNameSuffix;
+		switch (kind) {
+			case "TriggerBinding":
+				var taskrunParams = resource.spec.params;
+				break;
+			case "TriggerTemplate":
+					resource.spec.resourcetemplates[0].spec.serviceAccountName +=
+						resourceNameSuffix;
+					var taskrunSpec = resource.spec.resourcetemplates[0].spec;
+				break;
+			default:
+				// do nothing for other objects
+				break;
+		}
+	}
+
+	try {
+		const specString = JSON.stringify(taskrunSpec).replace(/tt\.params/g, 'params');
+		const populatedSpec = JSON.parse(specString);
+		const path = new URL(gitRepoUrl).pathname;
+		// create random git-commit-id-like string, to make sure that it will end up with differnt image tag on each run.
+		const uniqueInput = `${new Date().toISOString()}${Math.random()}`;
+		const generatedCommitId = crypto.createHash('sha1').update(uniqueInput).digest('hex');
+
+		// Need to populate params that comes with Webhook call
+		taskrunParams[0].value = appKind;
+		taskrunParams[1].value = appName;
+		taskrunParams[2].value = agnostNamespace;
+		taskrunParams[3].value = namespace;
+		taskrunParams[4].value = "zot." + agnostNamespace + ":5000";
+		taskrunParams[5].value = gitPat;
+		taskrunParams[6].value = gitBranch;
+		taskrunParams[7].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
+		taskrunParams[8].value = containerImageName;
+		taskrunParams[9].value = dockerfile.replace(/^\/+/, ""); // remove leading slash, if exists
+		taskrunParams[10].value = generatedCommitId;
+		taskrunParams[11].value = gitRepoUrl;
+		taskrunParams[12].value = 'agnost-gitops';
+		taskrunParams[13].value = gitRepoUrl + '/commit/' + generatedCommitId;
+		taskrunParams[14].value = gitRepoUrl;
+		taskrunParams[15].value = path.split('/')[2];
+		taskrunParams[16].value = "Manual TaskRun trigger";
+		taskrunParams[17].value = new Date().toISOString();
+		populatedSpec.params = taskrunParams;
+
+		const taskrunResource = {
+			apiVersion: 'tekton.dev/v1',
+			kind: 'TaskRun',
+			metadata: {
+				generateName: pipelineId + '-manual-run-'
+			},
+			spec: populatedSpec
+		};
+
+		await k8sCustomObjectApi.createNamespacedCustomObject(
+			'tekton.dev',
+			'v1',
+			'tekton-builds',
+			'taskruns',
+			taskrunResource
+		);
+	} catch (err) {
+		console.error(
+			`Error applying tekton pipeline resource ${taskrunResource.kind} ${
+				taskrunResource.metadata.name
+			}. ${err.response?.body?.message ?? err.message}`
+		);
+		throw err;
+	}
+}
+
+/**
+ * Manually retries a (failed) Tekton pipeline
+ * @param {string} taskRunName - The TaskRun Name to retry
+ * @returns {Promise<void>} - A promise that resolves when the Tekton pipeline is created.
+ */
+export async function rerunTektonPipeline(
+	taskRunName
+) {
+
+	try {
+		const taskRunResource = await k8sCustomObjectApi.getNamespacedCustomObject(
+			'tekton.dev',
+			'v1',
+			'tekton-builds',
+			'taskruns',
+			taskRunName
+		);
+
+		taskRunResource.body.metadata.generateName = taskRunResource.body.metadata.name + '-rerun-'
+    delete taskRunResource.body.metadata.name;
+    delete taskRunResource.body.metadata.resourceVersion;
+
+		await k8sCustomObjectApi.createNamespacedCustomObject(
+			'tekton.dev',
+			'v1',
+			'tekton-builds',
+			'taskruns',
+			taskRunResource.body
+		);
+	} catch (err) {
+		console.error(
+			`Error re-running tekton pipeline.
+			${err.response?.body?.message ?? err.message}`
+		);
+		throw err;
+	}
+}
+
+/**
+ * Cancels a running Tekton pipeline
+ * @param {string} taskRunName - The TaskRun Name to retry
+ * @returns {Promise<void>} - A promise that resolves when the Tekton pipeline is created.
+ */
+export async function cancelTektonPipeline(
+  taskRunName
+) {
+
+  const patchData = {
+    spec: {
+      status: 'TaskRunCancelled'
+    }
+  };
+
+  const requestOptions = { headers: { 'Content-Type': 'application/merge-patch+json' }, };
+
+  try {
+    await k8sCustomObjectApi.patchNamespacedCustomObject(
+      'tekton.dev',
+      'v1',
+      'tekton-builds',
+      'taskruns',
+      taskRunName,
+      patchData,
+      undefined,
+      undefined,
+      undefined,
+      requestOptions);
+
+  } catch (err) {
+    console.error(
+      `Error cancelling tekton pipeline.
+       ${err.response?.body?.message ?? err.message}`
+    );
+    throw err;
+  }
+}
+
+/**
  * Formats the given Kubernetes name.
  *
  * @param {string} name - The name to be formatted.
