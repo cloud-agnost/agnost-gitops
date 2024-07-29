@@ -186,9 +186,10 @@ export default function StorageConfig() {
 					)}
 					{form.watch('type') === ContainerType.StatefulSet && (
 						<div className='grid grid-cols-2 gap-4'>
-							{(visibleFields?.includes(
-								'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted',
-							) ??
+							{((!visibleFields.length ||
+								visibleFields.includes(
+									'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted',
+								)) ??
 								true) && (
 								<FormField
 									control={form.control}
@@ -227,9 +228,10 @@ export default function StorageConfig() {
 									)}
 								/>
 							)}
-							{(visibleFields?.includes(
-								'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled',
-							) ??
+							{((!visibleFields.length ||
+								visibleFields.includes(
+									'statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenScaled',
+								)) ??
 								true) && (
 								<FormField
 									control={form.control}

@@ -65,5 +65,6 @@
 	"ip": "Value/IP Address",
 	"target": "Value/Target",
 	"at": "A",
-	"cname": "CNAME"
+	"cname": "CNAME",
+	"domain_error": "Your cluster is not accessible publicly through a public IP address or DNS hostname. You Agnost cluster needs to be publicly accessible to set a custom domain to issue SSL certificates."
 }

@@ -1,4 +1,5 @@
 import { Button } from '@/components/Button';
+import { Description } from '@/components/Description';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/Form';
 import { Input } from '@/components/Input';
 import { PasswordInput } from '@/components/PasswordInput';
@@ -18,90 +19,93 @@ export default function Variables() {
 		name: 'variables',
 	});
 	return (
-		<div className='space-y-8'>
-			{fields.map((f, index) => (
-				<div className='flex gap-4' key={f.id}>
-					<FormField
-						control={form.control}
-						name={`variables.${index}.name`}
-						render={({ field }) => (
-							<FormItem className='flex-1'>
-								{index === 0 && <FormLabel>{t('general.key')}</FormLabel>}
-								<FormControl>
-									<Input
+		<>
+			<Description title={t('container.env.title')}>{t('container.env.description')}</Description>
+			<div className='space-y-8'>
+				{fields.map((f, index) => (
+					<div className='flex gap-4' key={f.id}>
+						<FormField
+							control={form.control}
+							name={`variables.${index}.name`}
+							render={({ field }) => (
+								<FormItem className='flex-1'>
+									{index === 0 && <FormLabel>{t('general.key')}</FormLabel>}
+									<FormControl>
+										<Input
+											readOnly={!!template}
+											placeholder={
+												t('forms.placeholder', {
+													label: t('general.key'),
+												}) ?? ''
+											}
+											error={!!form.formState.errors.variables?.[index]?.name}
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name={`variables.${index}.value`}
+							render={({ field }) => (
+								<FormItem className='flex-1'>
+									{index === 0 && <FormLabel>{t('general.value')}</FormLabel>}
+
+									<PasswordInput
 										readOnly={!!template}
+										copyable
 										placeholder={
 											t('forms.placeholder', {
-												label: t('general.key'),
+												label: t('general.value'),
 											}) ?? ''
 										}
 										error={!!form.formState.errors.variables?.[index]?.name}
 										{...field}
 									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name={`variables.${index}.value`}
-						render={({ field }) => (
-							<FormItem className='flex-1'>
-								{index === 0 && <FormLabel>{t('general.value')}</FormLabel>}
-
-								<PasswordInput
-									readOnly={!!template}
-									copyable
-									placeholder={
-										t('forms.placeholder', {
-											label: t('general.value'),
-										}) ?? ''
-									}
-									error={!!form.formState.errors.variables?.[index]?.name}
-									{...field}
-								/>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					{!template && (
-						<Button
-							variant='icon'
-							size='sm'
-							className={cn(
-								'rounded-full',
-								!index && 'self-end',
-								!isEmpty(form.formState.errors) && !index && 'self-center mt-2',
-								!isEmpty(form.formState.errors) &&
-									isEmpty(form.formState.errors.variables?.[0]) &&
-									!index &&
-									'self-end',
+									<FormMessage />
+								</FormItem>
 							)}
-							onClick={() => {
-								remove(index);
-							}}
-						>
-							<Trash size={16} className='text-subtle' />
-						</Button>
-					)}
-				</div>
-			))}
-			{!template && (
-				<div className='flex justify-between items-center mt-8'>
-					{fields.length < 50 && (
-						<Button
-							variant='text'
-							onClick={() => {
-								append({ name: '', value: '' });
-							}}
-						>
-							<Plus size={16} className='text-brand-primary' />
-							<span className='text-brand-primary ml-2'>{t('container.add_variable')}</span>
-						</Button>
-					)}
-				</div>
-			)}
-		</div>
+						/>
+						{!template && (
+							<Button
+								variant='icon'
+								size='sm'
+								className={cn(
+									'rounded-full',
+									!index && 'self-end',
+									!isEmpty(form.formState.errors) && !index && 'self-center mt-2',
+									!isEmpty(form.formState.errors) &&
+										isEmpty(form.formState.errors.variables?.[0]) &&
+										!index &&
+										'self-end',
+								)}
+								onClick={() => {
+									remove(index);
+								}}
+							>
+								<Trash size={16} className='text-subtle' />
+							</Button>
+						)}
+					</div>
+				))}
+				{!template && (
+					<div className='flex justify-between items-center mt-8'>
+						{fields.length < 50 && (
+							<Button
+								variant='text'
+								onClick={() => {
+									append({ name: '', value: '' });
+								}}
+							>
+								<Plus size={16} className='text-brand-primary' />
+								<span className='text-brand-primary ml-2'>{t('container.add_variable')}</span>
+							</Button>
+						)}
+					</div>
+				)}
+			</div>
+		</>
 	);
 }

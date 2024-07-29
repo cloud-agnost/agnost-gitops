@@ -29,15 +29,15 @@ export default function OrganizationMembersTableHeader({ table }: { table: Table
 	const [searchParams, setSearchParams] = useSearchParams();
 	const { deleteMultipleInvitations, removeMultipleMembersFromOrganization } =
 		useOrganizationStore();
-	const selectedTab = searchParams.get('tab') as string;
-	const sortOptions: SortOption[] =
-		selectedTab === 'member' ? ORG_MEMBERS_SORT_OPTIONS : INVITATIONS_SORT_OPTIONS;
+	const selectedTab = searchParams.get('ot') as string;
+	const sortOptions: SortOption[] = useMemo(() => {
+		return searchParams.get('ot') === 'members'
+			? ORG_MEMBERS_SORT_OPTIONS
+			: INVITATIONS_SORT_OPTIONS;
+	}, [searchParams.get('ot')]);
 
 	const selectedSort = useMemo(() => {
-		return (
-			sortOptions.find((sort) => sort.value === searchParams.get('s')) ??
-			INVITATIONS_SORT_OPTIONS[0]
-		);
+		return sortOptions.find((sort) => sort.value === searchParams.get('s')) ?? sortOptions[0];
 	}, [searchParams]);
 
 	function setMemberRoleFilter(roles: string[]) {

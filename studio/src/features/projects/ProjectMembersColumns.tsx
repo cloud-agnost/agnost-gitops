@@ -1,18 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
 import { Checkbox } from '@/components/Checkbox';
-import { SortButton } from '@/components/DataTable';
+import { RoleSelect } from '@/components/RoleDropdown';
 import { TableConfirmation } from '@/components/Table';
 import { toast } from '@/hooks/useToast';
 import useAuthStore from '@/store/auth/authStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
+import { APIError } from '@/types';
 import { ProjectMember } from '@/types/project';
 import { getProjectPermission, translate } from '@/utils';
-import { ColumnDef } from '@tanstack/react-table';
-import { RoleSelect } from '@/components/RoleDropdown';
 import { QueryClient } from '@tanstack/react-query';
-import { APIError } from '@/types';
+import { ColumnDef } from '@tanstack/react-table';
 
 const queryClient = new QueryClient();
 
@@ -105,7 +104,7 @@ export const ProjectMembersColumns: ColumnDef<ProjectMember>[] = [
 	},
 	{
 		id: 'name',
-		header: () => <SortButton text={translate('project.name')} field='name' />,
+		header: 'Member',
 		accessorKey: 'name',
 		size: 600,
 		cell: ({ row }) => {
@@ -162,8 +161,8 @@ export const ProjectMembersColumns: ColumnDef<ProjectMember>[] = [
 			return (
 				!member.isProjectOwner && (
 					<TableConfirmation
-						title={translate('application.deleteMember.title')}
-						description={translate('application.deleteMember.description')}
+						title='Delete Member'
+						description={`Are you sure you want to delete ${member.name}?`}
 						onConfirm={() => removeMember(member._id, projectId)}
 						hasPermission={canDelete}
 						disabled={isMe}

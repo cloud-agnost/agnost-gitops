@@ -1,6 +1,7 @@
 import { ProfileSettings } from '@/features/auth/ProfileSettings';
 import ReleaseHistory from '@/features/cluster/ReleaseHistory';
 import CreateEnvironment from '@/features/projects/CreateEnvironment';
+import DeleteProject from '@/features/projects/DeleteProject';
 import EditProject from '@/features/projects/EditProject';
 import Environments from '@/features/projects/Environments';
 import ProjectInviteMember from '@/features/projects/ProjectInviteMember';
@@ -68,6 +69,7 @@ export default function Root() {
 			<ProjectInviteMember />
 			<ReleaseHistory />
 			<ProfileSettings />
+			<DeleteProject />
 		</>
 	);
 }

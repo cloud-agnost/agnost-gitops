@@ -56,8 +56,9 @@
 		"tcp_proxy": "TCP Proxy",
 		"tcp_proxy_help": "Connect to your app services over TCP using a proxied domain and port. Enabling TCP proxy will forward TCP traffic from clients outside of the cluster to your app services within the cluster.",
 		"ingress": "Ingress",
-		"ingress_help": "Provide external HTTP or HTTPS access to application services. Agnost provides a subdomain based routing to route incoming traffic to your app services.",
-		"show_instructions": "Show DNS configuration instructions"
+		"ingress_help": "Provide external HTTP or HTTPS access to application services. Agnost provides a path based routing to route incoming traffic to your app services based on the URL path.",
+		"show_instructions": "Show DNS configuration instructions",
+		"no_domain_warning": "Custom domain and Ingress can only be configured if cluster domain has been set up. To set up your cluster domain, please visit cluster management section. Please also know that you need to have cluster owner privileges in order to set cluster domain."
 	},
 	"pod_config": {
 		"title": "Pod Configuration",
@@ -147,5 +148,9 @@
 		"status": "Status",
 		"duration": "Duration",
 		"back": "Back to Builds"
+	},
+	"env": {
+		"title": "Environment Variables",
+		"description": "Environment variables are key-value pairs used to pass configuration information to containers at runtime. They allow you to set dynamic values, such as database credentials, API keys, or application settings, without hardcoding them into your application, enhancing flexibility and security."
 	}
 }

@@ -85,7 +85,7 @@ export const OrganizationMembersColumns: ColumnDef<OrganizationMember>[] = [
 	},
 	{
 		id: 'name',
-		header: 'Members',
+		header: 'Member',
 		accessorKey: 'name',
 		size: 600,
 		cell: ({ row }) => {

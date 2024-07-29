@@ -60,7 +60,7 @@ export default function BuildLogs() {
 				return 'Step waiting previous step completion';
 		}
 	}
-
+	console.log('BuildLogs', pipelineLogs);
 	return (
 		<div className='space-y-4 h-full flex flex-col'>
 			<div>

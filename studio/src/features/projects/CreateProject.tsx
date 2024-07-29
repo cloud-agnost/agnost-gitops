@@ -21,21 +21,21 @@ import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useProjectStore from '@/store/project/projectStore';
 import { APIError } from '@/types';
 import { CreateProjectRequest, CreateProjectSchema } from '@/types/project';
-import { cn } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from '@phosphor-icons/react';
+import { DialogProps } from '@radix-ui/react-dialog';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 export default function CreateProject({
-	className,
 	dropdown,
+	open,
+	onOpenChange,
 }: {
 	dropdown?: boolean;
-	className?: string;
-}) {
+} & DialogProps) {
 	const { createProject } = useProjectStore();
 	const canProjectCreate = useAuthorizeOrg('project.create');
 	const { t } = useTranslation();
@@ -74,18 +74,15 @@ export default function CreateProject({
 	}
 
 	return (
-		<Dialog>
-			<DialogTrigger asChild>
-				<Button
-					variant={dropdown ? 'blank' : 'primary'}
-					size='lg'
-					disabled={!canProjectCreate}
-					className={cn(className, dropdown && 'justify-start dropdown-item')}
-				>
-					<Plus size={14} className='mr-1 text-icon-default' />
-					{t('project.create')}
-				</Button>
-			</DialogTrigger>
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			{!dropdown && (
+				<DialogTrigger asChild>
+					<Button variant='primary' size='lg' disabled={!canProjectCreate}>
+						<Plus size={20} className='mr-2' />
+						{t('project.create')}
+					</Button>
+				</DialogTrigger>
+			)}
 			<DialogContent>
 				<DialogTitle>{t('project.create')}</DialogTitle>
 				<Form {...form}>

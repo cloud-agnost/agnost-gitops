@@ -3,7 +3,7 @@ import { INVITATIONS_SORT_OPTIONS } from '@/constants';
 import { useToast } from '@/hooks';
 import useAuthorizeProject from '@/hooks/useAuthorizeProject';
 import useProjectStore from '@/store/project/projectStore';
-import { Invitation, SortOption } from '@/types';
+import { Invitation, Project, SortOption } from '@/types';
 import { FunnelSimple } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { Table } from '@tanstack/react-table';
@@ -27,7 +27,7 @@ function ProjectInvitationFilter({ table }: Props) {
 	const { t } = useTranslation();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const canMultiDeleteInvite = useAuthorizeProject('invite.delete');
-	const { deleteMultipleInvitations, project } = useProjectStore();
+	const { deleteMultipleInvitations, project, openInviteMemberModal } = useProjectStore();
 	const { orgId } = useParams() as Record<string, string>;
 
 	const { mutateAsync: deleteInvitations } = useMutation({
@@ -109,6 +109,9 @@ function ProjectInvitationFilter({ table }: Props) {
 					))}
 				</DropdownMenuContent>
 			</DropdownMenu>
+			<Button variant='primary' onClick={() => openInviteMemberModal(project as Project)}>
+				{t('general.addMembers')}
+			</Button>
 			{!!table.getSelectedRowModel().rows?.length && (
 				<SelectedRowButton
 					onDelete={deleteInvitations}

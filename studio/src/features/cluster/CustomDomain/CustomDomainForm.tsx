@@ -17,7 +17,7 @@ export default function CustomDomainForm({ loading, modal }: CustomDomainFormPro
 	const { t } = useTranslation();
 	const cluster = useClusterStore((state) => state.cluster);
 	return (
-		<div className='space-y-6'>
+		<div className='space-y-6 flex-1'>
 			{modal && (
 				<DnsSettings
 					description={t('cluster.dns_settings_description')}

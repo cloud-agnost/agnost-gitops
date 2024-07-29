@@ -14,20 +14,56 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ProjectMembersColumns } from './ProjectMembersColumns';
+import {
+	DropdownMenu,
+	DropdownMenuCheckboxItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from '@/components/Dropdown';
+import { FunnelSimple } from '@phosphor-icons/react';
+import { ORG_MEMBERS_SORT_OPTIONS } from '@/constants';
+import { SortOption } from '@/types';
 export default function ProjectMembers({ loading }: { loading: boolean }) {
-	const [searchParams] = useSearchParams();
 	const { projectTeam, project, openInviteMemberModal, removeMultipleProjectMembers } =
 		useProjectStore();
-	const filteredMembers = useMemo(() => {
-		if (searchParams.get('m')) {
-			const query = new RegExp(searchParams.get('m') as string, 'i');
-			return projectTeam.filter((val) => RegExp(query).exec(val.member.name));
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	const filteredAndSortedMembers = useMemo(() => {
+		let members = projectTeam;
+
+		// Filtering
+		const searchQuery = searchParams.get('m');
+		if (searchQuery) {
+			const query = new RegExp(searchQuery, 'i');
+			members = members.filter((member) => query.test(member.member.name));
 		}
-		return projectTeam;
-	}, [searchParams.get('m'), projectTeam]);
+
+		// Sorting
+		const sortKey = searchParams.get('s');
+		const sortDir = searchParams.get('d');
+		if (sortKey && sortDir && sortKey in members[0].member) {
+			members = [...members].sort((a, b) => {
+				if (
+					a.member[sortKey as keyof ProjectMember['member']] <
+					b.member[sortKey as keyof ProjectMember['member']]
+				) {
+					return sortDir === 'asc' ? -1 : 1;
+				}
+				if (
+					a.member[sortKey as keyof ProjectMember['member']] >
+					b.member[sortKey as keyof ProjectMember['member']]
+				) {
+					return sortDir === 'asc' ? 1 : -1;
+				}
+				return 0;
+			});
+		}
+
+		return members;
+	}, [searchParams.get('m'), searchParams.get('s'), searchParams.get('d'), projectTeam]);
 
 	const table = useTable({
-		data: filteredMembers,
+		data: filteredAndSortedMembers,
 		columns: ProjectMembersColumns,
 	});
 	const canMultiDelete = useAuthorizeProject('team.delete');
@@ -57,6 +93,25 @@ export default function ProjectMembers({ loading }: { loading: boolean }) {
 			appId: project?._id as string,
 		});
 	}
+
+	const selectedSort = useMemo(() => {
+		return (
+			ORG_MEMBERS_SORT_OPTIONS.find(
+				(sort) => sort.value === searchParams.get('s') && sort.sortDir === searchParams.get('d'),
+			) ?? ORG_MEMBERS_SORT_OPTIONS[0]
+		);
+	}, [searchParams]);
+
+	function setMemberSort(sort: SortOption) {
+		if (sort.sortDir && sort.value) {
+			searchParams.set('s', sort.value);
+			searchParams.set('d', sort.sortDir);
+		} else {
+			searchParams.delete('s');
+			searchParams.delete('d');
+		}
+		setSearchParams(searchParams);
+	}
 	return (
 		<div className='space-y-6 p-6 relative'>
 			<div className='flex items-center gap-4'>
@@ -79,6 +134,31 @@ export default function ProjectMembers({ loading }: { loading: boolean }) {
 						type='project'
 						onChange={(roles) => table?.getColumn('role')?.setFilterValue(roles)}
 					/>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant='outline'>
+								<FunnelSimple size={16} className='members-filter-icon mr-2' />
+								{selectedSort?.name}
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent className='w-24'>
+							{ORG_MEMBERS_SORT_OPTIONS.map((sort) => (
+								<DropdownMenuCheckboxItem
+									key={sort.name}
+									checked={sort.name === selectedSort?.name}
+									onCheckedChange={(checked) => {
+										if (checked) {
+											setMemberSort(sort);
+										} else {
+											setMemberSort(ORG_MEMBERS_SORT_OPTIONS[0]);
+										}
+									}}
+								>
+									{sort.name}
+								</DropdownMenuCheckboxItem>
+							))}
+						</DropdownMenuContent>
+					</DropdownMenu>
 
 					<Button variant='primary' onClick={() => openInviteMemberModal(project as Project)}>
 						{t('general.addMembers')}

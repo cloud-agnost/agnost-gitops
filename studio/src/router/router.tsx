@@ -1,6 +1,7 @@
 import { Loading } from '@/components/Loading';
 import { componentLoader } from '@/helpers';
 import ErrorBoundary from '@/pages/errors/ErrorBoundary';
+import Health from '@/pages/home/Health';
 import { Root } from '@/pages/root';
 import useAuthStore from '@/store/auth/authStore.ts';
 import useClusterStore from '@/store/cluster/clusterStore.ts';
@@ -10,7 +11,6 @@ import { Navigate, createBrowserRouter, useLocation } from 'react-router-dom';
 import AuthLoader from './loader/AuthLoader';
 import homeLoaders from './loader/HomeLoader';
 import onboardingLoaders from './loader/OnboardingLoader';
-import Health from '@/pages/home/Health';
 export function Fallback(): JSX.Element {
 	return (
 		<div className='relative h-screen'>
@@ -254,12 +254,12 @@ const router = createBrowserRouter(
 );
 
 export function RequireAuth({ children }: { children: JSX.Element }): JSX.Element {
-	const { isAuthenticated } = useAuthStore();
-	const location = useLocation();
+	//TODO const { isAuthenticated } = useAuthStore();
+	// const location = useLocation();
 
-	if (!isAuthenticated()) {
-		return <Navigate to='/login' state={{ from: location }} replace />;
-	}
+	// if (!isAuthenticated()) {
+	// 	return <Navigate to='/login' state={{ from: location }} replace />;
+	// }
 
 	return children;
 }
