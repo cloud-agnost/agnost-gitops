@@ -89,7 +89,7 @@ export default function Probes() {
 														<SelectValue>{t(`container.probes.${field.value}`)}</SelectValue>
 													</SelectTrigger>
 												</FormControl>
-												<SelectContent className='max-w-full'>
+												<SelectContent className='max-w-full max-h-full'>
 													<div className='space-y-2'>
 														{['exec', 'httpGet', 'tcpSocket'].map((command) => (
 															<SelectItem key={command} value={command}>

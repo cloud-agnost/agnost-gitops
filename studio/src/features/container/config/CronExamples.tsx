@@ -1,3 +1,4 @@
+import { Button } from '@/components/Button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,7 +17,7 @@ interface CronExamplesProps {
 }
 
 export default function CronExamples({ selectCron, children }: CronExamplesProps) {
-	const triggerRef = useRef<HTMLButtonElement>(null);
+	const triggerRef = useRef<HTMLDivElement>(null);
 	const [triggerWidth, setTriggerWidth] = useState(0);
 
 	useEffect(() => {
@@ -26,15 +27,20 @@ export default function CronExamples({ selectCron, children }: CronExamplesProps
 	}, [triggerRef.current]);
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger className='block w-full' ref={triggerRef}>
-				<div className='flex justify-between items-center rounded-sm bg-input-background pr-2'>
-					{children}
-					<CaretDown size={14} />
-				</div>
-			</DropdownMenuTrigger>
+			<div
+				className='flex justify-between items-center rounded-sm bg-input-background pr-2'
+				ref={triggerRef}
+			>
+				{children}
+				<DropdownMenuTrigger className='block' asChild>
+					<Button variant='icon' size='sm' rounded className='!p-1'>
+						<CaretDown size={20} />
+					</Button>
+				</DropdownMenuTrigger>
+			</div>
 			<DropdownMenuContent
-				align='start'
-				className='bg-input-background w-full'
+				align='end'
+				className='bg-input-background w-full my-1 '
 				style={{ width: triggerWidth }}
 			>
 				<DropdownMenuItemContainer className='min-w-full bg-input-background h-96 overflow-auto'>

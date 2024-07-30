@@ -1,23 +1,16 @@
 import { CopyInput } from '@/components/CopyInput';
-import {
-	Drawer,
-	DrawerContent,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerTrigger,
-} from '@/components/Drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
 import { SettingsFormItem } from '@/components/SettingsFormItem';
 import useClusterStore from '@/store/cluster/clusterStore';
-import { cn } from '@/utils';
-import { LineSegments } from '@phosphor-icons/react';
+import { DialogProps } from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useTranslation } from 'react-i18next';
 import CustomDomains from '../cluster/CustomDomain/CustomDomains';
-import TransferClusterOwnership from './TransferClusterOwnership';
 import ReverseProxyURL from '../cluster/CustomDomain/ReverseProxyURL';
+import TransferClusterOwnership from './TransferClusterOwnership';
 
-export default function ClusterManagement() {
+export default function ClusterManagement(props: DialogProps) {
 	const { t } = useTranslation();
 	const { checkDomainStatus, clusterDomainError, cluster } = useClusterStore();
 
@@ -29,13 +22,7 @@ export default function ClusterManagement() {
 	});
 
 	return (
-		<Drawer>
-			<DrawerTrigger className='dropdown-item'>
-				<div className={cn('flex items-center gap-2')}>
-					<LineSegments className='text-icon-base text-lg' />
-					{t('profileSettings.clusters_title')}
-				</div>
-			</DrawerTrigger>
+		<Drawer {...props}>
 			<DrawerContent>
 				<DrawerHeader>
 					<DrawerTitle>{t('profileSettings.clusters_title')}</DrawerTitle>

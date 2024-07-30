@@ -52,8 +52,8 @@ export default function CustomDomains() {
 		<div className='space-y-6 max-w-2xl'>
 			{clusterDomainError ? (
 				<Alert variant='warning'>
-					<AlertDescription>
-						Your cluster is not accessible publicly through a public IP address or DNS hostname. You Agnost cluster needs to be publicly accessible to set a custom domain to issue SSL certificates.
+					<AlertDescription className='text-slate-300'>
+						{t('cluster.domain_error')}
 					</AlertDescription>
 				</Alert>
 			) : (

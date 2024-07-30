@@ -130,13 +130,13 @@ export const ORG_MEMBERS_SORT_OPTIONS: SortOption[] = [
     sortDir: "desc",
   },
   {
-    name: translate("general.sortOptions.nameAsc"),
-    value: "name",
+    name: translate("general.sortOptions.emailAsc"),
+    value: "email",
     sortDir: "asc",
   },
   {
-    name: translate("general.sortOptions.nameDesc"),
-    value: "name",
+    name: translate("general.sortOptions.emailDesc"),
+    value: "email",
     sortDir: "desc",
   },
 ];
@@ -148,13 +148,13 @@ export const INVITATIONS_SORT_OPTIONS: SortOption[] = [
     sortDir: "desc",
   },
   {
-    name: translate("general.sortOptions.emailAsc"),
-    value: "email",
+    name: translate("general.sortOptions.nameAsc"),
+    value: "name",
     sortDir: "asc",
   },
   {
-    name: translate("general.sortOptions.emailDesc"),
-    value: "email",
+    name: translate("general.sortOptions.nameDesc"),
+    value: "name",
     sortDir: "desc",
   },
 ];

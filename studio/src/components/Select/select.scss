@@ -29,7 +29,7 @@
 	&-item {
 		@apply grid grid-cols-[10fr_1fr] w-full cursor-pointer select-none;
 		@apply py-1.5 px-2 text-sm outline-none text-default;
-		@apply focus:bg-subtle focus:text-default;
+		@apply focus:bg-subtle focus:text-default data-[state=checked]:bg-subtle;
 		@apply data-[disabled]:pointer-events-none data-[disabled]:text-subtle data-[disabled]:bg-subtle;
 		@apply checked:bg-subtle checked:text-default;
 		@apply truncate max-w-full hover:bg-lighter dark:hover:bg-[#343B4D] focus-visible:bg-lighter;

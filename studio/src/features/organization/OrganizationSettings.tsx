@@ -1,11 +1,4 @@
-import { Button } from '@/components/Button';
-import {
-	Drawer,
-	DrawerContent,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerTrigger,
-} from '@/components/Drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
 import { SettingsFormItem } from '@/components/SettingsFormItem';
 import { EDIT_PROJECT_MENU_ITEMS } from '@/constants';
 import {
@@ -17,30 +10,29 @@ import {
 	OrganizationMenuItem,
 	TransferOrganization,
 } from '@/features/organization';
-import { GearSix } from '@phosphor-icons/react';
+import { DialogProps } from '@radix-ui/react-dialog';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-export default function OrganizationSettings() {
+export default function OrganizationSettings({ open, onOpenChange }: DialogProps) {
 	const { t } = useTranslation();
 	const [searchParams, setSearchParams] = useSearchParams();
 
-	function onOpenChange(open: boolean) {
-		if (!open) {
-			searchParams.delete('ot');
-		} else {
-			searchParams.set('ot', 'general');
-		}
+	function onOpenChangeHandler(open: boolean) {
+		onOpenChange?.(open);
+		searchParams.delete('ot');
 		setSearchParams(searchParams);
 	}
 
+	useEffect(() => {
+		if (open) {
+			searchParams.set('ot', 'general');
+			setSearchParams(searchParams);
+		}
+	}, [open]);
+
 	return (
-		<Drawer onOpenChange={onOpenChange}>
-			<DrawerTrigger asChild>
-				<Button className='justify-start dropdown-item' variant='blank' size='full'>
-					<GearSix size={16} className='mr-2' />
-					{t('general.settings')}
-				</Button>
-			</DrawerTrigger>
+		<Drawer open={open} onOpenChange={onOpenChangeHandler}>
 			<DrawerContent position='right' size='lg' className='h-full'>
 				<DrawerHeader className='border-none'>
 					<DrawerTitle>{t('organization.settings.title')}</DrawerTitle>

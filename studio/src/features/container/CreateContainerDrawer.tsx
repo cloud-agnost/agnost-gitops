@@ -48,30 +48,30 @@ const defaultValues: Partial<CreateContainerParams> = {
 			checkMechanism: 'httpGet',
 			httpPath: '/health',
 			httpPort: 80,
-			initialDelaySeconds: 1,
-			periodSeconds: 1,
-			timeoutSeconds: 1,
-			failureThreshold: 1,
+			initialDelaySeconds: 30,
+			periodSeconds: 30,
+			timeoutSeconds: 10,
+			failureThreshold: 3,
 		},
 		readiness: {
 			enabled: false,
 			httpPath: '/health',
 			httpPort: 80,
 			checkMechanism: 'httpGet',
-			initialDelaySeconds: 1,
-			periodSeconds: 1,
-			timeoutSeconds: 1,
-			failureThreshold: 1,
+			initialDelaySeconds: 30,
+			periodSeconds: 30,
+			timeoutSeconds: 10,
+			failureThreshold: 3,
 		},
 		liveness: {
 			enabled: false,
 			httpPath: '/health',
 			httpPort: 80,
 			checkMechanism: 'httpGet',
-			initialDelaySeconds: 1,
-			periodSeconds: 1,
-			timeoutSeconds: 1,
-			failureThreshold: 1,
+			initialDelaySeconds: 30,
+			periodSeconds: 30,
+			timeoutSeconds: 10,
+			failureThreshold: 3,
 		},
 	},
 	storageConfig: {
@@ -161,7 +161,6 @@ export default function CreateContainerDrawer() {
 					envId,
 				});
 			}
-
 			if (templateName) {
 				const template = templates
 					?.flatMap((t) => t.templates)

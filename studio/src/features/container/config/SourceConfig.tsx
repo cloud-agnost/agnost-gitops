@@ -41,7 +41,7 @@ function getProviderIcon(provider: 'github' | 'gitlab' | 'bitbucket', className?
 		case 'bitbucket':
 			return <Bitbucket className={cn('size-5 mr-2', className)} />;
 		default:
-			return null;
+			return <Github className={cn('size-5 mr-2', className)} />;
 	}
 }
 
@@ -108,7 +108,7 @@ function GitConfig() {
 	const form = useFormContext<CreateContainerParams>();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const { addGitProvider } = useContainerStore();
-
+	const qc = useQueryClient();
 	const { mutate: addProvider } = useMutation({
 		mutationFn: () =>
 			addGitProvider({
@@ -117,16 +117,22 @@ function GitConfig() {
 				expiresAt: searchParams.get('expires_at') as string,
 				refreshToken: searchParams.get('refresh_token') as string,
 			}),
-		onSuccess: (data) => {
-			form.setValue('repo.gitProviderId', data._id);
-			form.setValue('repo.connected', true, {
-				shouldDirty: true,
+		onSuccess: async (data) => {
+			await qc.invalidateQueries({
+				queryKey: ['git-providers'],
 			});
+			setTimeout(() => {
+				form.setValue('repo.gitProviderId', data._id);
+				form.setValue('repo.connected', true);
+			}, 10);
 		},
 		onError: ({ details }) => {
 			toast({ action: 'error', title: details });
 		},
-		onSettled: () => setSearchParams({}),
+		onSettled: () => {
+			setSearchParams({});
+			localStorage.removeItem('createDeployment');
+		},
 	});
 
 	useEffect(() => {
@@ -158,7 +164,6 @@ function ProviderSelect() {
 			shouldDirty: true,
 		});
 		form.setValue('repo.gitProviderId', provider?._id);
-		form.setValue('repo.type', provider?.provider!);
 		form.setValue('repo.name', '');
 		form.setValue('repo.branch', '');
 	}
@@ -173,13 +178,20 @@ function ProviderSelect() {
 	});
 
 	useEffect(() => {
-		if (!form.watch('repo.gitProviderId') && providers && providers.length > 0) {
-			form.setValue('repo.gitProviderId', providers[0]._id);
+		if (
+			_.isEmpty(form.watch('repo.gitProviderId')) &&
+			!_.isEmpty(providers) &&
+			_.isEmpty(localStorage.getItem('createDeployment'))
+		) {
+			form.setValue('repo.gitProviderId', providers?.[0]._id);
 		}
 	}, [providers]);
 
 	return (
-		<Select value={form.watch('repo.gitProviderId')} onValueChange={onProviderSelect}>
+		<Select
+			value={form.watch('repo.gitProviderId') ?? providers?.[0]._id}
+			onValueChange={onProviderSelect}
+		>
 			<SelectTrigger className='w-full'>
 				<SelectValue placeholder='Select provider' />
 			</SelectTrigger>

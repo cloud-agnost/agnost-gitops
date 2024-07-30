@@ -23,6 +23,9 @@ import _ from 'lodash';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import ContainerFormTitle from './ContainerFormLayout';
+import { CopyButton } from '@/components/CopyButton';
+import { Link } from 'react-router-dom';
+import { Alert, AlertDescription } from '@/components/Alert';
 
 export default function Networking() {
 	const { t } = useTranslation();
@@ -84,6 +87,12 @@ export default function Networking() {
 										}
 										{...field}
 									/>
+									<CopyButton
+										text={`${container?.iid}.${environment.iid}.svc.cluster.local:${form.watch(
+											'networking.containerPort',
+										)}`}
+										className='mr-2'
+									/>
 								</div>
 							</FormControl>
 							<FormDescription>{t('container.networking.private_networking_help')}</FormDescription>
@@ -111,8 +120,7 @@ export default function Networking() {
 									checked={field.value}
 									onCheckedChange={field.onChange}
 									disabled={
-										!cluster?.domains ||
-										cluster.domains.length === 0 ||
+										_.isEmpty(cluster.domains) ||
 										disabledFields.includes('networking.customDomain.enabled')
 									}
 								/>
@@ -154,9 +162,6 @@ export default function Networking() {
 								>
 									<Trash size={14} />
 								</Button>
-								<Button variant='link' size='sm'>
-									{t('container.networking.show_instructions')}
-								</Button>
 							</div>
 						) : (
 							<Input
@@ -172,29 +177,31 @@ export default function Networking() {
 							/>
 						)}
 					</FormControl>
-					<Accordion type='single' collapsible className='w-full'>
-						<AccordionItem value='dns' className='border-none group'>
-							<AccordionTrigger className='link flex items-center justify-center gap-2'>
-								<div>
-									<span className='hidden group-data-[state=closed]:inline'>Show</span>
-									<span className='hidden group-data-[state=open]:inline'>Hide</span> DNS
-									configuration instructions
-								</div>
-								<CaretDown className='shrink-0 text-icon-base transition-transform duration-200 group-data-[state=open]:rotate-180' />
-							</AccordionTrigger>
-							<AccordionContent>
-								<DnsSettings
-									description='To finalize setting up your custom domain, please add the following entries to your domain DNS records'
-									ips={cluster.domains}
-									slug={container?.slug ?? ''}
-									isWildcard={
-										isWildcardDomain(form.watch('networking.customDomain.domain') ?? '') ?? false
-									}
-									isContainer
-								/>
-							</AccordionContent>
-						</AccordionItem>
-					</Accordion>
+					{!_.isEmpty(cluster.domains) && (
+						<Accordion type='single' collapsible className='w-full'>
+							<AccordionItem value='dns' className='border-none group'>
+								<AccordionTrigger className='link flex items-center justify-center gap-2'>
+									<div>
+										<span className='hidden group-data-[state=closed]:inline'>Show</span>
+										<span className='hidden group-data-[state=open]:inline'>Hide</span> DNS
+										configuration instructions
+									</div>
+									<CaretDown className='shrink-0 text-icon-base transition-transform duration-200 group-data-[state=open]:rotate-180' />
+								</AccordionTrigger>
+								<AccordionContent>
+									<DnsSettings
+										description='To finalize setting up your custom domain, please add the following entries to your domain DNS records'
+										ips={cluster.domains}
+										slug={container?.slug ?? ''}
+										isWildcard={
+											isWildcardDomain(form.watch('networking.customDomain.domain') ?? '') ?? false
+										}
+										isContainer
+									/>
+								</AccordionContent>
+							</AccordionItem>
+						</Accordion>
+					)}
 					<FormMessage />
 				</FormItem>
 			)}
@@ -264,18 +271,24 @@ export default function Networking() {
 											}
 										}}
 										disabled={
-											!cluster?.domains ||
-											cluster.domains.length === 0 ||
+											_.isEmpty(cluster.domains) ||
 											disabledFields.includes('networking.ingress.enabled')
 										}
 									/>
 								</FormControl>
 							</FormItem>
 							{form.watch('networking.ingress.enabled') && (
-								<CopyInput
-									readOnly
-									value={`${container?.iid}-${environment.iid}.${cluster.domains[0]}`}
-								/>
+								<div className='input input-md flex items-center justify-between'>
+									<Link
+										to={`http://${container?.iid}-${environment.iid}.${cluster.domains[0]}`}
+										className='link'
+										rel='noreferrer noopener'
+										target='_blank'
+									>
+										<p>{`${container?.iid}-${environment.iid}.${cluster.domains[0]}`}</p>
+									</Link>
+									<CopyButton text={`${container?.iid}-${environment.iid}.${cluster.domains[0]}`} />
+								</div>
 							)}
 						</div>
 					)}
@@ -291,6 +304,13 @@ export default function Networking() {
 			) : (
 				<>
 					{renderPrivateNetworkingInput()}
+					{_.isEmpty(cluster.domains) && (
+						<Alert variant='warning'>
+							<AlertDescription className='text-slate-300'>
+								{t('container.networking.no_domain_warning')}
+							</AlertDescription>
+						</Alert>
+					)}
 					{renderCustomDomainSwitch()}
 					{form.watch('networking.customDomain.enabled') && renderCustomDomainInput()}
 					{renderTcpProxySwitch()}

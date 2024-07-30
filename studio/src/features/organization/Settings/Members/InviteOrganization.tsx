@@ -12,14 +12,18 @@ import useAuthorizeOrg from '@/hooks/useAuthorizeOrg';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import { cn } from '@/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Envelope } from '@phosphor-icons/react';
+import { DialogProps } from '@radix-ui/react-dialog';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
-export default function InviteOrganization({ dropdown }: { dropdown?: boolean }) {
+export default function InviteOrganization({
+	dropdown,
+	open,
+	onOpenChange,
+}: { dropdown?: boolean } & DialogProps) {
 	const canInvite = useAuthorizeOrg('invite.create');
 	const [_, setSearchParams] = useSearchParams();
 	const { t } = useTranslation();
@@ -60,17 +64,18 @@ export default function InviteOrganization({ dropdown }: { dropdown?: boolean })
 	};
 
 	return (
-		<Drawer>
-			<DrawerTrigger asChild>
-				<Button
-					size={dropdown ? 'full' : 'md'}
-					variant={dropdown ? 'blank' : 'primary'}
-					className={cn(dropdown && 'justify-start dropdown-item')}
-				>
-					{dropdown && <Envelope size={16} className='mr-2' />}
-					{t('general.addMembers')}
-				</Button>
-			</DrawerTrigger>
+		<Drawer open={open} onOpenChange={onOpenChange}>
+			{!dropdown && (
+				<DrawerTrigger asChild>
+					<Button
+						size={dropdown ? 'full' : 'md'}
+						variant={dropdown ? 'blank' : 'primary'}
+						className={cn(dropdown && 'justify-start dropdown-item')}
+					>
+						{t('general.addMembers')}
+					</Button>
+				</DrawerTrigger>
+			)}
 			<DrawerContent position='right' size='lg'>
 				<DrawerHeader>
 					<DrawerTitle>{t('organization.settings.members.invite.title')}</DrawerTitle>

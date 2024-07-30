@@ -1,4 +1,3 @@
-import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
 import { InfoModal } from '@/components/InfoModal';
@@ -13,17 +12,14 @@ import { APIError } from '@/types';
 import { cn } from '@/utils';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 export default function OrganizationProjects() {
 	const { toast } = useToast();
 	const {
 		projects,
 		getProjects,
-		deleteProject,
 		toDeleteProject,
-		closeDeleteModal,
-		isDeleteModalOpen,
 		closeLeaveModal,
 		isLeaveModalOpen,
 		leaveProjectTeam,
@@ -41,15 +37,6 @@ export default function OrganizationProjects() {
 		queryFn: () => getProjects(orgId),
 		enabled: projects[0]?.orgId !== orgId,
 		refetchOnWindowFocus: false,
-	});
-
-	const {
-		mutateAsync: deleteMutate,
-		isPending: deleteLoading,
-		error: deleteError,
-	} = useMutation({
-		mutationFn: () => deleteProject(orgId, toDeleteProject?._id as string),
-		onSuccess: closeDeleteModal,
 	});
 
 	const { mutateAsync: leaveAppMutate, isPending: leaveLoading } = useMutation({
@@ -112,27 +99,7 @@ export default function OrganizationProjects() {
 					</EmptyState>
 				)}
 			</div>
-			<ConfirmationModal
-				loading={deleteLoading}
-				error={deleteError}
-				title={t('project.delete.title')}
-				alertTitle={t('project.delete.alert')}
-				alertDescription={t('project.delete.description')}
-				description={
-					<Trans
-						i18nKey='project.delete.confirmCode'
-						values={{ confirmCode: toDeleteProject?.iid }}
-						components={{
-							confirmCode: <span className='font-bold text-default' />,
-						}}
-					/>
-				}
-				confirmCode={toDeleteProject?.iid as string}
-				onConfirm={deleteMutate}
-				isOpen={isDeleteModalOpen}
-				closeModal={closeDeleteModal}
-				closable
-			/>
+
 			<InfoModal
 				isOpen={isLeaveModalOpen}
 				closeModal={closeLeaveModal}

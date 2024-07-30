@@ -6,7 +6,7 @@ import useAuthStore from '@/store/auth/authStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
 import { APIError, Organization } from '@/types';
-import { Plus, SignOut } from '@phosphor-icons/react';
+import { Envelope, GearSix, Plus, SignOut } from '@phosphor-icons/react';
 import { DropdownMenuItem } from '@/components/Dropdown';
 import { useMutation } from '@tanstack/react-query';
 import _ from 'lodash';
@@ -21,7 +21,9 @@ export function OrganizationDropdown() {
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [openModal, setOpenModal] = useState(false);
+	const [openSettings, setOpenSettings] = useState(false);
 	const [openCreateModal, setOpenCreateModal] = useState(false);
+	const [openInviteDialog, setOpenInviteDialog] = useState(false);
 	const {
 		organizations,
 		organization,
@@ -79,14 +81,22 @@ export function OrganizationDropdown() {
 	}, []);
 	return (
 		<>
+			<OrganizationSettings open={openSettings} onOpenChange={setOpenSettings} />
+			<InviteOrganization dropdown open={openInviteDialog} onOpenChange={setOpenInviteDialog} />
 			<SelectionDropdown<Organization>
 				data={organizations}
 				selectedData={organization}
 				onSelect={(org) => onSelect(org as Organization)}
 				onClick={navigateOrg}
 			>
-				<OrganizationSettings />
-				<InviteOrganization dropdown />
+				<DropdownMenuItem onClick={() => setOpenSettings(true)}>
+					<GearSix size={16} className='mr-2' />
+					{t('general.settings')}
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => setOpenInviteDialog(true)}>
+					<Envelope size={16} className='mr-2' />
+					{t('general.addMembers')}
+				</DropdownMenuItem>
 
 				<DropdownMenuItem
 					onClick={() => setOpenModal(true)}

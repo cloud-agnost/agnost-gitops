@@ -72,7 +72,7 @@ const ContainerColumns: ColumnDefWithClassName<Container>[] = [
 			const { status } = original;
 			return (
 				<Badge
-					variant={BADGE_COLOR_MAP[status.status.toUpperCase()]}
+					variant={BADGE_COLOR_MAP[status?.status.toUpperCase()]}
 					text={startCase(status.status)}
 					rounded
 				/>
