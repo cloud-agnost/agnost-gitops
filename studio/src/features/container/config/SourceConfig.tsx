@@ -19,8 +19,9 @@ import {
 import { Bitbucket, Docker, Github } from '@/components/icons';
 import GitLab from '@/components/icons/GitLab';
 import { useToast, useUpdateEffect } from '@/hooks';
+import useAuthStore from '@/store/auth/authStore';
 import useContainerStore from '@/store/container/containerStore';
-import { CreateContainerParams, GitProvider, StateOption } from '@/types';
+import { CreateContainerParams, StateOption } from '@/types';
 import { cn } from '@/utils';
 import { Code, Folder, GitBranch } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,7 +32,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import MultiSelect, { ValueContainerProps, components } from 'react-select';
 import ContainerFormTitle from './ContainerFormLayout';
-import useAuthStore from '@/store/auth/authStore';
 
 function getProviderIcon(provider: 'github' | 'gitlab' | 'bitbucket', className?: string) {
 	switch (provider) {
