@@ -371,6 +371,15 @@ export async function getTaskRunLogs({ container, taskRunName }) {
 			}
 		}
 
+		// If all of them are all in running status then make only the first one running and the rest pending
+		const areAllRunning = steps.every((step) => step.status === "running");
+		if (areAllRunning) {
+			for (let i = 0; i < steps.length; i++) {
+				if (i === 0) steps[i].status = "running";
+				else steps[i].status = "pending";
+			}
+		}
+
 		return steps;
 	} catch (err) {
 		throw new Error(
