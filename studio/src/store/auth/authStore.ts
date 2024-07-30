@@ -162,7 +162,6 @@ const useAuthStore = create<AuthState & Actions>()(
           async projectAcceptInvite(req: UserDataToRegister) {
             try {
               const res = await UserService.projectAcceptInvite(req);
-              console.log("accept invite res", { res });
               get().setUser(res.user);
               joinChannel(res.project.orgId);
               if (get().isAuthenticated()) {

@@ -68,10 +68,6 @@ export default function BuildLogs() {
 		}
 	}, [searchParams.get('s')]);
 
-	console.log(
-		'selectedPipeline',
-		pipelineLogs?.map((log) => log.status),
-	);
 	return (
 		<div className='space-y-4 h-full flex flex-col'>
 			<div>
