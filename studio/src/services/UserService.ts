@@ -1,6 +1,8 @@
 import { axios } from "@/helpers";
 import {
   BaseGetRequest,
+  OrgAcceptInviteResponse,
+  ProjectAcceptInviteResponse,
   UpdateNotificationData,
   User,
   UserDataToRegister,
@@ -41,14 +43,18 @@ export default class UserService {
       })
     ).data;
   }
-  static async orgAcceptInviteWithSession(token: string) {
+  static async orgAcceptInviteWithSession(
+    token: string
+  ): Promise<OrgAcceptInviteResponse> {
     return (
       await axios.post(`${this.url}/org-invite-accept-session?token=${token}`, {
         token,
       })
     ).data;
   }
-  static async orgAcceptInvite(req: UserDataToRegister) {
+  static async orgAcceptInvite(
+    req: UserDataToRegister
+  ): Promise<OrgAcceptInviteResponse> {
     return (
       await axios.post(
         `${this.url}/org-invite-accept`,
@@ -59,7 +65,9 @@ export default class UserService {
       )
     ).data;
   }
-  static async projectAcceptInvite(req: UserDataToRegister) {
+  static async projectAcceptInvite(
+    req: UserDataToRegister
+  ): Promise<ProjectAcceptInviteResponse> {
     return (
       await axios.post(
         `${this.url}/project-invite-accept`,
@@ -70,7 +78,9 @@ export default class UserService {
       )
     ).data;
   }
-  static async projectAcceptInviteWithSession(token: string) {
+  static async projectAcceptInviteWithSession(
+    token: string
+  ): Promise<ProjectAcceptInviteResponse> {
     return (
       await axios.post(
         `${this.url}/project-invite-accept-session?token=${token}`,

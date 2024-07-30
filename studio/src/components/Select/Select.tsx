@@ -73,13 +73,13 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
 			className={cn('select-item', hideIndicator && 'no-indicator', className)}
 			{...props}
 		>
-			<SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+			<SelectPrimitive.SelectItemText className='block flex-1'>
+				{children}
+			</SelectPrimitive.SelectItemText>
 			{!hideIndicator && (
-				<span className='flex w-full h-full items-center justify-end'>
-					<SelectPrimitive.ItemIndicator>
-						<Check className='h-4 w-4' />
-					</SelectPrimitive.ItemIndicator>
-				</span>
+				<SelectPrimitive.ItemIndicator>
+					<Check className='h-4 w-4' />
+				</SelectPrimitive.ItemIndicator>
 			)}
 		</SelectPrimitive.Item>
 	),

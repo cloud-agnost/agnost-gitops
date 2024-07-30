@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import MultiSelect, { ValueContainerProps, components } from 'react-select';
 import ContainerFormTitle from './ContainerFormLayout';
+import useAuthStore from '@/store/auth/authStore';
 
 function getProviderIcon(provider: 'github' | 'gitlab' | 'bitbucket', className?: string) {
 	switch (provider) {
@@ -156,7 +157,8 @@ function GitConfig() {
 function ProviderSelect() {
 	const form = useFormContext<CreateContainerParams>();
 	const { t } = useTranslation();
-	const { getGitProviders } = useContainerStore();
+	const { user } = useAuthStore();
+	const { getGitProviders, providers, getGitProvider, container } = useContainerStore();
 
 	function onProviderSelect(value: string) {
 		const provider = providers?.find((provider) => provider._id === value);
@@ -172,9 +174,16 @@ function ProviderSelect() {
 		localStorage.setItem('createDeployment', JSON.stringify(form.getValues()));
 	}
 
-	const { data: providers } = useQuery({
+	useQuery({
 		queryKey: ['git-providers'],
 		queryFn: getGitProviders,
+		enabled: _.isEmpty(container) || user._id === container?.createdBy,
+	});
+
+	useQuery({
+		queryKey: ['git-providers'],
+		queryFn: () => getGitProvider(form.watch('repo.gitProviderId') as string),
+		enabled: user._id !== container?.createdBy,
 	});
 
 	useEffect(() => {
@@ -189,8 +198,9 @@ function ProviderSelect() {
 
 	return (
 		<Select
-			value={form.watch('repo.gitProviderId') ?? providers?.[0]._id}
+			value={form.watch('repo.gitProviderId')}
 			onValueChange={onProviderSelect}
+			disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 		>
 			<SelectTrigger className='w-full'>
 				<SelectValue placeholder='Select provider' />
@@ -227,12 +237,15 @@ function ProviderSelect() {
 function RepositorySelect() {
 	const form = useFormContext<CreateContainerParams>();
 	const { t } = useTranslation();
-	const { getBranches, getGitRepositories } = useContainerStore();
+	const { user } = useAuthStore();
+	const { getBranches, getGitRepositories, container } = useContainerStore();
 	const qc = useQueryClient();
 	const { data: repositories } = useQuery({
 		queryKey: ['git-repositories', form.watch('repo.gitProviderId')],
 		queryFn: () => getGitRepositories(form.watch('repo.gitProviderId') as string),
-		enabled: !!form.watch('repo.gitProviderId'),
+		enabled:
+			!!form.watch('repo.gitProviderId') &&
+			(_.isEmpty(container) || user._id === container?.createdBy),
 	});
 
 	const selectedRepo = useMemo(
@@ -305,6 +318,7 @@ function RepositorySelect() {
 								name='repo'
 								id={selectedProvider?.provider}
 								onMenuClose={() => selectedRepoRef?.current?.blur()}
+								isDisabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 							/>
 						</FormControl>
 
@@ -334,6 +348,7 @@ function RepositorySelect() {
 									isSearchable
 									name='branch'
 									onMenuClose={() => branchRef?.current?.blur()}
+									isDisabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 								/>
 							</FormControl>
 							<FormMessage />
@@ -348,6 +363,7 @@ function RepositorySelect() {
 function RepoPathField() {
 	const form = useFormContext<CreateContainerParams>();
 	const { t } = useTranslation();
+
 	return (
 		<FormField
 			control={form.control}

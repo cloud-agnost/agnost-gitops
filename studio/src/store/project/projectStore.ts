@@ -173,6 +173,9 @@ const useProjectStore = create<ProjectState & Actions>()(
       },
       inviteUsersToProject: async (req: ProjectInviteRequest) => {
         const invitations = await ProjectService.inviteUsersToProject(req);
+        set((prevState) => ({
+          invitations: [...prevState.invitations, ...invitations],
+        }));
         return invitations;
       },
       openInviteMemberModal: (project: Project) => {

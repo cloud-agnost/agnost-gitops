@@ -162,8 +162,9 @@ const useAuthStore = create<AuthState & Actions>()(
           async projectAcceptInvite(req: UserDataToRegister) {
             try {
               const res = await UserService.projectAcceptInvite(req);
+              console.log("accept invite res", { res });
               get().setUser(res.user);
-              joinChannel(res.org._id);
+              joinChannel(res.project.orgId);
               if (get().isAuthenticated()) {
                 useProjectStore.setState?.((state) => ({
                   projects: [...state.projects, res.project],
@@ -181,7 +182,7 @@ const useAuthStore = create<AuthState & Actions>()(
                 token
               );
               get().setUser(res.user);
-              joinChannel(res.org._id);
+              joinChannel(res.project.orgId);
               if (get().isAuthenticated()) {
                 useProjectStore.setState?.((state) => ({
                   projects: [...state.projects, res.project],

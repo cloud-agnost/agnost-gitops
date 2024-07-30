@@ -52,7 +52,7 @@ export default function ProjectInviteMember() {
 			orgId,
 			projectId: project?._id,
 			members: data.member
-				.filter((item) => item.name !== '' && item.role !== '')
+				.filter((item) => item.role !== '')
 				.map((member) => ({
 					role: member.role as ProjectRole,
 					name: member.name as string,
