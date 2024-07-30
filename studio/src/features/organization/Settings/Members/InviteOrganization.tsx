@@ -58,7 +58,7 @@ export default function InviteOrganization({
 	const onSubmit = (data: z.infer<typeof InviteMemberSchema>) => {
 		inviteMutate({
 			organizationId: organization?._id as string,
-			members: data.member.filter((item) => item.name !== '' && item.role !== '') as any,
+			members: data.member.filter((item) => item.role !== '') as any,
 			uiBaseURL: window.location.origin,
 		});
 	};

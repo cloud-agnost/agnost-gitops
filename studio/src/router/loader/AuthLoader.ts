@@ -122,8 +122,10 @@ async function projectAcceptInvite({ request }: LoaderFunctionArgs) {
           "refresh_token"
         ) as string,
       });
+      console.log("projectAcceptInvite");
       return redirect("/organization");
     } catch (error) {
+      console.log(error);
       return error;
     }
   }

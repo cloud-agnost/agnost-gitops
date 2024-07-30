@@ -168,4 +168,8 @@ export default class ContainerService {
       )
     ).data;
   }
+
+  static async getGitProviderById(gitProviderId: string): Promise<GitProvider> {
+    return (await axios.get(`/v1/user/git/${gitProviderId}`)).data;
+  }
 }

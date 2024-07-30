@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import _, { startCase } from 'lodash';
 import { Link, useParams } from 'react-router-dom';
 import BuildLogs from './BuildLogs';
+import { Loading } from '@/components/Loading';
 
 export default function Builds() {
 	const {
@@ -23,7 +24,7 @@ export default function Builds() {
 		containerPipelines: pipelines,
 	} = useContainerStore();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
-	useQuery<ContainerPipeline[]>({
+	const { isPending } = useQuery<ContainerPipeline[]>({
 		queryKey: ['containerPipelines'],
 		queryFn: () =>
 			getContainerPipelines({
@@ -44,6 +45,10 @@ export default function Builds() {
 			selectPipeline(pipelines?.find((pipeline) => pipeline.name === selectedPipeline.name));
 		}
 	}, [pipelines]);
+
+	if (isPending) {
+		return <Loading />;
+	}
 
 	if (!_.isNil(selectedPipeline)) {
 		return <BuildLogs />;
@@ -97,8 +102,8 @@ const PipelineColumns: ColumnDefWithClassName<ContainerPipeline>[] = [
 		accessorKey: 'GIT_COMMIT_MESSAGE',
 		size: 300,
 		cell: ({ row }) => (
-			<div>
-				<p>{row.original.GIT_COMMIT_MESSAGE}</p>
+			<div className='space-y-1'>
+				<p className='truncate max-w-[20ch]'>{row.original.GIT_COMMIT_MESSAGE}</p>
 				<div className='flex items-center gap-4'>
 					<Link
 						to={row.original.GIT_COMMIT_URL!}

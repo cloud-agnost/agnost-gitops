@@ -48,7 +48,7 @@ export default function Logs() {
 				<Select value={selectedPod?.name} onValueChange={onSelect}>
 					<SelectTrigger className='w-full'>
 						<div className='flex justify-between w-full mr-4'>
-							<SelectValue />
+							<SelectValue>{selectedPod?.name}</SelectValue>
 							<Badge
 								className='ml-4'
 								variant={BADGE_COLOR_MAP[selectedPod?.status.toUpperCase() ?? 'DEFAULT']}
@@ -61,7 +61,15 @@ export default function Logs() {
 					<SelectContent>
 						{containerLogs?.pods?.map((pod) => (
 							<SelectItem key={pod.name} value={pod.name}>
-								{pod.name}
+								<div className='w-full flex items-center justify-between flex-1'>
+									{pod.name}
+									<Badge
+										className='ml-4'
+										variant={BADGE_COLOR_MAP[pod?.status.toUpperCase() ?? 'DEFAULT']}
+										text={pod?.status!}
+										rounded
+									/>
+								</div>
 							</SelectItem>
 						))}
 					</SelectContent>

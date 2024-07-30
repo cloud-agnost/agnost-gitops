@@ -54,4 +54,9 @@
 			@apply border-error;
 		}
 	}
+
+	&--is-disabled {
+		@apply cursor-not-allowed;
+		@apply opacity-50;
+	}
 }

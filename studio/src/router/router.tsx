@@ -253,17 +253,6 @@ const router = createBrowserRouter(
 	},
 );
 
-export function RequireAuth({ children }: { children: JSX.Element }): JSX.Element {
-	//TODO const { isAuthenticated } = useAuthStore();
-	// const location = useLocation();
-
-	// if (!isAuthenticated()) {
-	// 	return <Navigate to='/login' state={{ from: location }} replace />;
-	// }
-
-	return children;
-}
-
 export function GuestOnly({ children }: { children: ReactNode }): JSX.Element {
 	const { isAuthenticated } = useAuthStore();
 	const { isCompleted } = useClusterStore();

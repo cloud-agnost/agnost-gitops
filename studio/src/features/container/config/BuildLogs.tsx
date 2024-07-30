@@ -13,12 +13,12 @@ import {
 } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { startCase } from 'lodash';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 export default function BuildLogs() {
 	const { t } = useTranslation();
-
+	const [searchParams, setSearchParams] = useSearchParams();
 	const {
 		getContainerPipelineLogs,
 		container,
@@ -60,7 +60,18 @@ export default function BuildLogs() {
 				return 'Step waiting previous step completion';
 		}
 	}
-	console.log('BuildLogs', pipelineLogs);
+
+	useEffect(() => {
+		const step = searchParams.get('s');
+		if (step) {
+			setSelectedStep(step);
+		}
+	}, [searchParams.get('s')]);
+
+	console.log(
+		'selectedPipeline',
+		pipelineLogs?.map((log) => log.status),
+	);
 	return (
 		<div className='space-y-4 h-full flex flex-col'>
 			<div>
@@ -76,7 +87,10 @@ export default function BuildLogs() {
 						<Button
 							variant='text'
 							className={cn('gap-2', selectedStep === log.step && ' bg-wrapper-background-hover')}
-							onClick={() => setSelectedStep(log.step)}
+							onClick={() => {
+								searchParams.set('s', log.step);
+								setSearchParams(searchParams);
+							}}
 						>
 							{log?.status === 'success' && (
 								<CheckCircle size={16} className='text-elements-green' />

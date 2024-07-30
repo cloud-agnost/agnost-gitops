@@ -44,6 +44,7 @@ type ContainerState = {
   containerEvents?: ContainerEvent[];
   containerPipelines?: ContainerPipeline[];
   containerPipelineLogs?: ContainerPipelineLogs[];
+  providers?: GitProvider[];
 };
 
 type Actions = {
@@ -57,6 +58,7 @@ type Actions = {
   closePodInfo: () => void;
   selectPipeline: (pipeline?: ContainerPipeline) => void;
   getGitProviders: () => Promise<GitProvider[]>;
+  getGitProvider: (providerId: string) => Promise<GitProvider>;
   addGitProvider: (req: AddGitProviderParams) => Promise<GitProvider>;
   disconnectGitProvider: (providerId: string) => Promise<void>;
   getGitRepositories: (providerId: string) => Promise<GitRepo[]>;
@@ -148,8 +150,16 @@ const useContainerStore = create<ContainerState & Actions>()(
           const provider = await ContainerService.addGitProvider(req);
           return provider;
         },
+        getGitProvider: async (providerId) => {
+          const provider = await ContainerService.getGitProviderById(
+            providerId
+          );
+          set({ providers: [provider] });
+          return provider;
+        },
         getGitProviders: async () => {
           const providers = await ContainerService.getGitProviders();
+          set({ providers });
           return providers;
         },
         disconnectGitProvider: async (providerId) => {

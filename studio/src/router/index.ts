@@ -1,2 +1,1 @@
-export { default as router } from './router.tsx';
-export { RequireAuth, GuestOnly } from './router.tsx';
+export { GuestOnly, default as router } from "./router.tsx";
