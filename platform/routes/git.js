@@ -8,6 +8,7 @@ import { checkContentType } from "../middlewares/contentType.js";
 import { validate } from "../middlewares/validate.js";
 import {
 	validateGitProvider,
+	validateGitProviderInfo,
 	validateGitProviderForRefresh,
 } from "../middlewares/validateGitProvider.js";
 import {
@@ -115,6 +116,26 @@ router.post(
 				delete gitEntry.refreshToken;
 				res.json(gitEntry);
 			}
+		} catch (error) {
+			helper.handleError(req, res, error);
+		}
+	}
+);
+
+/*
+@route      /v1/user/git/:gitProviderId
+@method     GET
+@desc       Returns git provider information
+@access     private
+*/
+router.get(
+	"/:gitProviderId",
+	authSession,
+	validateGitProviderInfo,
+	async (req, res) => {
+		try {
+			const { gitProvider } = req;
+			res.json(gitProvider);
 		} catch (error) {
 			helper.handleError(req, res, error);
 		}
