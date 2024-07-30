@@ -843,6 +843,16 @@ router.post(
 					},
 					{ session, cacheKey: `${invite.orgId}.${user._id}` }
 				);
+
+				// Create new session for the new user
+				let tokens = await authCtrl.createSession(
+					userId,
+					helper.getIP(req),
+					req.headers["user-agent"],
+					gitUser.provider
+				);
+
+				user = { ...user, ...tokens };
 			}
 
 			// Add user to the project team
