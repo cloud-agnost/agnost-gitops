@@ -238,8 +238,7 @@ function RepositorySelect() {
 	const form = useFormContext<CreateContainerParams>();
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
-	const { getBranches, getGitRepositories, container } = useContainerStore();
-	const qc = useQueryClient();
+	const { getBranches, getGitRepositories, container, providers } = useContainerStore();
 	const { data: repositories } = useQuery({
 		queryKey: ['git-repositories', form.watch('repo.gitProviderId')],
 		queryFn: () => getGitRepositories(form.watch('repo.gitProviderId') as string),
@@ -285,7 +284,6 @@ function RepositorySelect() {
 	);
 
 	const selectedProvider = useMemo(() => {
-		const providers: GitProvider[] = qc.getQueryData(['git-providers']) ?? [];
 		return providers?.find((provider) => provider._id === form.watch('repo.gitProviderId'));
 	}, [form.watch('repo.gitProviderId')]);
 	const branchRef = useRef<any>(null);
