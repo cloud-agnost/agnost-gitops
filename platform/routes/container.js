@@ -28,10 +28,16 @@ import {
 	constructCreateRequestBodyForTemplate,
 	constructUpdateRequestBodyForTemplate,
 } from "../handlers/templates/middlewares.js";
+import {
+	triggerTektonPipeline,
+	rerunTektonPipeline,
+	cancelTektonPipeline,
+	getTektonTaskrun,
+	deleteTektonTaskrun,
+} from "../handlers/tekton.js";
 import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
-import e from "express";
 
 const router = express.Router({ mergeParams: true });
 
@@ -466,6 +472,85 @@ router.delete(
 );
 
 /*
+@route      /v1/org/:orgId/project/:projectId/env/:envId/containers/:containerId/trigger
+@method     POST
+@desc       Triggers the build and deploy pipeline of the container
+@access     private
+*/
+router.post(
+	"/:containerId/trigger",
+	authSession,
+	validateOrg,
+	validateProject,
+	validateEnvironment,
+	validateContainer,
+	authorizeProjectAction("project.container.update"),
+	async (req, res) => {
+		try {
+			const { org, project, environment, container, user } = req;
+
+			if (container.isClusterEntity) {
+				return res.status(401).json({
+					error: "Not Allowed",
+					details: `You are not allowed to delete container '${container.name}' which is one of the default containers of the cluster.`,
+					code: ERROR_CODES.notAllowed,
+				});
+			}
+
+			// We can only trigger the pipeline if the container is associated with a repository
+			if (container.repoOrRegistry !== "repo" || !container.repo.connected) {
+				return res.status(400).json({
+					error: "Bad Request",
+					details: `The container '${container.name}' is not associated with a repository`,
+					code: ERROR_CODES.badRequest,
+				});
+			}
+
+			let gitProvider = null;
+			if (container.repo.gitProviderId) {
+				gitProvider = await gitCtrl.getOneById(container.repo.gitProviderId);
+
+				if (gitProvider?.accessToken)
+					gitProvider.accessToken = helper.decryptText(gitProvider.accessToken);
+				if (gitProvider?.refreshToken)
+					gitProvider.refreshToken = helper.decryptText(
+						gitProvider.refreshToken
+					);
+			}
+
+			if (!gitProvider) {
+				return res.status(400).json({
+					error: "Bad Request",
+					details: `The git provider for the container '${container.name}' is not found`,
+					code: ERROR_CODES.badRequest,
+				});
+			}
+
+			await triggerTektonPipeline(container, environment, gitProvider);
+			res.json();
+
+			// Log action
+			auditCtrl.logAndNotify(
+				environment._id,
+				user,
+				"org.project.environment.container",
+				"update",
+				`Triggered build & deploy pipeline of '${container.type}' named '${container.name}'`,
+				{},
+				{
+					orgId: org._id,
+					projectId: project._id,
+					environmentId: environment._id,
+					containerId: container._id,
+				}
+			);
+		} catch (err) {
+			helper.handleError(req, res, err);
+		}
+	}
+);
+
+/*
 @route      /v1/org/:orgId/project/:projectId/env/:envId/containers/:containerId/pods
 @method     GET
 @desc       Returns container pods
@@ -590,6 +675,176 @@ router.get(
 				taskRunName: pipelineName,
 			});
 			res.json(logs);
+		} catch (err) {
+			helper.handleError(req, res, err);
+		}
+	}
+);
+
+/*
+@route      /v1/org/:orgId/project/:projectId/env/:envId/containers/:containerId/pipelines/:pipelineName/cancel
+@method     POST
+@desc       Cancels a specific build & deploy pipeline run of a container
+@access     private
+*/
+router.post(
+	"/:containerId/pipelines/:pipelineName/cancel",
+	authSession,
+	validateOrg,
+	validateProject,
+	validateEnvironment,
+	validateContainer,
+	authorizeProjectAction("project.container.update"),
+	async (req, res) => {
+		try {
+			const { pipelineName } = req.params;
+			const { org, project, environment, container, user } = req;
+
+			const taskrun = await getTektonTaskrun(pipelineName);
+			if (
+				!taskrun.metadata.labels["triggers.tekton.dev/eventlistener"]?.includes(
+					container.slug
+				)
+			) {
+				return res.status(400).json({
+					error: "Bad Request",
+					details: `The provided pipeline name '${pipelineName}' is not associated with the container '${container.name}'`,
+					code: ERROR_CODES.badRequest,
+				});
+			}
+
+			await cancelTektonPipeline(pipelineName);
+			res.json();
+
+			// Log action
+			auditCtrl.logAndNotify(
+				environment._id,
+				user,
+				"org.project.environment.container",
+				"update",
+				`Cancelled the build & deploy pipeline of '${container.type}' named '${container.name}'`,
+				{},
+				{
+					orgId: org._id,
+					projectId: project._id,
+					environmentId: environment._id,
+					containerId: container._id,
+				}
+			);
+		} catch (err) {
+			helper.handleError(req, res, err);
+		}
+	}
+);
+
+/*
+@route      /v1/org/:orgId/project/:projectId/env/:envId/containers/:containerId/pipelines/:pipelineName/rerun
+@method     POST
+@desc       Reruns a specific build & deploy pipeline run of a container
+@access     private
+*/
+router.post(
+	"/:containerId/pipelines/:pipelineName/rerun",
+	authSession,
+	validateOrg,
+	validateProject,
+	validateEnvironment,
+	validateContainer,
+	authorizeProjectAction("project.container.update"),
+	async (req, res) => {
+		try {
+			const { pipelineName } = req.params;
+			const { org, project, environment, container, user } = req;
+
+			const taskrun = await getTektonTaskrun(pipelineName);
+			if (
+				!taskrun ||
+				!taskrun.metadata.labels["triggers.tekton.dev/eventlistener"]?.includes(
+					container.slug
+				)
+			) {
+				return res.status(400).json({
+					error: "Bad Request",
+					details: `The provided pipeline name '${pipelineName}' is not associated with the container '${container.name}'`,
+					code: ERROR_CODES.badRequest,
+				});
+			}
+
+			await rerunTektonPipeline(pipelineName);
+			res.json();
+
+			// Log action
+			auditCtrl.logAndNotify(
+				environment._id,
+				user,
+				"org.project.environment.container",
+				"update",
+				`Re-run the build & deploy pipeline of '${container.type}' named '${container.name}'`,
+				{},
+				{
+					orgId: org._id,
+					projectId: project._id,
+					environmentId: environment._id,
+					containerId: container._id,
+				}
+			);
+		} catch (err) {
+			helper.handleError(req, res, err);
+		}
+	}
+);
+
+/*
+@route      /v1/org/:orgId/project/:projectId/env/:envId/containers/:containerId/pipelines/:pipelineName/delete
+@method     POST
+@desc       Deletes a specific build & deploy pipeline run of a container
+@access     private
+*/
+router.post(
+	"/:containerId/pipelines/:pipelineName/delete",
+	authSession,
+	validateOrg,
+	validateProject,
+	validateEnvironment,
+	validateContainer,
+	authorizeProjectAction("project.container.update"),
+	async (req, res) => {
+		try {
+			const { pipelineName } = req.params;
+			const { org, project, environment, container, user } = req;
+
+			const taskrun = await getTektonTaskrun(pipelineName);
+			if (
+				!taskrun ||
+				!taskrun.metadata.labels["triggers.tekton.dev/eventlistener"]?.includes(
+					container.slug
+				)
+			) {
+				return res.status(400).json({
+					error: "Bad Request",
+					details: `The provided pipeline name '${pipelineName}' is not associated with the container '${container.name}'`,
+					code: ERROR_CODES.badRequest,
+				});
+			}
+
+			await deleteTektonTaskrun(pipelineName);
+			res.json();
+
+			// Log action
+			auditCtrl.logAndNotify(
+				environment._id,
+				user,
+				"org.project.environment.container",
+				"update",
+				`Deleted the build & deploy task run of '${container.type}' named '${container.name}'`,
+				{},
+				{
+					orgId: org._id,
+					projectId: project._id,
+					environmentId: environment._id,
+					containerId: container._id,
+				}
+			);
 		} catch (err) {
 			helper.handleError(req, res, err);
 		}

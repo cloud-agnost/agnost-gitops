@@ -58,7 +58,7 @@
 		"ingress": "Ingress",
 		"ingress_help": "Provide external HTTP or HTTPS access to application services. Agnost provides a path based routing to route incoming traffic to your app services based on the URL path.",
 		"show_instructions": "Show DNS configuration instructions",
-		"no_domain_warning": "Custom domain and Ingress can only be configured if cluster domain has been set up. To set up your cluster domain, please visit cluster management section. Please also know that you need to have cluster owner privileges in order to set cluster domain."
+		"no_domain_warning": "Custom domain and Ingress can only be configured if cluster domain has been set. To set your cluster domain, please visit cluster management section. Please also note that you need to have cluster owner privileges in order to set the cluster domain."
 	},
 	"pod_config": {
 		"title": "Pod Configuration",

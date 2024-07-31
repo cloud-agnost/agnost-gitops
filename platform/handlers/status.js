@@ -249,7 +249,9 @@ export async function getContainerTaskRuns({ container }) {
 						if (condition.status === "True") {
 							runStatus = "Succeeded";
 						} else if (condition.status === "False") {
-							runStatus = "Failed";
+							if (condition.reason === "TaskRunCancelled")
+								runStatus = "Cancelled";
+							else runStatus = "Failed";
 						} else {
 							runStatus = "Running";
 						}
