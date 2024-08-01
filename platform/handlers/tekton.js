@@ -729,7 +729,9 @@ export async function updateTriggerTemplateAccessTokens(
 					param.value = accessToken;
 				} else if (param.name === "bitbucketpat" && provider === "bitbucket") {
 					param.value = accessToken;
-				} else return param;
+				}
+
+				return param;
 			});
 
 			// Update the TriggerBinding object
