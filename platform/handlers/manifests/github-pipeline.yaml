@@ -113,6 +113,12 @@ spec:
               git clone ${URL} -b $(tt.params.gitbranch)
               cd ${REPO_NAME}
 
+              # Set the file dates to the same as the repo after cloning
+              git ls-tree -r --long HEAD | while read -r mode type object size filename; do
+                commit_date=$(git log -1 --format="%ct" -- "$filename")
+                touch -d "@$commit_date" "$filename"
+              done
+
               # Do not check commits if this is an initial manual run
               if [[ ! $(context.taskRun.name) =~ "manual-run-" ]]; then
                 # If subpath is defined, then check for the changed files
@@ -149,11 +155,17 @@ spec:
                   --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
                   --dockerfile=$(tt.params.dockerfile) \
                   --no-push \
+                  --no-push-cache \
+                  --cache=true \
+                  --reproducible \
+                  --cache-repo=oci:$(tt.params.containerregistry)/$(tt.params.imagename)-cache \
                   --tar-path=$(workspaces.ws.path)/image.tar
               else
                 /kaniko/executor \
                   --destination=${IMAGE} \
                   --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
+                  --cache=true \
+                  --reproducible \
                   --dockerfile=$(tt.params.dockerfile)
               fi
           - image: quay.io/skopeo/stable:latest
@@ -173,6 +185,10 @@ spec:
                   --dest-authfile /root/.docker/config.json \
                   --dest-tls-verify=false --format=oci \
                   docker-archive:$(workspaces.ws.path)/image.tar docker://${IMAGE}
+                skopeo --insecure-policy copy \
+                  --dest-authfile /root/.docker/config.json \
+                  --dest-tls-verify=false --format=oci \
+                  docker-archive:$(workspaces.ws.path)/image.tar docker://$(tt.params.containerregistry)/$(tt.params.imagename)-cache
               else
                 echo "Not using local registry, skipping ..."
               fi
