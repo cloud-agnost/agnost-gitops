@@ -158,7 +158,6 @@ spec:
                   --no-push-cache \
                   --cache=true \
                   --reproducible \
-                  --digest-file=/dev/termination-log \
                   --cache-repo=oci:$(tt.params.containerregistry)/$(tt.params.imagename)-cache \
                   --tar-path=$(workspaces.ws.path)/image.tar
               else
