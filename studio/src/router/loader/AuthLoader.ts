@@ -1,5 +1,6 @@
 import useAuthStore from "@/store/auth/authStore";
 import useClusterStore from "@/store/cluster/clusterStore";
+import useContainerStore from "@/store/container/containerStore";
 import { resetAllStores } from "@/utils";
 import { LoaderFunctionArgs, redirect } from "react-router-dom";
 
@@ -39,6 +40,19 @@ async function loginLoader({ request }: LoaderFunctionArgs) {
   if (status === "200" && accessToken && !error) {
     try {
       await useAuthStore.getState().login({
+        accessToken,
+        provider: new URL(request.url).searchParams.get("provider") as
+          | "github"
+          | "gitlab"
+          | "bitbucket",
+        expiresAt: new URL(request.url).searchParams.get(
+          "expires_at"
+        ) as string,
+        refreshToken: new URL(request.url).searchParams.get(
+          "refresh_token"
+        ) as string,
+      });
+      await useContainerStore.getState().addGitProvider({
         accessToken,
         provider: new URL(request.url).searchParams.get("provider") as
           | "github"
