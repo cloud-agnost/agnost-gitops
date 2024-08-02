@@ -1,5 +1,6 @@
 import config from "config";
 import k8s from "@kubernetes/client-node";
+import c from "config";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
@@ -230,14 +231,16 @@ export async function getContainerTaskRuns({ container }) {
 			"tekton.dev",
 			"v1beta1",
 			"tekton-builds",
-			"taskruns"
+			"taskruns",
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			`triggers.tekton.dev/eventlistener=${container.repo.type}-listener-${container.slug}`,
+			config.get("general.taskRunPageSize")
 		);
+
 		const taskruns = body.items
-			.filter((taskrun) =>
-				taskrun.metadata.labels["triggers.tekton.dev/eventlistener"]?.includes(
-					container.slug
-				)
-			)
 			.map((taskrun) => {
 				const { status } = taskrun;
 				let runStatus = "Unknown";

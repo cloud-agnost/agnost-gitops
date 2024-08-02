@@ -29,6 +29,7 @@
 		"port": 6379
 	},
 	"general": {
+		"taskRunPageSize": 20,
 		"clusterCertificateCheckIntervalMs": 3000,
 		"clusterCertificateCheckTimeoutMs": 3600000,
 		"clusterDomainSecret": "agnost-cluster-tls",
