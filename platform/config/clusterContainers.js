@@ -813,15 +813,15 @@ export const clusterContainers = [
 		},
 	},
 	{
-		iid: "zot",
-		slug: "zot",
-		name: "zot",
+		iid: "registry",
+		slug: "registry",
+		name: "registry",
 		type: "statefulset",
 		pipelineStatus: "N/A",
 		variables: [],
 		repoOrRegistry: "registry",
 		registry: {
-			imageUrl: "ghcr.io/project-zot/zot-linux-amd64:v2.0.4",
+			imageUrl: "registry:2.8.3",
 		},
 		networking: {
 			containerPort: 5000,
@@ -848,7 +848,7 @@ export const clusterContainers = [
 		},
 		storageConfig: {
 			enabled: true,
-			mountPath: "/data",
+			mountPath: "/var/lib/registry",
 			size: 50,
 			sizeType: "gibibyte",
 			accessModes: ["ReadWriteOnce"],
