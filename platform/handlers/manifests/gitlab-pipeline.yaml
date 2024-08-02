@@ -113,6 +113,12 @@ spec:
               git clone ${URL} -b $(tt.params.gitbranch)
               cd ${REPO_NAME}
 
+              # Set the file dates to the same as the repo after cloning
+              git ls-tree -r --long HEAD | while read -r mode type object size filename; do
+                commit_date=$(git log -1 --format="%ct" -- "$filename")
+                touch -d "@$commit_date" "$filename"
+              done
+
               # Do not check commits if this is an initial manual run
               if [[ ! $(context.taskRun.name) =~ "manual-run-" ]]; then
                 # If subpath is defined, then check for the changed files
@@ -143,39 +149,13 @@ spec:
               echo "Context: $(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath)"
               echo "Dockerfile: $(tt.params.dockerfile)"
               echo "Image: ${IMAGE}"
-              if [ "$(tt.params.containerregistry)" = "zot.$(tt.params.agnostnamespace):5000" ]; then
-                /kaniko/executor \
-                  --destination=${IMAGE} \
-                  --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
-                  --dockerfile=$(tt.params.dockerfile) \
-                  --no-push \
-                  --tar-path=$(workspaces.ws.path)/image.tar
-              else
-                /kaniko/executor \
-                  --destination=${IMAGE} \
-                  --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
-                  --dockerfile=$(tt.params.dockerfile)
-              fi
-          - name: local-push
-            image: quay.io/skopeo/stable:latest
-            script: |
-              #!/bin/bash
-
-              CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
-              if [ ${CANCEL_PIPELINE} -eq 1 ]; then
-                echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
-                exit 0
-              fi
-
-              if [ "$(tt.params.containerregistry)" = "zot.$(tt.params.agnostnamespace):5000" ]; then
-                export IMAGE=$(cat $(workspaces.ws.path)/image)
-                skopeo --insecure-policy copy \
-                  --dest-authfile /root/.docker/config.json \
-                  --dest-tls-verify=false --format=oci \
-                  docker-archive:$(workspaces.ws.path)/image.tar docker://${IMAGE}
-              else
-                echo "Not using local registry, skipping ..."
-              fi
+              /kaniko/executor \
+                --destination=${IMAGE} \
+                --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
+                --dockerfile=$(tt.params.dockerfile) \
+                --cache=true \
+                --cache-repo=$(tt.params.containerregistry)/$(tt.params.imagename)-cache \
+                --insecure
           - name: deploy
             image: bitnami/kubectl:1.29.2
             script: |
@@ -187,7 +167,7 @@ spec:
                 exit 0
               fi
 
-              export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/zot.$(tt.params.agnostnamespace):5000/localhost:30050/')
+              export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/registry.$(tt.params.agnostnamespace):5000/localhost:30050/')
               kubectl set image $(tt.params.kind)/$(tt.params.resourcename) $(tt.params.resourcename)=${IMAGE} -n $(tt.params.resourcenamespace)
               kubectl rollout status $(tt.params.kind)/$(tt.params.resourcename) -n $(tt.params.resourcenamespace) -w
               kubectl annotate $(tt.params.kind)/$(tt.params.resourcename) kubernetes.io/change-cause="Update image to ${IMAGE}" -n $(tt.params.resourcenamespace)

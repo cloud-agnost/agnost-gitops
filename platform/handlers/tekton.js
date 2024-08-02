@@ -165,7 +165,7 @@ export async function createTektonPipeline(
 					resource.spec.params[1].value = appName;
 					resource.spec.params[2].value = agnostNamespace;
 					resource.spec.params[3].value = namespace;
-					resource.spec.params[4].value = "zot." + agnostNamespace + ":5000";
+					resource.spec.params[4].value = "registry." + agnostNamespace + ":5000";
 					resource.spec.params[5].value = gitPat;
 					resource.spec.params[6].value = gitBranch;
 					resource.spec.params[7].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
@@ -832,7 +832,7 @@ export async function triggerTektonPipeline(
 		taskrunParams[1].value = appName;
 		taskrunParams[2].value = agnostNamespace;
 		taskrunParams[3].value = namespace;
-		taskrunParams[4].value = "zot." + agnostNamespace + ":5000";
+		taskrunParams[4].value = "registry." + agnostNamespace + ":5000";
 		taskrunParams[5].value = gitPat;
 		taskrunParams[6].value = gitBranch;
 		taskrunParams[7].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
