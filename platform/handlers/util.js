@@ -615,3 +615,25 @@ function getObjectValue(object, key) {
 	else if (value === "cores") return "";
 	else return value;
 }
+
+/**
+ * Deletes a container pod in the specified namespace.
+ *
+ * @param {string} namespace - The namespace of the pod.
+ * @param {string} podName - The name of the pod to delete.
+ * @returns {Promise<void>} - A promise that resolves when the pod is deleted successfully.
+ */
+export async function deleteContainerPod(namespace, podName) {
+	try {
+		await k8sCoreApi.deleteNamespacedPod(podName, namespace);
+		console.info(
+			`Pod '${podName}' in namespace '${namespace}' deleted successfully`
+		);
+	} catch (err) {
+		console.error(
+			`Error deleting pod ${podName}. ${
+				err.response?.body?.message ?? err.message
+			}`
+		);
+	}
+}

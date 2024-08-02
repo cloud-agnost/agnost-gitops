@@ -156,8 +156,8 @@ spec:
                   --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
                   --dockerfile=$(tt.params.dockerfile)
               fi
-          - image: quay.io/skopeo/stable:latest
-            name: local-push
+          - name: local-push
+            image: quay.io/skopeo/stable:latest
             script: |
               #!/bin/bash
 

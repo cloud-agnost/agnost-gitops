@@ -35,6 +35,7 @@ import {
 	getTektonTaskrun,
 	deleteTektonTaskrun,
 } from "../handlers/tekton.js";
+import { deleteContainerPod } from "../handlers/util.js";
 import helper from "../util/helper.js";
 
 import ERROR_CODES from "../config/errorCodes.js";
@@ -569,6 +570,48 @@ router.get(
 			const { container, environment } = req;
 			const pods = await getContainerPods({ container, environment });
 			res.json(pods);
+		} catch (err) {
+			helper.handleError(req, res, err);
+		}
+	}
+);
+
+/*
+@route      /v1/org/:orgId/project/:projectId/env/:envId/containers/:containerId/pods/:podName
+@method     DELETE
+@desc       Deletes a specific pod of a container
+@access     private
+*/
+router.delete(
+	"/:containerId/pods/:podName",
+	authSession,
+	validateOrg,
+	validateProject,
+	validateEnvironment,
+	validateContainer,
+	authorizeProjectAction("project.container.update"),
+	async (req, res) => {
+		try {
+			const { user, org, project, container, environment } = req;
+
+			await deleteContainerPod(environment.iid, req.params.podName);
+			res.json();
+
+			// Log action
+			auditCtrl.logAndNotify(
+				environment._id,
+				user,
+				"org.project.environment.container",
+				"update",
+				`Deleted pod '${req.params.podName}' of '${container.type}' named '${container.name}'`,
+				{},
+				{
+					orgId: org._id,
+					projectId: project._id,
+					environmentId: environment._id,
+					containerId: container._id,
+				}
+			);
 		} catch (err) {
 			helper.handleError(req, res, err);
 		}
