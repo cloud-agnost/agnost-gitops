@@ -236,8 +236,8 @@ export async function getContainerTaskRuns({ container }) {
 			undefined,
 			undefined,
 			undefined,
-			`triggers.tekton.dev/eventlistener=${container.repo.type}-listener-${container.slug}`,
-			config.get("general.taskRunPageSize")
+			`triggers.tekton.dev/eventlistener=${container.repo.type}-listener-${container.slug}`
+			//config.get("general.taskRunPageSize")
 		);
 
 		const taskruns = body.items
