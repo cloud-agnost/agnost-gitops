@@ -1,6 +1,6 @@
 {
    "name": "platform-core",
-   "version": "v0.0.19",
+   "version": "v0.0.20",
    "description": "Platform core api server",
    "main": "server.js",
    "type": "module",
