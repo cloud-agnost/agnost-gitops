@@ -1,8 +1,8 @@
 {
-   "release": "v0.0.26",
+   "release": "v0.0.25",
    "modules": {
       "monitor": "v0.0.4",
-      "platform": "v0.0.19",
+      "platform": "v0.0.18",
       "sync": "v0.0.4",
       "webhook": "v0.0.6",
       "studio": "v0.0.17"
