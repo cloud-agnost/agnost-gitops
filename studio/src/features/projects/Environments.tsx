@@ -23,11 +23,11 @@ import { EnvironmentsColumns } from './EnvironmentsColumns';
 
 export default function Environments() {
 	const { t } = useTranslation();
-	const { selectProject, isEnvOpen, projects, closeEnvironmentDrawer } = useProjectStore();
+	const { selectProject, isEnvOpen, projects, closeEnvironmentDrawer, project } = useProjectStore();
 	const { getEnvironments, environments, lastFetchedPage } = useEnvironmentStore();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const match = useMatch('/organization/:orgId/projects');
-	const { orgId, projectId } = useParams() as Record<string, string>;
+	const { orgId } = useParams() as Record<string, string>;
 	const table = useTable({
 		data: environments,
 		columns: EnvironmentsColumns,
@@ -35,7 +35,7 @@ export default function Environments() {
 	function closeDrawerHandler() {
 		searchParams.delete('q');
 		setSearchParams(searchParams);
-		if (projectId) selectProject(projects.find((app) => app._id === projectId) as Project);
+		if (project._id) selectProject(projects.find((app) => app._id === project._id) as Project);
 		closeEnvironmentDrawer(!!match);
 	}
 
@@ -43,7 +43,7 @@ export default function Environments() {
 		queryFn: ({ pageParam }) =>
 			getEnvironments({
 				orgId,
-				projectId,
+				projectId: project._id,
 				page: pageParam,
 				size: MODULE_PAGE_SIZE,
 				search: searchParams.get('q') as string,

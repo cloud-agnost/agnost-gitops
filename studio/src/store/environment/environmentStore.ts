@@ -9,6 +9,7 @@ import {
 } from "@/types";
 import { history, joinChannel } from "@/utils";
 import { create } from "zustand";
+import useContainerStore from "../container/containerStore";
 type EnvironmentStore = {
   environment: Environment;
   environments: Environment[];
@@ -58,9 +59,10 @@ const useEnvironmentStore = create<EnvironmentStore & Actions>((set, get) => ({
     return environment;
   },
   selectEnvironment: (environment) => {
+    get().reset();
     set({ environment });
     joinChannel(environment._id);
-    get().reset();
+    useContainerStore.getState().reset();
     history.navigate?.(
       `/organization/${environment.orgId}/projects/${environment.projectId}/env/${environment._id}`
     );
