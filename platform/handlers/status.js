@@ -236,8 +236,8 @@ export async function getContainerTaskRuns({ container }) {
 			undefined,
 			undefined,
 			undefined,
-			`triggers.tekton.dev/eventlistener=${container.repo.type}-listener-${container.slug}`,
-			config.get("general.taskRunPageSize")
+			`triggers.tekton.dev/eventlistener=${container.repo.type}-listener-${container.slug}`
+			//config.get("general.taskRunPageSize")
 		);
 
 		const taskruns = body.items
@@ -342,9 +342,6 @@ export async function getTaskRunLogs({ container, taskRunName }) {
 		const build = containerStatuses?.find(
 			(entry) => entry.name === "step-build"
 		);
-		const push = containerStatuses?.find(
-			(entry) => entry.name === "step-local-push"
-		);
 		const deploy = containerStatuses?.find(
 			(entry) => entry.name === "step-deploy"
 		);
@@ -352,7 +349,6 @@ export async function getTaskRunLogs({ container, taskRunName }) {
 		const stepPromises = [
 			getStepInfo(`${taskRunName}-pod`, "step-setup", "setup", setup),
 			getStepInfo(`${taskRunName}-pod`, "step-build", "build", build),
-			getStepInfo(`${taskRunName}-pod`, "step-local-push", "push", push),
 			getStepInfo(`${taskRunName}-pod`, "step-deploy", "deploy", deploy),
 		];
 
