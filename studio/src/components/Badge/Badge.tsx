@@ -1,8 +1,8 @@
-import { cva } from 'class-variance-authority';
-import { cn } from '@/utils';
-import { CircleNotch, Spinner, X } from '@phosphor-icons/react';
-import './badge.scss';
 import { Button } from '@/components/Button';
+import { cn } from '@/utils';
+import { CircleNotch, X } from '@phosphor-icons/react';
+import { cva } from 'class-variance-authority';
+import './badge.scss';
 const badgeVariants = cva('badge', {
 	variants: {
 		variant: {

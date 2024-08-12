@@ -1,14 +1,20 @@
 import { Badge } from '@/components/Badge';
+import { Button } from '@/components/Button';
 import { DataTable } from '@/components/DataTable';
 import { DropdownMenuItemContainer } from '@/components/Dropdown';
+import { EmptyState } from '@/components/EmptyState';
 import { Github } from '@/components/icons';
 import { Loading } from '@/components/Loading';
-import { BADGE_COLOR_MAP, PROJECT_SETTINGS } from '@/constants';
+import { BADGE_COLOR_MAP } from '@/constants';
 import { useTable, useUpdateEffect } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
+import useEnvironmentStore from '@/store/environment/environmentStore';
+import useOrganizationStore from '@/store/organization/organizationStore';
+import useProjectStore from '@/store/project/projectStore';
 import { ColumnDefWithClassName, ContainerPipeline } from '@/types';
 import { cn, getRelativeTime, secondsToRelativeTime } from '@/utils';
 import { DotsThreeVertical, GitBranch, GitCommit } from '@phosphor-icons/react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,16 +22,10 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from 'components/Dropdown';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import _, { startCase } from 'lodash';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import BuildLogs from './BuildLogs';
-import useEnvironmentStore from '@/store/environment/environmentStore';
-import useOrganizationStore from '@/store/organization/organizationStore';
-import useProjectStore from '@/store/project/projectStore';
-import { EmptyState } from '@/components/EmptyState';
-import { Button } from '@/components/Button';
-import { useTranslation } from 'react-i18next';
 
 export default function Builds() {
 	const { t } = useTranslation();

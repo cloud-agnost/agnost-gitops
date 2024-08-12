@@ -6,10 +6,9 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/Dropdown';
 import { LogViewer } from '@/components/LogViewer';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import { BADGE_COLOR_MAP } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
-import { ArrowDown, CaretDown, Check } from '@phosphor-icons/react';
+import { CaretDown, Check } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';

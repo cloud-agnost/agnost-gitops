@@ -5,10 +5,9 @@ import { FormatOptionLabelProps, OrganizationMember } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { useParams, useSearchParams } from 'react-router-dom';
 import Select from 'react-select';
-import { NotificationFilterSchema } from '../NotificationFilter';
 import { z } from 'zod';
+import { NotificationFilterSchema } from '../NotificationFilter';
 
 const formatOptionLabel = ({ label, value }: FormatOptionLabelProps<OrganizationMember>) => {
 	const name = label?.split(' ');
@@ -42,7 +41,6 @@ const formatOptionLabel = ({ label, value }: FormatOptionLabelProps<Organization
 
 export default function TeamMemberFilter() {
 	const form = useFormContext<z.infer<typeof NotificationFilterSchema>>();
-	const [searchParams] = useSearchParams();
 	const { getOrganizationMembers } = useOrganizationStore();
 
 	const { data: members } = useQuery({

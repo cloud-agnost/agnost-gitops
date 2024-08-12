@@ -4,6 +4,7 @@ import { RealtimeActions } from "./RealtimeActions";
 
 class Cluster implements RealtimeActions<ClusterResourceStatus[]> {
   update(param: RealtimeActionParams<ClusterResourceStatus[]>): void {
+    console.log("Cluster update", param);
     useClusterStore.setState?.((prev) => ({
       ...prev,
       clusterComponentsReleaseInfo: prev.clusterComponentsReleaseInfo.map(

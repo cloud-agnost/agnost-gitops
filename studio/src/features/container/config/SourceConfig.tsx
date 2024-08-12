@@ -18,7 +18,7 @@ import {
 } from '@/components/Select';
 import { Bitbucket, Docker, Github } from '@/components/icons';
 import GitLab from '@/components/icons/GitLab';
-import { useToast, useUpdateEffect } from '@/hooks';
+import { useToast } from '@/hooks';
 import useAuthStore from '@/store/auth/authStore';
 import useContainerStore from '@/store/container/containerStore';
 import { CreateContainerParams, StateOption } from '@/types';
