@@ -90,16 +90,14 @@ export default function Probes() {
 													</SelectTrigger>
 												</FormControl>
 												<SelectContent className='max-w-full max-h-full'>
-													<div className='space-y-2'>
-														{['exec', 'httpGet', 'tcpSocket'].map((command) => (
-															<SelectItem key={command} value={command}>
-																{t(`container.probes.${command}`)}
-																<p className='text-xs text-subtle text-pretty max-w-[90ch]'>
-																	{t(`container.probes.${command}_help`)}
-																</p>
-															</SelectItem>
-														))}
-													</div>
+													{['exec', 'httpGet', 'tcpSocket'].map((command) => (
+														<SelectItem key={command} value={command}>
+															{t(`container.probes.${command}`)}
+															<p className='text-xs text-subtle text-pretty max-w-[90ch]'>
+																{t(`container.probes.${command}_help`)}
+															</p>
+														</SelectItem>
+													))}
 												</SelectContent>
 											</Select>
 

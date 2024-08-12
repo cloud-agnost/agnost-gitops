@@ -77,7 +77,7 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
 				{children}
 			</SelectPrimitive.SelectItemText>
 			{!hideIndicator && (
-				<SelectPrimitive.ItemIndicator>
+				<SelectPrimitive.ItemIndicator className='flex items-center justify-center'>
 					<Check className='h-4 w-4' />
 				</SelectPrimitive.ItemIndicator>
 			)}

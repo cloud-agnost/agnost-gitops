@@ -1,31 +1,46 @@
 import { Badge } from '@/components/Badge';
-import { Button } from '@/components/Button';
 import { DataTable } from '@/components/DataTable';
+import { DropdownMenuItemContainer } from '@/components/Dropdown';
 import { Github } from '@/components/icons';
-import { BADGE_COLOR_MAP } from '@/constants';
+import { Loading } from '@/components/Loading';
+import { BADGE_COLOR_MAP, PROJECT_SETTINGS } from '@/constants';
 import { useTable, useUpdateEffect } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
 import { ColumnDefWithClassName, ContainerPipeline } from '@/types';
 import { cn, getRelativeTime, secondsToRelativeTime } from '@/utils';
-import { GitBranch, GitCommit } from '@phosphor-icons/react';
-import { File } from '@phosphor-icons/react/dist/ssr';
-import { useQuery } from '@tanstack/react-query';
+import { DotsThreeVertical, GitBranch, GitCommit } from '@phosphor-icons/react';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from 'components/Dropdown';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import _, { startCase } from 'lodash';
 import { Link, useParams } from 'react-router-dom';
 import BuildLogs from './BuildLogs';
-import { Loading } from '@/components/Loading';
+import useEnvironmentStore from '@/store/environment/environmentStore';
+import useOrganizationStore from '@/store/organization/organizationStore';
+import useProjectStore from '@/store/project/projectStore';
+import { EmptyState } from '@/components/EmptyState';
+import { Button } from '@/components/Button';
+import { useTranslation } from 'react-i18next';
 
 export default function Builds() {
+	const { t } = useTranslation();
 	const {
 		getContainerPipelines,
 		container,
 		selectPipeline,
 		selectedPipeline,
 		containerPipelines: pipelines,
+		triggerBuild,
 	} = useContainerStore();
+	const qc = useQueryClient();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
 	const { isPending } = useQuery<ContainerPipeline[]>({
-		queryKey: ['containerPipelines'],
+		queryKey: ['containerPipelines', container?._id],
 		queryFn: () =>
 			getContainerPipelines({
 				orgId,
@@ -38,6 +53,16 @@ export default function Builds() {
 	const table = useTable<ContainerPipeline>({
 		columns: PipelineColumns,
 		data: pipelines || [],
+	});
+
+	const { mutate, isPending: triggerBuildLoading } = useMutation({
+		mutationKey: ['triggerBuild'],
+		mutationFn: triggerBuild,
+		onSuccess: () => {
+			qc.invalidateQueries({
+				queryKey: ['containerPipelines', container?._id],
+			});
+		},
 	});
 
 	useUpdateEffect(() => {
@@ -53,6 +78,28 @@ export default function Builds() {
 	if (!_.isNil(selectedPipeline)) {
 		return <BuildLogs />;
 	}
+	if (pipelines?.length === 0) {
+		return (
+			<div className='w-full h-full'>
+				<EmptyState title='You dont have any builds for this container' type='container'>
+					<Button
+						loading={triggerBuildLoading}
+						className='btn btn-primary'
+						onClick={() =>
+							mutate({
+								orgId,
+								envId,
+								projectId,
+								containerId: container?._id!,
+							})
+						}
+					>
+						{t('container.trigger_build')}
+					</Button>
+				</EmptyState>
+			</div>
+		);
+	}
 
 	return (
 		<div
@@ -67,10 +114,54 @@ export default function Builds() {
 					className='navigator w-full h-full relative'
 					headerClassName='sticky top-0 z-50'
 					containerClassName='!border-none h-full'
+					onRowClick={(row) => selectPipeline(row)}
 				/>
 			</div>
 		</div>
 	);
+}
+
+function reRun(pipelineName: string) {
+	const { organization } = useOrganizationStore.getState();
+	const { project } = useProjectStore.getState();
+	const { environment } = useEnvironmentStore.getState();
+	const { container, restartRun } = useContainerStore.getState();
+
+	restartRun({
+		containerId: container?._id!,
+		orgId: organization?._id,
+		projectId: project?._id,
+		envId: environment?._id,
+		pipelineName,
+	});
+}
+function cancelRun(pipelineName: string) {
+	const { organization } = useOrganizationStore.getState();
+	const { project } = useProjectStore.getState();
+	const { environment } = useEnvironmentStore.getState();
+	const { container, cancelRun } = useContainerStore.getState();
+
+	cancelRun({
+		containerId: container?._id!,
+		orgId: organization?._id,
+		projectId: project?._id,
+		envId: environment?._id,
+		pipelineName,
+	});
+}
+function deleteRun(pipelineName: string) {
+	const { organization } = useOrganizationStore.getState();
+	const { project } = useProjectStore.getState();
+	const { environment } = useEnvironmentStore.getState();
+	const { container, deleteRun } = useContainerStore.getState();
+
+	deleteRun({
+		containerId: container?._id!,
+		orgId: organization?._id,
+		projectId: project?._id,
+		envId: environment?._id,
+		pipelineName,
+	});
 }
 
 const PipelineColumns: ColumnDefWithClassName<ContainerPipeline>[] = [
@@ -150,14 +241,48 @@ const PipelineColumns: ColumnDefWithClassName<ContainerPipeline>[] = [
 	{
 		id: 'actions',
 		cell: ({ row }) => (
-			<Button
-				variant='text'
-				className='gap-2'
-				onClick={() => useContainerStore.getState().selectPipeline(row.original)}
-			>
-				<File size={16} />
-				Logs
-			</Button>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+					<div className='size-7 hover:bg-wrapper-background-hover rounded-full flex items-center justify-center cursor-pointer'>
+						<DotsThreeVertical className='size-5 text-icon-secondary' />
+					</div>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent>
+					<DropdownMenuItemContainer>
+						<DropdownMenuItem
+							onClick={() => useContainerStore.getState().selectPipeline(row.original)}
+						>
+							View Logs
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							disabled={row.original.status !== 'Running'}
+							onClick={(e) => {
+								e.stopPropagation();
+								cancelRun(row.original.name);
+							}}
+						>
+							Cancel Run
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={(e) => {
+								e.stopPropagation();
+								reRun(row.original.name);
+							}}
+						>
+							Re-run
+						</DropdownMenuItem>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem
+							onClick={(e) => {
+								e.stopPropagation();
+								deleteRun(row.original.name);
+							}}
+						>
+							Delete Run
+						</DropdownMenuItem>
+					</DropdownMenuItemContainer>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		),
 	},
 ];

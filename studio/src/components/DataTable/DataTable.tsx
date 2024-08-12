@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/Table';
 import { ColumnDefWithClassName } from '@/types';
 import { cn, translate } from '@/utils';
-import { Cell, Table as TableType, flexRender } from '@tanstack/react-table';
+import { Table as TableType, flexRender } from '@tanstack/react-table';
 import { ReactNode } from 'react';
 import './sortButton.scss';
 interface DataTableProps<TData> {
@@ -9,7 +9,6 @@ interface DataTableProps<TData> {
 	className?: string;
 	containerClassName?: string;
 	onRowClick?: (row: TData) => void;
-	onCellClick?: (cell: Cell<TData, any>) => void;
 	noDataMessage?: string | ReactNode;
 	headerClassName?: string;
 }
@@ -17,7 +16,6 @@ interface DataTableProps<TData> {
 export default function DataTable<TData>({
 	table,
 	onRowClick,
-	onCellClick,
 	noDataMessage = translate('general.no_results'),
 	className,
 	containerClassName,
@@ -73,7 +71,10 @@ export default function DataTable<TData>({
 							key={row.id}
 							data-state={row.getIsSelected() && 'selected'}
 							onClick={() => onRowClick?.(row.original)}
-							className={cn(onRowClick && 'cursor-pointer', 'content')}
+							className={cn(
+								onRowClick && 'cursor-pointer hover:bg-wrapper-background-hover',
+								'content',
+							)}
 						>
 							{row.getVisibleCells().map((cell, index) => (
 								<TableCell
@@ -81,10 +82,6 @@ export default function DataTable<TData>({
 									className={cn('', columns[index].className)}
 									style={{
 										width: cell.column.getSize(),
-									}}
-									onClick={(e) => {
-										e.stopPropagation();
-										onCellClick?.(cell);
 									}}
 								>
 									{flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -87,7 +87,7 @@ function ProjectInvitationFilter({ table }: Props) {
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button variant='outline'>
-						<FunnelSimple size={16} className='members-filter-icon' />
+						<FunnelSimple size={16} className='members-filter-icon mr-2' />
 						{selectedSort?.name}
 					</Button>
 				</DropdownMenuTrigger>

@@ -22,44 +22,42 @@ export default function ProjectFilter() {
 	}, [form.watch('orgId')]);
 
 	return (
-		<div className='space-y-3'>
-			<FormField
-				control={form.control}
-				name='projectId'
-				disabled={!form.watch('orgId')}
-				render={({ field }) => (
-					<FormItem className='flex-1'>
-						<FormLabel>Projects</FormLabel>
-						<FormControl>
-							<Select
-								value={field.value}
-								onValueChange={(val) => {
-									field.onChange(val);
-									form.setValue('envId', '');
-								}}
-								disabled={!form.watch('orgId')}
-							>
-								<FormControl>
-									<SelectTrigger
-										className='w-full rounded-l-none space-x-2'
-										error={Boolean(form.formState.errors.projectId)}
-									>
-										<SelectValue placeholder='Select project' />
-									</SelectTrigger>
-								</FormControl>
-								<SelectContent>
-									{projects?.map((project) => (
-										<SelectItem key={project._id} value={project._id} className='max-w-full'>
-											{project.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-		</div>
+		<FormField
+			control={form.control}
+			name='projectId'
+			disabled={!form.watch('orgId')}
+			render={({ field }) => (
+				<FormItem className='flex-1'>
+					<FormLabel>Projects</FormLabel>
+					<FormControl>
+						<Select
+							value={field.value}
+							onValueChange={(val) => {
+								field.onChange(val);
+								form.setValue('envId', '');
+							}}
+							disabled={!form.watch('orgId')}
+						>
+							<FormControl>
+								<SelectTrigger
+									className='w-full rounded-l-none space-x-2'
+									error={Boolean(form.formState.errors.projectId)}
+								>
+									<SelectValue placeholder='Select project' />
+								</SelectTrigger>
+							</FormControl>
+							<SelectContent>
+								{projects?.map((project) => (
+									<SelectItem key={project._id} value={project._id} className='max-w-full'>
+										{project.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</FormControl>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
 	);
 }

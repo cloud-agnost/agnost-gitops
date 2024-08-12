@@ -32,7 +32,6 @@ export default function CronJobFrom() {
 		form.setValue('cronJobConfig.concurrencyPolicy', 'Allow');
 		form.setValue('cronJobConfig.suspend', false);
 	}, []);
-
 	return (
 		<>
 			<ContainerFormTitle

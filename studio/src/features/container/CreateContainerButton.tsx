@@ -73,8 +73,10 @@ export default function CreateContainerButton() {
 							))}
 							<DropdownMenuSub>
 								<DropdownMenuSubTrigger className='gap-2'>
-									<HardDrive size={16} />
-									{t('container.template')}
+									<div className='flex items-center justify-center gap-2'>
+										<HardDrive size={16} />
+										{t('container.template')}
+									</div>
 								</DropdownMenuSubTrigger>
 								<DropdownMenuPortal>
 									<DropdownMenuSubContent>

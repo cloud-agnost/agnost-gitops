@@ -5,6 +5,8 @@ import { STATE_LIST } from '@/constants/stateList';
 import { socket } from '@/helpers';
 import { toast } from '@/hooks/useToast';
 import useAuthStore from '@/store/auth/authStore';
+import useContainerStore from '@/store/container/containerStore';
+import useEnvironmentStore from '@/store/environment/environmentStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
 import { ProjectRole, RealtimeData } from '@/types';
@@ -115,7 +117,11 @@ export function resetAfterOrgChange() {
 			store.getState()?.reset();
 		}
 	});
-	
+}
+
+export function resetAfterProjectChange() {
+	useContainerStore.getState().reset();
+	useEnvironmentStore.getState().reset();
 }
 
 

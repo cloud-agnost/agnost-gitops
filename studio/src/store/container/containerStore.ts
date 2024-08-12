@@ -6,12 +6,14 @@ import {
   ContainerEvent,
   ContainerLog,
   ContainerPipeline,
+  ContainerPipelineActions,
   ContainerPipelineLogs,
   ContainerPod,
   ContainerTemplate,
   ContainerType,
   CreateContainerParams,
   DeleteContainerParams,
+  DeleteContainerPodParams,
   GetBranchesParams,
   GetContainerPipelineLogsParams,
   GetContainersInEnvParams,
@@ -79,6 +81,11 @@ type Actions = {
   getContainerTemplates: () => Promise<ContainerTemplate[]>;
   getContainerTemplate: (name: string, version: string) => Promise<Template>;
   setSelectedPod: (pod: ContainerPod) => void;
+  deletePod: (req: DeleteContainerPodParams) => Promise<void>;
+  cancelRun: (req: ContainerPipelineActions) => Promise<void>;
+  deleteRun: (req: ContainerPipelineActions) => Promise<void>;
+  restartRun: (req: ContainerPipelineActions) => Promise<void>;
+  triggerBuild: (req: DeleteContainerParams) => Promise<void>;
   reset: () => void;
 };
 
@@ -272,6 +279,31 @@ const useContainerStore = create<ContainerState & Actions>()(
         },
         setSelectedPod: (pod) => {
           set({ selectedPod: pod });
+        },
+        deletePod: async (req) => {
+          await ContainerService.deleteContainerPod(req);
+          set((state) => ({
+            containerPods: state.containerPods?.filter(
+              (pod) => pod.name !== req.podName
+            ),
+          }));
+        },
+        cancelRun: async (req) => {
+          await ContainerService.cancelPipelineRun(req);
+        },
+        deleteRun: async (req) => {
+          await ContainerService.deletePipelineRun(req);
+          set((state) => ({
+            containerPipelines: state.containerPipelines?.filter(
+              (pipeline) => pipeline.name !== req.pipelineName
+            ),
+          }));
+        },
+        restartRun: async (req) => {
+          await ContainerService.rerunPipeline(req);
+        },
+        triggerBuild: async (req) => {
+          await ContainerService.triggerBuild(req);
         },
         reset: () => set(initialState),
       }),

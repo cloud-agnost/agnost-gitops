@@ -568,8 +568,8 @@ html .light ::-webkit-scrollbar-track {
 .navigator .table-body tr:last-child td {
 	@apply border-b;
 }
-.navigator .table-cell {
-	@apply bg-base;
+.navigator .table-body tr td {
+	@apply rounded-none;
 }
 
 button:focus-visible {

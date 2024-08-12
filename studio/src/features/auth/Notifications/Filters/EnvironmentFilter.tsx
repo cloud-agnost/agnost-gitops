@@ -25,41 +25,39 @@ export default function EnvironmentFilter() {
 		if (form.watch('orgId') && form.watch('projectId')) refetch();
 	}, [form.watch('orgId'), form.watch('projectId')]);
 	return (
-		<div className='space-y-3'>
-			<FormField
-				control={form.control}
-				name='envId'
-				disabled={!form.watch('orgId') || !form.watch('projectId')}
-				render={({ field }) => (
-					<FormItem className='flex-1'>
-						<FormLabel>Environment</FormLabel>
-						<FormControl>
-							<Select
-								value={field.value}
-								onValueChange={field.onChange}
-								disabled={!form.watch('orgId') || !form.watch('projectId')}
-							>
-								<FormControl>
-									<SelectTrigger
-										className='w-full rounded-l-none space-x-2'
-										error={Boolean(form.formState.errors.envId)}
-									>
-										<SelectValue placeholder='Select environment' />
-									</SelectTrigger>
-								</FormControl>
-								<SelectContent>
-									{environments?.map((env) => (
-										<SelectItem key={env._id} value={env._id} className='max-w-full'>
-											{env.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-		</div>
+		<FormField
+			control={form.control}
+			name='envId'
+			disabled={!form.watch('orgId') || !form.watch('projectId')}
+			render={({ field }) => (
+				<FormItem className='flex-1'>
+					<FormLabel>Environment</FormLabel>
+					<FormControl>
+						<Select
+							value={field.value}
+							onValueChange={field.onChange}
+							disabled={!form.watch('orgId') || !form.watch('projectId')}
+						>
+							<FormControl>
+								<SelectTrigger
+									className='w-full rounded-l-none space-x-2'
+									error={Boolean(form.formState.errors.envId)}
+								>
+									<SelectValue placeholder='Select environment' />
+								</SelectTrigger>
+							</FormControl>
+							<SelectContent>
+								{environments?.map((env) => (
+									<SelectItem key={env._id} value={env._id} className='max-w-full'>
+										{env.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</FormControl>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
 	);
 }

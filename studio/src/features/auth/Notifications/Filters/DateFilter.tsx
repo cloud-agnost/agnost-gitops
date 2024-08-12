@@ -24,28 +24,26 @@ export default function DateFilter() {
 	}, []);
 
 	return (
-		<div className='space-y-3'>
-			<FormField
-				control={form.control}
-				name='start'
-				render={() => (
-					<FormItem>
-						<div className='flex items-center justify-between'>
-							<FormLabel>Date Time & Range</FormLabel>
-						</div>
-						<DateRangePicker
-							key={date[0].startDate?.toISOString()}
-							date={date}
-							onChange={(date) => {
-								setDate(date);
-								form.setValue('start', date[0].startDate?.toISOString());
-								form.setValue('end', date[0].endDate?.toISOString());
-							}}
-						/>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-		</div>
+		<FormField
+			control={form.control}
+			name='start'
+			render={() => (
+				<FormItem>
+					<div className='flex items-center justify-between w-full'>
+						<FormLabel>Date Time & Range</FormLabel>
+					</div>
+					<DateRangePicker
+						key={date[0].startDate?.toISOString()}
+						date={date}
+						onChange={(date) => {
+							setDate(date);
+							form.setValue('start', date[0].startDate?.toISOString());
+							form.setValue('end', date[0].endDate?.toISOString());
+						}}
+					/>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
 	);
 }

@@ -5,10 +5,12 @@ import {
   ContainerEvent,
   ContainerLog,
   ContainerPipeline,
+  ContainerPipelineActions,
   ContainerPipelineLogs,
   ContainerPod,
   CreateContainerParams,
   DeleteContainerParams,
+  DeleteContainerPodParams,
   GetBranchesParams,
   GetContainerPipelineLogsParams,
   GetContainersInEnvParams,
@@ -171,5 +173,62 @@ export default class ContainerService {
 
   static async getGitProviderById(gitProviderId: string): Promise<GitProvider> {
     return (await axios.get(`/v1/user/git/${gitProviderId}`)).data;
+  }
+
+  static deleteContainerPod({
+    containerId,
+    envId,
+    orgId,
+    podName,
+    projectId,
+  }: DeleteContainerPodParams): Promise<void> {
+    return axios.delete(
+      `${this.url}/${orgId}/project/${projectId}/env/${envId}/container/${containerId}/pods/${podName}`
+    );
+  }
+
+  static async rerunPipeline({
+    containerId,
+    envId,
+    orgId,
+    pipelineName,
+    projectId,
+  }: ContainerPipelineActions): Promise<void> {
+    return axios.post(
+      `${this.url}/${orgId}/project/${projectId}/env/${envId}/container/${containerId}/pipelines/${pipelineName}/rerun`
+    );
+  }
+  static async deletePipelineRun({
+    containerId,
+    envId,
+    orgId,
+    pipelineName,
+    projectId,
+  }: ContainerPipelineActions): Promise<void> {
+    return axios.post(
+      `${this.url}/${orgId}/project/${projectId}/env/${envId}/container/${containerId}/pipelines/${pipelineName}/delete`
+    );
+  }
+  static async cancelPipelineRun({
+    containerId,
+    envId,
+    orgId,
+    pipelineName,
+    projectId,
+  }: ContainerPipelineActions): Promise<void> {
+    return axios.post(
+      `${this.url}/${orgId}/project/${projectId}/env/${envId}/container/${containerId}/pipelines/${pipelineName}/cancel`
+    );
+  }
+
+  static async triggerBuild({
+    containerId,
+    envId,
+    orgId,
+    projectId,
+  }: DeleteContainerParams): Promise<ContainerPipelineLogs[]> {
+    return axios.post(
+      `${this.url}/${orgId}/project/${projectId}/env/${envId}/container/${containerId}/trigger`
+    );
   }
 }

@@ -87,6 +87,7 @@ export interface Cluster {
   updatedAt: string;
   reverseProxyURL: string;
   slug: string;
+  certificateStatus: "Issuing" | "Issued" | "Not Ready" | "Error";
 }
 
 export interface ClusterReleaseInfo {

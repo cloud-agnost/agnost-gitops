@@ -20,11 +20,17 @@ export default function OrganizationMembers() {
 		columns: OrganizationMembersColumns,
 	});
 	const { refetch, isPending } = useQuery({
-		queryKey: ['organizationMembers'],
+		queryKey: [
+			'organizationMembers',
+			searchParams.get('n'),
+			searchParams.get('s'),
+			searchParams.get('d'),
+			searchParams.get('r'),
+		],
 		queryFn: () =>
 			getOrganizationMembers({
 				organizationId: organization?._id ?? orgId,
-				search: searchParams.get('q') as string,
+				search: searchParams.get('n') as string,
 				sortBy: searchParams.get('s') as string,
 				sortDir: searchParams.get('d') as string,
 				roles: searchParams.get('r')?.split(',') as string[],

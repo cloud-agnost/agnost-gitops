@@ -8,6 +8,7 @@ import useNotificationStore from '@/store/notification/notificationStore';
 import { NotificationActions } from '@/types';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import _ from 'lodash';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useSearchParams } from 'react-router-dom';
@@ -17,7 +18,7 @@ export default function Notifications() {
 
 	const { notifications, getNotifications, notificationLastFetchedPage } = useNotificationStore();
 	const [searchParams] = useSearchParams();
-	const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } = useInfiniteQuery({
+	const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, refetch } = useInfiniteQuery({
 		queryFn: ({ pageParam = 0 }) =>
 			getNotifications({
 				page: pageParam,
@@ -32,7 +33,16 @@ export default function Notifications() {
 				envId: searchParams.get('envId') ?? undefined,
 				projectId: searchParams.get('projectId') ?? undefined,
 			}),
-		queryKey: ['versionNotifications'],
+		queryKey: [
+			'versionNotifications',
+			searchParams.get('orgId'),
+			searchParams.get('actor'),
+			searchParams.get('a'),
+			searchParams.get('start'),
+			searchParams.get('end'),
+			searchParams.get('envId'),
+			searchParams.get('projectId'),
+		],
 		refetchOnWindowFocus: false,
 		initialPageParam: 0,
 		enabled:
@@ -46,18 +56,30 @@ export default function Notifications() {
 			return nextPage;
 		},
 	});
+
+	useEffect(() => {
+		if (searchParams.get('orgId')) refetch();
+	}, [
+		searchParams.get('orgId'),
+		searchParams.get('actor'),
+		searchParams.get('a'),
+		searchParams.get('start'),
+		searchParams.get('end'),
+		searchParams.get('envId'),
+		searchParams.get('projectId'),
+	]);
 	return (
 		<Layout>
-			<div className='flex gap-6 h-full p-6'>
+			<div className='grid grid-cols-[1.5fr_6.5fr] gap-6 h-full p-6'>
 				<NotificationFilter />
-				<div className='border border-border rounded-lg flex-1 relative'>
+				<div className='border border-border rounded-lg relative overflow-auto'>
 					<div className='bg-subtle p-6 border-b border-border'>
 						<h1 className='text-default text-xl'>{t('organization.notifications')}</h1>
 					</div>
 					{isFetching ? (
 						<Loading loading={isFetching} />
 					) : (
-						<div className='scroll p-6 divide-y-2' id='scrollableDiv'>
+						<div className='scroll divide-y-2' id='scrollableDiv'>
 							{!_.isEmpty(notifications) ? (
 								<InfiniteScroll
 									scrollableTarget='scrollableDiv'

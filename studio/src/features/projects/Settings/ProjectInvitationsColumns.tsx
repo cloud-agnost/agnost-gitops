@@ -138,7 +138,7 @@ export const ProjectInvitationsColumns: ColumnDefWithClassName<Invitation>[] = [
 								<Copy size={14} />
 							</Button>
 						</TooltipTrigger>
-						<TooltipContent>Copy</TooltipContent>
+						<TooltipContent>Copy Invitation</TooltipContent>
 					</Tooltip>
 					<TableConfirmation
 						title={translate('project.invite.delete')}

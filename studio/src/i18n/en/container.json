@@ -152,5 +152,11 @@
 	"env": {
 		"title": "Environment Variables",
 		"description": "Environment variables are key-value pairs used to pass configuration information to containers at runtime. They allow you to set dynamic values, such as database credentials, API keys, or application settings, without hardcoding them into your application, enhancing flexibility and security."
-	}
+	},
+	"private": "Private",
+	"read_only": "Read Only",
+	"view": "View",
+	"pod_delete": "Delete Pod",
+	"pod_delete_desc": "Are you sure you want to delete this pod?",
+	"trigger_build": "Trigger Build & Deploy"
 }

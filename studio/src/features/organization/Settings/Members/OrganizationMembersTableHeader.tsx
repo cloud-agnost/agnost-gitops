@@ -37,7 +37,11 @@ export default function OrganizationMembersTableHeader({ table }: { table: Table
 	}, [searchParams.get('ot')]);
 
 	const selectedSort = useMemo(() => {
-		return sortOptions.find((sort) => sort.value === searchParams.get('s')) ?? sortOptions[0];
+		return (
+			sortOptions.find(
+				(sort) => sort.value === searchParams.get('s') && sort.sortDir === searchParams.get('d'),
+			) ?? sortOptions[0]
+		);
 	}, [searchParams]);
 
 	function setMemberRoleFilter(roles: string[]) {
@@ -97,7 +101,7 @@ export default function OrganizationMembersTableHeader({ table }: { table: Table
 	}
 	return (
 		<div className='flex items-center gap-4'>
-			<SearchInput className='flex-1' />
+			<SearchInput className='flex-1' urlKey='n' />
 			<DropdownMenu>
 				<RoleDropdown type='org' onChange={setMemberRoleFilter} />
 				<DropdownMenuTrigger asChild>

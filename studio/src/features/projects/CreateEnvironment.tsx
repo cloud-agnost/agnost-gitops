@@ -101,7 +101,7 @@ export default function CreateEnvironment() {
 							render={({ field }) => (
 								<FormItem className='grid grid-cols-[2fr_1fr] items-center space-y-0 gap-2'>
 									<div>
-										<FormLabel>{t('version.private')}</FormLabel>
+										<FormLabel>{t('container.private')}</FormLabel>
 										<FormDescription>{t('project.create_env.private_desc')}</FormDescription>
 									</div>
 									<FormControl className='justify-self-end'>
@@ -123,7 +123,7 @@ export default function CreateEnvironment() {
 							render={({ field }) => (
 								<FormItem className='grid grid-cols-[2fr_1fr] items-center space-y-0 gap-2'>
 									<div>
-										<FormLabel>{t('version.read_only')}</FormLabel>
+										<FormLabel>{t('container.read_only')}</FormLabel>
 										<FormDescription>{t('project.create_env.readonly_desc')}</FormDescription>
 									</div>
 									<FormControl className='justify-self-end'>

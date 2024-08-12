@@ -20,7 +20,7 @@ export function DateRangePicker({ date, onChange }: DateRangePickerProps) {
 			<PopoverTrigger asChild>
 				<Button
 					variant={'outline'}
-					className={cn('w-[240px] justify-start text-left font-normal', !date && 'text-subtle')}
+					className={cn('w-full justify-start text-left font-normal', !date && 'text-subtle')}
 				>
 					<CalendarBlank size={16} className='mr-2' />
 					{date ? (

@@ -131,7 +131,7 @@ export interface Invitation {
 }
 
 export interface GetInvitationRequest extends BaseGetRequest {
-  email?: string;
+  name?: string;
   roles?: string[];
   status?: string;
   appId?: string;

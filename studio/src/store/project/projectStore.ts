@@ -21,7 +21,7 @@ import {
   UpdateRoleRequest,
 } from "@/types";
 
-import { joinChannel, leaveChannel } from "@/utils";
+import { joinChannel, leaveChannel, resetAfterProjectChange } from "@/utils";
 import { create } from "zustand";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import useAuthStore from "../auth/authStore";
@@ -109,6 +109,7 @@ const useProjectStore = create<ProjectState & Actions>()(
       getProjectById: async (orgId: string, projectId: string) => {
         const project = await ProjectService.getProjectById(orgId, projectId);
         get().selectProject(project);
+        if (project._id !== projectId) resetAfterProjectChange();
         return project;
       },
       getProjectPermissions: async (orgId: string) => {
@@ -136,7 +137,9 @@ const useProjectStore = create<ProjectState & Actions>()(
           projects: state.projects.filter(
             (project) => project._id !== projectId
           ),
+          project: undefined,
         }));
+        resetAfterProjectChange();
       },
       openDeleteModal: (project: Project) =>
         set({ isDeleteModalOpen: true, toDeleteProject: project }),

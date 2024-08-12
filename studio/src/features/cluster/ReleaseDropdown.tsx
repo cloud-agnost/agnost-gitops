@@ -114,8 +114,8 @@ function ReleaseInfo({ loading = false }: { loading: boolean }) {
 	) : (
 		<DataTable
 			table={table}
-			containerClassName='!border-none pl-3.5 pb-3'
-			className='!bg-transparent [&>tbody]:bg-transparent [&_tr]:!border-none [&_td]:p-0.5 [&_th]:p-0.5 [&_th]:h-8 [&_th]:!bg-transparent'
+			containerClassName='!border-none pl-3.5 pb-3 bg-subtle'
+			className='!bg-transparent [&_tr]:!bg-transparent [&>tbody]:bg-transparent [&_tr]:!border-none [&_td]:p-0.5 [&_th]:p-0.5 [&_th]:h-8 [&_th]:!bg-transparent'
 		/>
 	);
 }

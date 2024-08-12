@@ -43,12 +43,12 @@ const formatOptionLabel = ({ label, value }: FormatOptionLabelProps<Organization
 export default function TeamMemberFilter() {
 	const form = useFormContext<z.infer<typeof NotificationFilterSchema>>();
 	const [searchParams] = useSearchParams();
-	const { orgId } = useParams() as Record<string, string>;
 	const { getOrganizationMembers } = useOrganizationStore();
+
 	const { data: members } = useQuery({
-		queryKey: ['organizationMembers', { organizationId: orgId }],
-		queryFn: () => getOrganizationMembers({ organizationId: orgId }),
-		enabled: !!orgId,
+		queryKey: ['organizationMembers', { organizationId: form.watch('orgId') }],
+		queryFn: () => getOrganizationMembers({ organizationId: form.watch('orgId') }),
+		enabled: !!form.watch('orgId'),
 	});
 
 	const teamOptions = useMemo(() => {
@@ -58,38 +58,31 @@ export default function TeamMemberFilter() {
 		}));
 	}, [members]);
 
-	const actorValue = useMemo(() => {
-		const ids = searchParams.get('u')?.split(',') ?? [];
-		return teamOptions?.filter((option) => ids.includes(option.value.member._id));
-	}, [searchParams.get('u')]);
-
 	return (
-		<div className='space-y-3'>
-			<FormField
-				control={form.control}
-				name='actor'
-				render={({ field }) => (
-					<FormItem className='flex-1'>
-						<FormLabel>Team Members</FormLabel>
-						<FormControl>
-							<Select
-								value={actorValue}
-								formatOptionLabel={formatOptionLabel}
-								isMulti
-								isClearable
-								isSearchable
-								name='member'
-								options={teamOptions}
-								className='select-container'
-								classNamePrefix='select'
-								placeholder='Search team member'
-								onChange={(value) => field.onChange(value)}
-							/>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-		</div>
+		<FormField
+			control={form.control}
+			name='actor'
+			render={({ field }) => (
+				<FormItem className='max-w-xs'>
+					<FormLabel>Team Members</FormLabel>
+					<FormControl>
+						<Select
+							formatOptionLabel={formatOptionLabel}
+							isMulti
+							isClearable
+							isSearchable
+							name='member'
+							options={teamOptions}
+							className='select-container'
+							classNamePrefix='select'
+							placeholder='Search team member'
+							//@ts-ignore
+							onChange={(data) => field.onChange(data.map((d) => d.value.member._id))}
+						/>
+					</FormControl>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
 	);
 }

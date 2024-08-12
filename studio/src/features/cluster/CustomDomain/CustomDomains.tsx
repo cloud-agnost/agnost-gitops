@@ -13,6 +13,8 @@ import * as z from 'zod';
 import CustomDomainForm from './CustomDomainForm';
 import DnsSettings from './DnsSettings';
 import DomainList from './DomainList';
+import { Badge } from '@/components/Badge';
+import { BADGE_COLOR_MAP } from '@/constants';
 
 export default function CustomDomains() {
 	const { t } = useTranslation();
@@ -80,6 +82,16 @@ export default function CustomDomains() {
 								</form>
 							</Form>
 						)}
+
+						<div className='flex items-center justify-between'>
+							<p className='text-sm'>Certificate Status</p>
+							<Badge
+								variant={BADGE_COLOR_MAP[cluster?.certificateStatus?.toUpperCase() ?? '']}
+								className='text-xs'
+								text={cluster?.certificateStatus}
+								loading={cluster?.certificateStatus === 'Issuing'}
+							/>
+						</div>
 					</div>
 					<DnsSettings
 						description={t('cluster.dns_settings_description')}

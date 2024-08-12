@@ -52,8 +52,8 @@ export function TableConfirmation({
 					<PopoverTrigger asChild>
 						<TooltipTrigger asChild>
 							<Button
-								rounded
 								disabled={!hasPermission || disabled}
+								rounded
 								variant='icon'
 								size='sm'
 								onClick={(e) => e.stopPropagation()}

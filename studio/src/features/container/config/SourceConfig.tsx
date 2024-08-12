@@ -181,9 +181,9 @@ function ProviderSelect() {
 	});
 
 	useQuery({
-		queryKey: ['git-providers'],
+		queryKey: ['git-provider'],
 		queryFn: () => getGitProvider(form.watch('repo.gitProviderId') as string),
-		enabled: user._id !== container?.createdBy,
+		enabled: user._id !== container?.createdBy && !_.isEmpty(container),
 	});
 
 	useEffect(() => {
@@ -259,7 +259,7 @@ function RepositorySelect() {
 				gitProviderId: form.watch('repo.gitProviderId') as string,
 				owner: selectedRepo?.owner as string,
 				repo: selectedRepo?.repo as string,
-				repoId: selectedRepo?.repoId,
+				repoId: selectedRepo?.repoId!,
 			}),
 		enabled:
 			!!form.watch('repo.name') && !!form.watch('repo.gitProviderId') && !_.isNil(selectedRepo),
@@ -286,12 +286,10 @@ function RepositorySelect() {
 	const selectedProvider = useMemo(() => {
 		return providers?.find((provider) => provider._id === form.watch('repo.gitProviderId'));
 	}, [form.watch('repo.gitProviderId')]);
+
 	const branchRef = useRef<any>(null);
 	const selectedRepoRef = useRef<any>(null);
-	useUpdateEffect(() => {
-		form.setValue('repo.url', selectedRepo?.url ?? '');
-		form.setValue('repo.repoId', selectedRepo?.repoId!);
-	}, [selectedRepo]);
+
 	return (
 		<Fragment>
 			<FormField
@@ -307,9 +305,12 @@ function RepositorySelect() {
 								className='select-container'
 								classNamePrefix='select'
 								value={field.value ? { value: field.value, label: field.value } : null}
-								onChange={(selected) => {
-									// @ts-ignore
+								onChange={(selected: any) => {
+									const repo = repositories?.find((repo) => repo.fullName === selected?.value);
 									field.onChange(selected?.value);
+									if (repo?.repoId) form.setValue('repo.repoId', repo.repoId.toString());
+									if (repo?.url) form.setValue('repo.url', repo.url);
+									form.setValue('repo.type', selectedProvider?.provider!);
 									if (form.watch('repo.branch')) form.setValue('repo.branch', '');
 								}}
 								components={{ ValueContainer }}
@@ -361,7 +362,8 @@ function RepositorySelect() {
 function RepoPathField() {
 	const form = useFormContext<CreateContainerParams>();
 	const { t } = useTranslation();
-
+	const { container } = useContainerStore();
+	const { user } = useAuthStore();
 	return (
 		<FormField
 			control={form.control}
@@ -380,6 +382,7 @@ function RepoPathField() {
 										label: t('container.source.rootDirectory'),
 									}) ?? ''
 								}
+								disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 								{...field}
 							/>
 						</div>
@@ -395,6 +398,8 @@ function RepoPathField() {
 function DockerFileField() {
 	const form = useFormContext<CreateContainerParams>();
 	const { t } = useTranslation();
+	const { container } = useContainerStore();
+	const { user } = useAuthStore();
 	return (
 		<FormField
 			control={form.control}
@@ -413,6 +418,7 @@ function DockerFileField() {
 										label: t('container.source.dockerFile'),
 									}) ?? ''
 								}
+								disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 								{...field}
 							/>
 						</div>
@@ -444,6 +450,8 @@ const ValueContainer = ({ children, ...props }: ValueContainerProps<StateOption>
 function RegistryForm() {
 	const form = useFormContext<CreateContainerParams>();
 	const { t } = useTranslation();
+	const { container } = useContainerStore();
+	const { user } = useAuthStore();
 	return (
 		<div className='space-y-4'>
 			<FormField
@@ -463,6 +471,7 @@ function RegistryForm() {
 											label: t('container.registry.image'),
 										}) ?? ''
 									}
+									disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 									{...field}
 								/>
 							</div>

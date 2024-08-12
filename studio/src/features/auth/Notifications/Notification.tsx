@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
 import { DateText } from '@/components/DateText';
+import { BADGE_COLOR_MAP } from '@/constants';
 import { Notification } from '@/types';
 import _ from 'lodash';
 
@@ -23,7 +24,11 @@ export default function MainNotification({ notification }: { notification: Notif
 				</div>
 			</div>
 			<p className='text-sm text-default font-sfCompact flex-[0.8]'>{notification.description}</p>
-			<Badge variant='blue' className='justify-center' text={_.capitalize(notification.action)} />
+			<Badge
+				variant={BADGE_COLOR_MAP[notification.action.toUpperCase()]}
+				className='justify-center w-12'
+				text={_.capitalize(notification.action)}
+			/>
 			<DateText date={notification.createdAt} className='justify-center' />
 		</div>
 	);

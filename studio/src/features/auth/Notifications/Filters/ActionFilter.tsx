@@ -36,48 +36,43 @@ export default function ActionFilter() {
 	}
 
 	return (
-		<div className='space-y-3'>
-			<FormField
-				control={form.control}
-				name='action'
-				render={() => (
-					<FormItem>
-						<FormLabel>Actions</FormLabel>
-						{actions?.map((action: string) => (
-							<FormField
-								key={action}
-								control={form.control}
-								name='action'
-								render={({ field }) => {
-									return (
-										<FormItem
-											key={action}
-											className='flex flex-row items-start space-x-3 space-y-0'
-										>
-											<FormControl>
-												<Checkbox
-													checked={field.value?.includes(action)}
-													onCheckedChange={(checked) => {
-														if (checked) {
-															field.onChange([...(field.value ?? []), action]);
-														} else {
-															field.onChange(
-																field.value?.filter((value: string) => value !== action),
-															);
-														}
-													}}
-												/>
-											</FormControl>
-											<FormLabel className='text-xs'>{_.startCase(action)}</FormLabel>
-										</FormItem>
-									);
-								}}
-							/>
-						))}
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-		</div>
+		<FormField
+			control={form.control}
+			name='action'
+			render={() => (
+				<FormItem>
+					<FormLabel>Actions</FormLabel>
+					{actions?.map((action: string) => (
+						<FormField
+							key={action}
+							control={form.control}
+							name='action'
+							render={({ field }) => {
+								return (
+									<FormItem key={action} className='flex flex-row items-start space-x-3 space-y-0'>
+										<FormControl>
+											<Checkbox
+												checked={field.value?.includes(action)}
+												onCheckedChange={(checked) => {
+													if (checked) {
+														field.onChange([...(field.value ?? []), action]);
+													} else {
+														field.onChange(
+															field.value?.filter((value: string) => value !== action),
+														);
+													}
+												}}
+											/>
+										</FormControl>
+										<FormLabel className='text-xs'>{_.startCase(action)}</FormLabel>
+									</FormItem>
+								);
+							}}
+						/>
+					))}
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
 	);
 }

@@ -10,6 +10,7 @@ import TeamMemberFilter from './Filters/TeamMemberFilter';
 import ActionFilter from './Filters/ActionFilter';
 import DateFilter from './Filters/DateFilter';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 
 export const NotificationFilterSchema = z.object({
 	start: z.string().optional(),
@@ -24,29 +25,49 @@ export const NotificationFilterSchema = z.object({
 });
 
 export default function NotificationFilter() {
-	const [_, setSearchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const form = useForm<z.infer<typeof NotificationFilterSchema>>({
 		resolver: zodResolver(NotificationFilterSchema),
 	});
 
 	function clearAllFilters() {
+		form.reset({
+			orgId: '',
+			projectId: '',
+			envId: '',
+			action: [],
+			actor: [],
+			start: '',
+			end: '',
+		});
 		setSearchParams({});
-		form.reset();
 	}
-
 	function onSubmit(data: z.infer<typeof NotificationFilterSchema>) {
 		setSearchParams({
 			orgId: data.orgId,
 			...(data.projectId && { projectId: data.projectId }),
 			...(data.envId && { envId: data.envId }),
-			...(data.action && { a: data.action.join(',') }),
-			...(data.actor && { actor: data.actor }),
+			...(data.action?.length && { a: data.action.join(',') }),
+			...(data.actor && { actor: data.actor.join(',') }),
 			...(data.start && { start: data.start }),
 			...(data.end && { end: data.end }),
 		});
 	}
+
+	useEffect(() => {
+		form.reset({
+			orgId: searchParams.get('orgId') ?? '',
+			projectId: searchParams.get('projectId') ?? '',
+			envId: searchParams.get('envId') ?? '',
+			action: searchParams.get('a')?.split(',') ?? [],
+			actor: searchParams.get('actor')?.split(',') ?? [],
+			start: searchParams.get('start') ?? '',
+			end: searchParams.get('end') ?? '',
+		});
+	}, []);
+
 	return (
-		<div className='p-6 bg-subtle rounded-lg space-y-6'>
+		<div className='p-6 bg-subtle rounded-lg space-y-6 h-full overflow-auto'>
 			<div className='flex items-center justify-between'>
 				<h1 className='text-default text-xl'>Filter</h1>
 				<Button variant='blank' className='link' onClick={clearAllFilters}>
@@ -55,7 +76,7 @@ export default function NotificationFilter() {
 			</div>
 			<div>
 				<Form {...form}>
-					<form className='space-y-8' onSubmit={form.handleSubmit(onSubmit)}>
+					<form className='space-y-8 overflow-auto' onSubmit={form.handleSubmit(onSubmit)}>
 						<OrganizationsFilter />
 						<ProjectFilter />
 						<EnvironmentFilter />

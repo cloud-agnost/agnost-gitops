@@ -32,7 +32,7 @@ export default function Variables() {
 									{index === 0 && <FormLabel>{t('general.key')}</FormLabel>}
 									<FormControl>
 										<Input
-											readOnly={!!template}
+											disabled={!!template}
 											placeholder={
 												t('forms.placeholder', {
 													label: t('general.key'),
@@ -54,7 +54,7 @@ export default function Variables() {
 									{index === 0 && <FormLabel>{t('general.value')}</FormLabel>}
 
 									<PasswordInput
-										readOnly={!!template}
+										disabled={!!template}
 										copyable
 										placeholder={
 											t('forms.placeholder', {

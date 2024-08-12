@@ -27,7 +27,7 @@ export default function ProjectInvitations() {
 			getProjectInvitations({
 				page: pageParam,
 				size: PAGE_SIZE,
-				email: searchParams.get('e') as string,
+				name: searchParams.get('e') as string,
 				sortBy: searchParams.get('s') as string,
 				sortDir: searchParams.get('d') as string,
 				roles: searchParams.get('r')?.split(',') as string[],

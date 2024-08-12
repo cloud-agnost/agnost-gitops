@@ -1,6 +1,6 @@
 import { cva } from 'class-variance-authority';
 import { cn } from '@/utils';
-import { X } from '@phosphor-icons/react';
+import { CircleNotch, Spinner, X } from '@phosphor-icons/react';
 import './badge.scss';
 import { Button } from '@/components/Button';
 const badgeVariants = cva('badge', {
@@ -33,11 +33,13 @@ interface BadgeProps {
 	text: string;
 	className?: string;
 	onClear?: () => void;
+	loading?: boolean;
 }
-export default function Badge({ text, variant, rounded, onClear, className }: BadgeProps) {
+export default function Badge({ text, variant, rounded, onClear, className, loading }: BadgeProps) {
 	return (
 		<div className={cn(badgeVariants({ variant, rounded }), className)}>
 			{rounded && variant !== 'gray' && <div className='badge-dot' />}
+			{loading && <CircleNotch size={16} className='animate-spin' />}
 			<span className={cn('badge-text')}>{text}</span>
 			{onClear && (
 				<Button

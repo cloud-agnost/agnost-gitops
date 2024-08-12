@@ -14,7 +14,6 @@ export default function OrganizationsFilter() {
 		queryKey: ['organizations'],
 		queryFn: getAllOrganizationByUser,
 	});
-
 	return (
 		<div className='space-y-3'>
 			<FormField
@@ -25,6 +24,7 @@ export default function OrganizationsFilter() {
 						<FormLabel>Organization</FormLabel>
 						<FormControl>
 							<Select
+								key={field.value}
 								value={field.value}
 								onValueChange={(val) => {
 									field.onChange(val);

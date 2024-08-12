@@ -42,7 +42,7 @@ export const PROJECT_SETTINGS = [
       useProjectStore.getState().onProjectClick(project);
     },
     isDisabled: (role: ProjectRole) =>
-      !getProjectPermission("version.view", role),
+      !getProjectPermission("container.view", role),
     icon: GitBranch,
   },
   {
@@ -200,6 +200,13 @@ export const BADGE_COLOR_MAP: Record<string, BadgeColors> = {
   SUCCEEDED: "green",
   CONNECTED: "blue",
   STARTED: "blue",
+  ISSUING: "blue",
+  ISSUED: "green",
+  "NOT READY": "orange",
+  CREATE: "blue",
+  UPDATE: "yellow",
+  DELETE: "red",
+  ACCEPT: "purple",
 };
 
 export const CLUSTER_RELEASE_CLASS_MAP: Record<string, string[]> = {

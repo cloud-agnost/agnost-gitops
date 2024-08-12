@@ -592,11 +592,7 @@ export const SourceConfigSchema = z
       })
       .trim()
       .optional(),
-    repoId: z.coerce
-      .number({
-        required_error: "Branch is required",
-      })
-      .optional(),
+    repoId: z.string().optional(),
     path: z
       .string({
         required_error: "Path is required",
@@ -820,6 +816,21 @@ export interface DeleteContainerParams {
   envId: string;
   containerId: string;
 }
+export interface DeleteContainerPodParams {
+  orgId: string;
+  projectId: string;
+  envId: string;
+  containerId: string;
+  podName: string;
+}
+
+export interface ContainerPipelineActions {
+  orgId: string;
+  projectId: string;
+  envId: string;
+  containerId: string;
+  pipelineName: string;
+}
 
 export interface GetContainerPipelineLogsParams extends DeleteContainerParams {
   pipelineName: string;
@@ -836,7 +847,7 @@ export interface GetBranchesParams {
   gitProviderId: string;
   repo: string;
   owner: string;
-  repoId?: number;
+  repoId?: string;
 }
 export interface GitProvider {
   iid: string;
@@ -851,7 +862,7 @@ export interface GitProvider {
   updatedAt: Date;
 }
 export interface GitRepo {
-  repoId: number;
+  repoId: string;
   owner: string;
   repo: string;
   fullName: string;

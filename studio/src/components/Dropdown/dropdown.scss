@@ -1,6 +1,11 @@
 .dropdown {
 	&-sub-trigger {
-		@apply flex cursor-default select-none items-center px-2 py-1.5 text-xs outline-none;
+		@apply flex cursor-default select-none items-center pl-3 pr-1.5 py-1.5 text-xs outline-none justify-between;
+		&:hover,
+		&:focus-visible,
+		&.active {
+			@apply bg-lighter text-default;
+		}
 	}
 
 	&-sub-content {
@@ -13,7 +18,7 @@
 	}
 
 	&-item {
-		@apply relative flex cursor-pointer select-none items-center  text-xs;
+		@apply relative flex cursor-pointer select-none items-center text-xs;
 		@apply px-3 py-1.5 text-default outline-none transition-colors;
 		@apply data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
 		&:hover,

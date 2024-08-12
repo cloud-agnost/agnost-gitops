@@ -113,7 +113,7 @@ export const OrganizationInvitationsColumns: ColumnDef<Invitation>[] = [
 								<Copy size={14} />
 							</Button>
 						</TooltipTrigger>
-						<TooltipContent>Copy</TooltipContent>
+						<TooltipContent>Copy Invitation</TooltipContent>
 					</Tooltip>
 
 					<TableConfirmation

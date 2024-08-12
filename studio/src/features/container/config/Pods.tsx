@@ -2,11 +2,22 @@ import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { DataTable } from '@/components/DataTable';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/Dialog';
+import { TableConfirmation } from '@/components/Table';
 import { BADGE_COLOR_MAP } from '@/constants';
 import { useTable } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
+import useEnvironmentStore from '@/store/environment/environmentStore';
+import useOrganizationStore from '@/store/organization/organizationStore';
+import useProjectStore from '@/store/project/projectStore';
 import { ColumnDefWithClassName, ContainerPod, PodCondition } from '@/types';
-import { DATE_TIME_FORMAT, cn, formatDate, getRelativeTime } from '@/utils';
+import {
+	DATE_TIME_FORMAT,
+	cn,
+	formatDate,
+	getProjectPermission,
+	getRelativeTime,
+	translate,
+} from '@/utils';
 import { Info } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -64,6 +75,21 @@ export default function Pods() {
 	);
 }
 
+function deleteContainerPodHandler(podName: string) {
+	const { organization } = useOrganizationStore.getState();
+	const { project } = useProjectStore.getState();
+	const { environment } = useEnvironmentStore.getState();
+	const { container, deletePod } = useContainerStore.getState();
+
+	deletePod({
+		containerId: container?._id!,
+		orgId: organization?._id,
+		projectId: project?._id,
+		envId: environment?._id,
+		podName,
+	});
+}
+
 const PodColumns: ColumnDefWithClassName<ContainerPod>[] = [
 	{
 		id: 'name',
@@ -112,14 +138,22 @@ const PodColumns: ColumnDefWithClassName<ContainerPod>[] = [
 	{
 		id: 'actions',
 		cell: ({ row }) => (
-			<Button
-				variant='icon'
-				rounded
-				size='sm'
-				onClick={() => useContainerStore.getState().openPodInfo(row.original)}
-			>
-				<Info size={20} />
-			</Button>
+			<>
+				<Button
+					rounded
+					variant='icon'
+					size='sm'
+					onClick={() => useContainerStore.getState().openPodInfo(row.original)}
+				>
+					<Info size={16} />
+				</Button>
+				<TableConfirmation
+					title={translate('container.pod_delete')}
+					description={translate('container.pod_delete_desc')}
+					onConfirm={async () => deleteContainerPodHandler(row.original.name)}
+					hasPermission={getProjectPermission('container.delete')}
+				/>
+			</>
 		),
 	},
 ];

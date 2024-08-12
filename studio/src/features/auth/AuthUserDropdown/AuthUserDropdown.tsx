@@ -121,8 +121,10 @@ export default function AuthUserDropdown() {
 
 						<DropdownMenuSub>
 							<DropdownMenuSubTrigger className='dropdown-item flex items-center gap-2'>
-								<SunDim className='text-icon-base text-lg' />
-								Theme
+								<div className='flex items-center gap-2'>
+									<SunDim className='text-icon-base text-lg' />
+									Theme
+								</div>
 							</DropdownMenuSubTrigger>
 							<DropdownMenuPortal>
 								<DropdownMenuSubContent

@@ -45,7 +45,7 @@ export default function Networking() {
 					<FormLabel>{t('container.networking.container_port')}</FormLabel>
 					<FormControl>
 						<Input
-							readOnly={disabledFields.includes('networking.containerPort')}
+							disabled={disabledFields.includes('networking.containerPort')}
 							className='w-1/3'
 							type='number'
 							error={Boolean(form.formState.errors.networking?.containerPort)}
@@ -77,7 +77,7 @@ export default function Networking() {
 										{container?.iid}.{environment.iid}.svc.cluster.local:
 									</p>
 									<Input
-										readOnly={disabledFields.includes('networking.containerPort')}
+										disabled={disabledFields.includes('networking.containerPort')}
 										className='rounded-l-none pl-1 flex-1'
 										type='number'
 										error={Boolean(form.formState.errors.networking?.containerPort)}
