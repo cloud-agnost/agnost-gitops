@@ -43,7 +43,12 @@ export async function getContainerPods({ container, environment }) {
 
 				const containerStates = entry.status.containerStatuses
 					? entry.status.containerStatuses.map((cs) => {
-							if (cs.state.running)
+							if (entry.metadata.deletionTimestamp)
+								return {
+									state: "Terminating",
+									deletionTimestamp: entry.metadata.deletionTimestamp,
+								};
+							else if (cs.state.running)
 								return {
 									state: "Running",
 									startedAt: cs.state.running.startedAt,
@@ -65,7 +70,8 @@ export async function getContainerPods({ container, environment }) {
 					: [];
 
 				let status = "Unknown";
-				if (entry.status.phase === "Pending") status = "Pending";
+				if (entry.metadata.deletionTimestamp) status = "Terminating";
+				else if (entry.status.phase === "Pending") status = "Pending";
 				else if (entry.status.phase === "Succeeded") status = "Succeeded";
 				else if (entry.status.phase === "Failed") {
 					status = "Failed";
