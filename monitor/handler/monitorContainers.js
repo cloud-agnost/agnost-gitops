@@ -61,10 +61,14 @@ export async function monitorContainers() {
 					if (result && container.status) {
 						if (
 							result.status !== container.status.status ||
-							result.lastScheduleTime.getTime() !==
-								new Date(container.status.lastScheduleTime).getTime() ||
-							result.lastSuccessfulTime.getTime() !==
-								new Date(container.status.lastSuccessfulTime).getTime()
+							(result.lastScheduleTime &&
+								container.status.lastScheduleTime &&
+								result.lastScheduleTime.getTime() !==
+									new Date(container.status.lastScheduleTime).getTime()) ||
+							(result.lastSuccessfulTime &&
+								container.status.lastSuccessfulTime &&
+								result.lastSuccessfulTime.getTime() !==
+									new Date(container.status.lastSuccessfulTime).getTime())
 						)
 							needsUpdate = true;
 					}
