@@ -3,7 +3,6 @@ import k8s from "@kubernetes/client-node";
 import path from "path";
 import { fileURLToPath } from "url";
 import clsCtrl from "../controllers/cluster.js";
-import helper from "../util/helper.js";
 
 // Kubernetes client configuration
 const kc = new k8s.KubeConfig();
