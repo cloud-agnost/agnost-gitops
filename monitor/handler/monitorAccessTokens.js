@@ -67,7 +67,7 @@ async function refreshAccessToken(gitProvider) {
 	try {
 		// Renew the access and refresh tokens
 		const response = await axios.post(
-			`https://api.agnost.dev/provider/${gitProvider.provider}/refresh`,
+			`https://api.agnost.dev/oauth/${gitProvider.provider}/refresh`,
 			{ refreshToken: helper.decryptText(gitProvider.refreshToken) }
 		);
 

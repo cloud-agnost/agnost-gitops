@@ -220,7 +220,7 @@ function ProviderSelect() {
 					<Link
 						key={provider}
 						onClick={connectGithubHandler}
-						to={`https://api.agnost.dev/provider/${provider}?redirect=${window.location.href}?provider=${provider}`}
+						to={`https://api.agnost.dev/oauth/${provider}?redirect=${window.location.href}?provider=${provider}`}
 						className='select-item flex items-center gap-2'
 					>
 						{getProviderIcon(provider as 'github' | 'gitlab' | 'bitbucket')}
