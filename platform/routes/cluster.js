@@ -323,7 +323,7 @@ router.get(
 /*
 @route      /v1/cluster/reverse-proxy-url
 @method     PUT
-@desc       Returns information whether custom domains can be added to the cluster or not
+@desc       Sets the reverse proxy url for the cluster
 @access     public
 */
 router.put(

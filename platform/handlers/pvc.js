@@ -205,12 +205,12 @@ export async function deleteStatefulSetPVC(
 	name,
 	namespace
 ) {
-	if (
+	/* 	if (
 		!definition.enabled ||
 		statefulSetConfig.persistentVolumeClaimRetentionPolicy.whenDeleted ===
 			"Retain"
 	)
-		return;
+		return; */
 
 	// Get the list of PVCs in the namespace
 	const { body } = await k8sCoreApi.listNamespacedPersistentVolumeClaim(

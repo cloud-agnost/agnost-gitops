@@ -145,6 +145,7 @@ export const templates = [
 					variables: {
 						POSTGRES_USER: "{{secret:username}}",
 						POSTGRES_PASSWORD: "{{secret:password}}",
+						PGDATA: "/var/lib/postgresql/dstore/data",
 					},
 				},
 			},

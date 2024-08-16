@@ -66,6 +66,8 @@ spec:
             secretKeyRef:
               name: {{iid}}
               key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/dstore/data
         livenessProbe:
           exec:
             command:

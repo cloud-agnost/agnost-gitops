@@ -102,7 +102,7 @@ export default function UserProviders() {
 				{['github', 'gitlab', 'bitbucket'].map((provider) => (
 					<Link
 						key={provider}
-						to={`https://api.agnost.dev/provider/${provider}?redirect=${window.location.href}?provider=${provider}`}
+						to={`https://api.agnost.dev/oauth/${provider}?redirect=${window.location.href}?provider=${provider}`}
 						className={buttonVariants({
 							variant: 'outline',
 							size: 'full',

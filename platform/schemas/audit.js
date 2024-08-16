@@ -149,6 +149,21 @@ export const applyRules = (type) => {
 
 						return true;
 					}),
+				query("actor")
+					.optional()
+					.isArray()
+					.withMessage("Team members filter needs to be an array of user ids"),
+				query("actor.*")
+					.trim()
+					.notEmpty()
+					.withMessage("Required field, cannot be left empty")
+					.bail()
+					.custom(async (value) => {
+						if (!helper.isValidId(value))
+							throw new Error("Not a valid user identifier");
+
+						return true;
+					}),
 			];
 		case "view-filters":
 			return [

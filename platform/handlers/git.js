@@ -174,7 +174,7 @@ export async function revokeGitProviderAccessToken(
 	refreshToken
 ) {
 	try {
-		await axios.post(`https://api.agnost.dev/provider/${provider}/revoke`, {
+		await axios.post(`https://api.agnost.dev/oauth/${provider}/revoke`, {
 			accessToken,
 			refreshToken,
 		});
