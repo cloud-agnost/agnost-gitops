@@ -110,15 +110,15 @@ const useOrganizationStore = create<OrganizationStore & Actions>()(
       createOrganization: async ({ name }: CreateOrganizationRequest) => {
         try {
           const res = await OrganizationService.createOrganization(name);
-          set({
+          set((state) => ({
             organizations: [
+              ...state.organizations,
               {
                 ...res,
                 role: "Admin",
               },
-              ...get().organizations,
             ],
-          });
+          }));
 
           joinChannel(res._id);
           return res;

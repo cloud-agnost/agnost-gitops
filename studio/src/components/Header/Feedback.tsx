@@ -26,7 +26,7 @@ export default function Feedback() {
 			const myHeaders = new Headers();
 			myHeaders.append('Content-Type', 'application/json');
 
-			return fetch('https://cloudflex.app/env-ikqshrg70v97/feedback', {
+			return fetch('https://api.agnost.dev/community/feedback', {
 				method: 'POST',
 				headers: myHeaders,
 				body: JSON.stringify({

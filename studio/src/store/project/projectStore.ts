@@ -1,4 +1,3 @@
-import EnvironmentService from "@/services/EnvironmentService";
 import ProjectService from "@/services/ProjectService";
 import {
   APIError,
@@ -383,14 +382,17 @@ const useProjectStore = create<ProjectState & Actions>()(
           const { selectProject, openEnvironmentDrawer } = get();
           selectProject(project);
           set({ loading: true });
-          const { selectEnvironment } = useEnvironmentStore.getState();
+          const {
+            selectEnvironment,
+            getEnvironments,
+          } = useEnvironmentStore.getState();
           const orgId = useOrganizationStore.getState().organization
             ?._id as string;
-          const environments = await EnvironmentService.getEnvironments({
+          const environments = await getEnvironments({
             orgId,
-            projectId: project?._id as string,
+            projectId: project._id,
             page: 0,
-            size: 2,
+            size: 250,
           });
 
           if (environments.length === 1) {

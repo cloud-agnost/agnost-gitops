@@ -40,7 +40,7 @@ export default function Error({ children }: { children: React.ReactNode }) {
 			const myHeaders = new Headers();
 			myHeaders.append('Content-Type', 'application/json');
 
-			return fetch('https://cloudflex.app/env-ikqshrg70v97/bug', {
+			return fetch('https://api.agnost.dev/community/bug', {
 				method: 'POST',
 				headers: myHeaders,
 				body: JSON.stringify({

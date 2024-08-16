@@ -56,7 +56,15 @@ export default function EnvironmentContainers() {
 				sortDir: searchParams.get('d') as string,
 			}),
 		initialPageParam: 0,
-		queryKey: ['Environments'],
+		queryKey: [
+			'Environments',
+			orgId,
+			projectId,
+			envId,
+			searchParams.get('q'),
+			searchParams.get('f'),
+			searchParams.get('d'),
+		],
 		enabled:
 			lastFetchedPage === undefined ||
 			Math.ceil(containers.length / MODULE_PAGE_SIZE) < (lastFetchedPage ?? 0),
@@ -69,8 +77,15 @@ export default function EnvironmentContainers() {
 
 	useEffect(() => {
 		refetch();
-	}, [envId, orgId, projectId]);
-	if (!containers.length && !isFetching) {
+	}, [
+		envId,
+		orgId,
+		projectId,
+		searchParams.get('q'),
+		searchParams.get('f'),
+		searchParams.get('d'),
+	]);
+	if (!containers.length && !loading) {
 		return (
 			<EmptyState
 				type='container'
@@ -111,7 +126,7 @@ export default function EnvironmentContainers() {
 					</div>
 				</div>
 				<div className='h-[calc(100%-2.5rem)]'>
-					{!isFetching && (
+					{!loading && (
 						<InfiniteScroll
 							scrollableTarget='env-layout'
 							dataLength={containers.length}

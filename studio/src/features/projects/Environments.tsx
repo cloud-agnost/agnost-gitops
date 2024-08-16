@@ -27,7 +27,7 @@ export default function Environments() {
 	const { getEnvironments, environments, lastFetchedPage } = useEnvironmentStore();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const match = useMatch('/organization/:orgId/projects');
-	const { orgId } = useParams() as Record<string, string>;
+	const { orgId, projectId } = useParams() as Record<string, string>;
 	const table = useTable({
 		data: environments,
 		columns: EnvironmentsColumns,
@@ -35,7 +35,9 @@ export default function Environments() {
 	function closeDrawerHandler() {
 		searchParams.delete('q');
 		setSearchParams(searchParams);
-		if (project._id) selectProject(projects.find((app) => app._id === project._id) as Project);
+		console.log('closeDrawerHandler', project._id, projectId);
+		if (project._id !== projectId)
+			selectProject(projects.find((prj) => prj._id === projectId) as Project);
 		closeEnvironmentDrawer(!!match);
 	}
 

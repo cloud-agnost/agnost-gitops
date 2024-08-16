@@ -1,9 +1,10 @@
 import { buttonVariants } from '@/components/Button';
 import { Bitbucket, Github, Gitlab } from '@/components/icons';
 import { useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 export default function Providers() {
+	const [_, setSearchParams] = useSearchParams();
 	const getCallbackUrl = useCallback((provider: 'github' | 'gitlab' | 'bitbucket') => {
 		const hasSearchParam = window.location.href.includes('?');
 		return `https://api.agnost.dev/oauth/${provider}?redirect=${window.location.href}${
@@ -13,6 +14,7 @@ export default function Providers() {
 
 	function onProviderClick(provider: 'github' | 'gitlab' | 'bitbucket') {
 		localStorage.setItem('provider', provider);
+		setSearchParams({});
 	}
 
 	return (
