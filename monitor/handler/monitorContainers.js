@@ -310,7 +310,7 @@ async function getCronJobStatus(name, namespace) {
 
 		let status = "Unknown";
 		if (!lastJob) {
-			status = "Creating";
+			status = "Scheduled";
 		} else if (activeJobs > 0) {
 			status = "Running";
 		} else if (lastJob && lastJob.status.succeeded) {

@@ -378,6 +378,15 @@ export async function getTaskRunLogs({ container, taskRunName }) {
 			}
 		}
 
+		// If all of them are all in pending status then make only the first one running and the rest pending
+		const areAllPending = steps.every((step) => step.status === "pending");
+		if (areAllPending) {
+			for (let i = 0; i < steps.length; i++) {
+				if (i === 0) steps[i].status = "running";
+				else steps[i].status = "pending";
+			}
+		}
+
 		// If all of them are all in running status then make only the first one running and the rest pending
 		const areAllRunning = steps.every((step) => step.status === "running");
 		if (areAllRunning) {
@@ -423,11 +432,11 @@ async function getStepInfo(podName, containerName, stepName, containerStatus) {
 		.then((logs) => ({
 			step: stepName,
 			status: status,
-			logs: logs.body ? logs.body.split("\n") : ["No log available"],
+			logs: logs.body ? logs.body.split("\n") : ["No logs available"],
 		}))
 		.catch(() => ({
 			step: stepName,
 			status: status,
-			logs: ["No log available"],
+			logs: ["No logs available"],
 		}));
 }

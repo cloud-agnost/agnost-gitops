@@ -5,6 +5,7 @@ import responseTime from "response-time";
 import logger from "./init/logger.js";
 import { monitorContainers } from "./handler/monitorContainers.js";
 import { monitorAccessTokens } from "./handler/monitorAccessTokens.js";
+import { deleteUnusedImagesInRegistry } from "./handler/deleteUnusedImagesInRegistry.js";
 import { connectToDatabase, disconnectFromDatabase } from "./init/db.js";
 import { handleUndefinedPaths } from "./middlewares/undefinedPaths.js";
 import { logRequest } from "./middlewares/logRequest.js";
@@ -15,6 +16,7 @@ import {
 
 var processing = false;
 var processingTokens = false;
+var processingRepositories = false;
 
 (async function () {
 	console.info(`Process ${process.pid} is running`);
@@ -86,6 +88,16 @@ function initMonitoringScheduler() {
 			processingTokens = false;
 		}
 	}, config.get("general.monitoringIntervalTokens"));
+
+	setInterval(async () => {
+		// If we are already monitoring the tokens skip this cycle
+		if (processingRepositories) return;
+		else {
+			processingRepositories = true;
+			await deleteUnusedImagesInRegistry();
+			processingRepositories = false;
+		}
+	}, config.get("general.monitoringIntervalRepositories"));
 }
 
 function setUpGC() {

@@ -71,7 +71,7 @@ router.get(
 			let sort = {};
 			if (sortBy && sortDir) {
 				sort[sortBy] = sortDir;
-			} else sort = { createdAt: "desc" };
+			} else sort = { createdAt: "asc" };
 
 			let containers = await cntrCtrl.getManyByQuery(query, {
 				sort,
