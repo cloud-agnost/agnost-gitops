@@ -13,7 +13,7 @@
   ],
   "session": {
     "accessTokenExpiry": 300,
-    "refreshTokenExpiry": 31536000,
+    "refreshTokenExpiry": 14400,
     "refreshTokenDelete": 60
   },
   "database": {

@@ -243,7 +243,7 @@ router.get(
 			let sort = {};
 			if (sortBy && sortDir) {
 				sort[sortBy] = sortDir;
-			} else sort = { createdAt: "desc" };
+			} else sort = { createdAt: "asc" };
 
 			let invites = await prjInvitationCtrl.getManyByQuery(query, {
 				sort,

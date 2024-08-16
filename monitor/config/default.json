@@ -7,10 +7,14 @@
 	"general": {
 		"monitoringInterval": 3000,
 		"monitoringIntervalTokens": 600000,
+		"monitoringIntervalRepositories": 3600000,
 		"resourcePaginationSize": 100,
 		"containerPaginationSize": 100,
 		"gitProviderPaginationSize": 100,
-		"gcSeconds": 30
+		"gcSeconds": 30,
+		"registry": {
+			"maxImages": 5
+		}
 	},
 	"database": {
 		"maxPoolSize": 3
