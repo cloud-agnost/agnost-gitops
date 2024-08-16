@@ -67,6 +67,7 @@ export const EnvironmentsColumns: ColumnDef<Environment>[] = [
 		size: 75,
 		cell: ({ row }) => {
 			const canViewVersion = getProjectPermission('environment.view');
+			console.log('canViewVersion', canViewVersion);
 			return (
 				<Button
 					disabled={!canViewVersion}

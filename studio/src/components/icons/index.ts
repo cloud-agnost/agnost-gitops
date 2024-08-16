@@ -25,3 +25,5 @@ export { default as Resource } from "./Resource";
 export { default as SocketIo } from "./SocketIo";
 export { default as SuccessCheck } from "./SuccessCheck";
 export { default as Warning } from "./Warning";
+export { default as MariaDb } from "./MariaDb";
+export { default as Memcached } from "./Memcached";

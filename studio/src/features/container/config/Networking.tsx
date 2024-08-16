@@ -106,28 +106,37 @@ export default function Networking() {
 	const renderCustomDomainSwitch = () => {
 		if (!visibleFields.length || visibleFields.includes('networking.customDomain.enabled'))
 			return (
-				<FormField
-					control={form.control}
-					name='networking.customDomain.enabled'
-					render={({ field }) => (
-						<FormItem className='flex justify-between gap-4 items-center space-y-0'>
-							<div>
-								<FormLabel>{t('container.networking.custom_domain')}</FormLabel>
-								<FormDescription>{t('container.networking.custom_domain_help')}</FormDescription>
-							</div>
-							<FormControl>
-								<Switch
-									checked={field.value}
-									onCheckedChange={field.onChange}
-									disabled={
-										_.isEmpty(cluster.domains) ||
-										disabledFields.includes('networking.customDomain.enabled')
-									}
-								/>
-							</FormControl>
-						</FormItem>
+				<>
+					<FormField
+						control={form.control}
+						name='networking.customDomain.enabled'
+						render={({ field }) => (
+							<FormItem className='flex justify-between gap-4 items-center space-y-0'>
+								<div>
+									<FormLabel>{t('container.networking.custom_domain')}</FormLabel>
+									<FormDescription>{t('container.networking.custom_domain_help')}</FormDescription>
+								</div>
+								<FormControl>
+									<Switch
+										checked={field.value}
+										onCheckedChange={field.onChange}
+										disabled={
+											_.isEmpty(cluster.domains) ||
+											disabledFields.includes('networking.customDomain.enabled')
+										}
+									/>
+								</FormControl>
+							</FormItem>
+						)}
+					/>
+					{_.isEmpty(cluster.domains) && (
+						<Alert variant='warning'>
+							<AlertDescription className='text-slate-300'>
+								{t('container.networking.no_domain_warning')}
+							</AlertDescription>
+						</Alert>
 					)}
-				/>
+				</>
 			);
 		return null;
 	};
@@ -304,13 +313,6 @@ export default function Networking() {
 			) : (
 				<>
 					{renderPrivateNetworkingInput()}
-					{_.isEmpty(cluster.domains) && (
-						<Alert variant='warning'>
-							<AlertDescription className='text-slate-300'>
-								{t('container.networking.no_domain_warning')}
-							</AlertDescription>
-						</Alert>
-					)}
 					{renderCustomDomainSwitch()}
 					{form.watch('networking.customDomain.enabled') && renderCustomDomainInput()}
 					{renderTcpProxySwitch()}

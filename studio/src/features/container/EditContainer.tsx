@@ -62,7 +62,7 @@ export default function EditContainer() {
 	};
 
 	function onClose() {
-		form.reset();
+		form.reset({});
 		setSearchParams({});
 		closeEditContainerDialog();
 	}

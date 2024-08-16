@@ -1,11 +1,13 @@
 import { Badge } from '@/components/Badge';
 import {
 	DropdownMenu,
+	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/Dropdown';
 import { LogViewer } from '@/components/LogViewer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/Select';
 import { BADGE_COLOR_MAP } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
 import { CaretDown, Check } from '@phosphor-icons/react';
@@ -66,7 +68,7 @@ export default function Logs() {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent className='w-[44rem] !bg-input-background'>
 						{containerLogs?.pods?.map((pod) => (
-							<DropdownMenuItem
+							<DropdownMenuCheckboxItem
 								key={pod.name}
 								onSelect={() => onSelect(pod.name)}
 								className='justify-between'
@@ -79,9 +81,11 @@ export default function Logs() {
 										text={pod?.status!}
 										rounded
 									/>
-									{selectedPod?.name === pod.name && <Check className='h-4 w-4' />}
+									<div className='size-4'>
+										{selectedPod?.name === pod.name && <Check className='h-4 w-4' />}
+									</div>
 								</div>
-							</DropdownMenuItem>
+							</DropdownMenuCheckboxItem>
 						))}
 					</DropdownMenuContent>
 				</DropdownMenu>

@@ -42,10 +42,12 @@ export default function OrganizationMembers() {
 		if (searchParams.get('tab') === 'member') refetch();
 	}, [searchParams, searchParams.get('tab')]);
 	return (
-		<div className='space-y-4 relative'>
+		<div className='space-y-4 h-full'>
 			<OrganizationMembersTableHeader table={table} />
 			{isPending ? (
-				<Loading loading={isPending} />
+				<div className='relative h-full'>
+					<Loading loading={isPending} />
+				</div>
 			) : (
 				<DataTable<OrganizationMember> table={table} />
 			)}

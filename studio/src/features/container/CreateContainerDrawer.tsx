@@ -135,7 +135,6 @@ export default function CreateContainerDrawer() {
 		});
 		setSearchParams({});
 		localStorage.removeItem('createDeployment');
-		setSearchParams(searchParams);
 		closeCreateContainerDialog();
 	}
 

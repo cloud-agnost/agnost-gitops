@@ -71,10 +71,7 @@ export default function DataTable<TData>({
 							key={row.id}
 							data-state={row.getIsSelected() && 'selected'}
 							onClick={() => onRowClick?.(row.original)}
-							className={cn(
-								onRowClick && 'cursor-pointer hover:bg-wrapper-background-hover',
-								'content',
-							)}
+							className={cn(onRowClick && 'cursor-pointer hover:bg-subtle', 'content')}
 						>
 							{row.getVisibleCells().map((cell, index) => (
 								<TableCell

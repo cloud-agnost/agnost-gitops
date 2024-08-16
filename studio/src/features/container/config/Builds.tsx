@@ -39,7 +39,7 @@ export default function Builds() {
 	} = useContainerStore();
 	const qc = useQueryClient();
 	const { orgId, envId, projectId } = useParams() as Record<string, string>;
-	const { isPending } = useQuery<ContainerPipeline[]>({
+	const { isFetching } = useQuery<ContainerPipeline[]>({
 		queryKey: ['containerPipelines', container?._id],
 		queryFn: () =>
 			getContainerPipelines({
@@ -71,7 +71,7 @@ export default function Builds() {
 		}
 	}, [pipelines]);
 
-	if (isPending) {
+	if (isFetching && !pipelines) {
 		return <Loading />;
 	}
 
@@ -179,6 +179,7 @@ const PipelineColumns: ColumnDefWithClassName<ContainerPipeline>[] = [
 						target='_blank'
 						rel='noopener noreferrer'
 						className='space-y-2 text-default hover:underline hover:text-elements-blue'
+						onClick={(e) => e.stopPropagation()}
 					>
 						{row.original.GIT_COMMITTER_USERNAME}
 					</Link>
@@ -201,6 +202,7 @@ const PipelineColumns: ColumnDefWithClassName<ContainerPipeline>[] = [
 						target='_blank'
 						rel='noopener noreferrer'
 						className='flex items-center gap-1 text-default hover:underline hover:text-elements-blue'
+						onClick={(e) => e.stopPropagation()}
 					>
 						<GitCommit size={16} />
 						<span>{row.original.GIT_COMMIT_ID}</span>
@@ -210,6 +212,7 @@ const PipelineColumns: ColumnDefWithClassName<ContainerPipeline>[] = [
 						target='_blank'
 						rel='noopener noreferrer'
 						className='bg-elements-blue truncate text-xs px-1 rounded flex items-center gap-0.5 hover:underline text-gray-100'
+						onClick={(e) => e.stopPropagation()}
 					>
 						<GitBranch size={10} />
 						<span>{row.original?.GIT_BRANCH}</span>

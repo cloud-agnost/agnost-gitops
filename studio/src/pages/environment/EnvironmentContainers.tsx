@@ -13,6 +13,7 @@ import { useTable } from '@/hooks';
 import useContainerStore from '@/store/container/containerStore';
 import { Container } from '@/types';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -40,6 +41,8 @@ export default function EnvironmentContainers() {
 		isFetchingNextPage,
 		hasNextPage,
 		isPending: loading,
+		isFetching,
+		refetch,
 	} = useInfiniteQuery({
 		queryFn: ({ pageParam }) =>
 			getContainersInEnv({
@@ -53,7 +56,15 @@ export default function EnvironmentContainers() {
 				sortDir: searchParams.get('d') as string,
 			}),
 		initialPageParam: 0,
-		queryKey: ['Environments'],
+		queryKey: [
+			'Environments',
+			orgId,
+			projectId,
+			envId,
+			searchParams.get('q'),
+			searchParams.get('f'),
+			searchParams.get('d'),
+		],
 		enabled:
 			lastFetchedPage === undefined ||
 			Math.ceil(containers.length / MODULE_PAGE_SIZE) < (lastFetchedPage ?? 0),
@@ -64,6 +75,16 @@ export default function EnvironmentContainers() {
 		},
 	});
 
+	useEffect(() => {
+		refetch();
+	}, [
+		envId,
+		orgId,
+		projectId,
+		searchParams.get('q'),
+		searchParams.get('f'),
+		searchParams.get('d'),
+	]);
 	if (!containers.length && !loading) {
 		return (
 			<EmptyState
@@ -117,7 +138,7 @@ export default function EnvironmentContainers() {
 						</InfiniteScroll>
 					)}
 				</div>
-				<Loading loading={loading} />
+				<Loading loading={isFetching} />
 			</div>
 			<EditContainer />
 			<DeleteContainer />

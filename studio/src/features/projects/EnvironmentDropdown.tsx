@@ -22,6 +22,8 @@ export default function EnvironmentDropdown() {
 		deleteEnvironment,
 		isDeleteEnvironmentModalOpen,
 		toggleDeleteEnvironmentModal,
+		environments,
+		selectEnvironment,
 	} = useEnvironmentStore();
 	const { toast } = useToast();
 	const { orgId, projectId, envId } = useParams() as Record<string, string>;
@@ -44,8 +46,12 @@ export default function EnvironmentDropdown() {
 
 		onSuccess: () => {
 			toggleDeleteEnvironmentModal();
-			navigate(`/organization/${orgId}/projects`);
-			openEnvironmentDrawer(project);
+			if (environments.length === 1) {
+				selectEnvironment(environments[0]);
+			} else {
+				navigate(`/organization/${orgId}/projects`);
+				openEnvironmentDrawer(project);
+			}
 		},
 		onError: (error: APIError) => {
 			toast({

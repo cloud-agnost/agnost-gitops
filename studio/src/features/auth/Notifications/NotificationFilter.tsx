@@ -48,7 +48,7 @@ export default function NotificationFilter() {
 			...(data.projectId && { projectId: data.projectId }),
 			...(data.envId && { envId: data.envId }),
 			...(data.action?.length && { a: data.action.join(',') }),
-			...(data.actor && { actor: data.actor.join(',') }),
+			...(data.actor?.length && { a: data.actor.join(',') }),
 			...(data.start && { start: data.start }),
 			...(data.end && { end: data.end }),
 		});
