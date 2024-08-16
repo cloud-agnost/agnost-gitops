@@ -139,119 +139,114 @@ const Unauthorized = loadable(() => componentLoader(() => import('../pages/error
 	resolveComponent: (mod: any) => mod.default,
 });
 
-const router = createBrowserRouter(
-	[
-		{
-			path: '/',
-			element: <Root />,
-			children: [
-				{
-					index: true,
-					element: <HomeLoadable />,
-					loader: homeLoaders.homeLoader,
-				},
-				{
-					path: '/health',
-					element: <Health />,
-				},
-				{
-					path: '/login',
-					loader: AuthLoader.loginLoader,
-					element: <Login />,
-				},
-				{
-					path: 'notifications',
-					element: <Notifications />,
-				},
-				{
-					path: '/organization',
-					element: <Organization />,
-					children: [
-						{
-							path: '',
-							element: <OrganizationSelect />,
-							loader: homeLoaders.organizationSelectLoader,
-						},
-						{
-							path: ':orgId',
-							element: <OrganizationDetailsLoadable />,
-							children: [
-								{
-									path: 'projects',
-									children: [
-										{
-											index: true,
-											element: <OrganizationProjects />,
-										},
-										{
-											path: ':projectId/env/:envId',
-											element: <Environment />,
-											children: [
-												{
-													path: '',
-													element: <EnvironmentDetail />,
-												},
-											],
-										},
-									],
-								},
-							],
-						},
-					],
-				},
-			],
-			errorElement: <ErrorBoundary />,
-		},
-		{
-			path: '/register',
-			element: <OnboardingLoadable />,
-			loader: onboardingLoaders.onboardingLoader,
-			errorElement: <ErrorBoundary />,
-			children: [
-				{
-					path: '',
-					element: <Register />,
-					loader: AuthLoader.registerLoader,
-				},
-				{
-					path: 'setup',
-					element: <CreateProject />,
-				},
-			],
-		},
-		{
-			path: '/org-accept',
-			element: <OrgAcceptInvitation />,
-			loader: AuthLoader.orgAcceptInvitation,
-			errorElement: <ErrorBoundary />,
-		},
-		{
-			path: '/project-accept',
-			element: <ProjectAcceptInvitation />,
-			loader: AuthLoader.projectAcceptInvite,
-			errorElement: <ErrorBoundary />,
-		},
-		{
-			path: '/redirect-handle',
-			element: <RedirectHandleLoadable />,
-			loader: homeLoaders.redirectHandleLoader,
-			errorElement: <ErrorBoundary />,
-		},
-		{
-			path: '/*',
-			element: <NotFound />,
-			errorElement: <ErrorBoundary />,
-		},
-		{
-			path: '/401',
-			element: <Unauthorized />,
-			errorElement: <ErrorBoundary />,
-		},
-	],
+const router = createBrowserRouter([
 	{
-		basename: '/studio',
+		path: '/',
+		element: <Root />,
+		children: [
+			{
+				index: true,
+				element: <HomeLoadable />,
+				loader: homeLoaders.homeLoader,
+			},
+			{
+				path: '/health',
+				element: <Health />,
+			},
+			{
+				path: '/login',
+				loader: AuthLoader.loginLoader,
+				element: <Login />,
+			},
+			{
+				path: 'notifications',
+				element: <Notifications />,
+			},
+			{
+				path: '/organization',
+				element: <Organization />,
+				children: [
+					{
+						path: '',
+						element: <OrganizationSelect />,
+						loader: homeLoaders.organizationSelectLoader,
+					},
+					{
+						path: ':orgId',
+						element: <OrganizationDetailsLoadable />,
+						children: [
+							{
+								path: 'projects',
+								children: [
+									{
+										index: true,
+										element: <OrganizationProjects />,
+									},
+									{
+										path: ':projectId/env/:envId',
+										element: <Environment />,
+										children: [
+											{
+												path: '',
+												element: <EnvironmentDetail />,
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+		],
+		errorElement: <ErrorBoundary />,
 	},
-);
+	{
+		path: '/register',
+		element: <OnboardingLoadable />,
+		loader: onboardingLoaders.onboardingLoader,
+		errorElement: <ErrorBoundary />,
+		children: [
+			{
+				path: '',
+				element: <Register />,
+				loader: AuthLoader.registerLoader,
+			},
+			{
+				path: 'setup',
+				element: <CreateProject />,
+			},
+		],
+	},
+	{
+		path: '/org-accept',
+		element: <OrgAcceptInvitation />,
+		loader: AuthLoader.orgAcceptInvitation,
+		errorElement: <ErrorBoundary />,
+	},
+	{
+		path: '/project-accept',
+		element: <ProjectAcceptInvitation />,
+		loader: AuthLoader.projectAcceptInvite,
+		errorElement: <ErrorBoundary />,
+	},
+	{
+		path: '/redirect-handle',
+		element: <RedirectHandleLoadable />,
+		loader: homeLoaders.redirectHandleLoader,
+		errorElement: <ErrorBoundary />,
+	},
+	{
+		path: '/*',
+		element: <NotFound />,
+		errorElement: <ErrorBoundary />,
+	},
+	{
+		path: '/401',
+		element: <Unauthorized />,
+		errorElement: <ErrorBoundary />,
+	},
+]);
 
 export function GuestOnly({ children }: { children: ReactNode }): JSX.Element {
 	const { isAuthenticated } = useAuthStore();

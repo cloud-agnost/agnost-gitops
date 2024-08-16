@@ -21,9 +21,6 @@ function App() {
 		if (!_.isEmpty(accessToken)) {
 			getAllTypes();
 		}
-		if (!window.location.pathname.includes('studio')) {
-			window.location.pathname = `/studio${window.location.pathname}`;
-		}
 
 		setTimeout(() => {
 			document.documentElement.classList.add('has-js');
