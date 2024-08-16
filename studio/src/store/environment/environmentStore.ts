@@ -69,7 +69,6 @@ const useEnvironmentStore = create<EnvironmentStore & Actions>((set, get) => ({
   },
   createEnvironment: async (req: CreateNewEnvironmentRequest) => {
     const environment = await EnvironmentService.createEnvironment(req);
-
     set((prev) => ({ environments: [...prev.environments, environment] }));
     return environment;
   },

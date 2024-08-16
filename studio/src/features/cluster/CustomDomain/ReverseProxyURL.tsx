@@ -16,7 +16,8 @@ const ReverseProxyURLSchema = z.object({
 		})
 		.url({
 			message: 'Invalid URL',
-		}),
+		})
+		.or(z.literal('')),
 });
 
 export default function ReverseProxyURL() {

@@ -764,6 +764,14 @@ export enum ContainerType {
   CronJob = "cronjob",
 }
 
+export type TemplateTypes =
+  | "MongoDB"
+  | "PostgreSQL"
+  | "MySQL"
+  | "MariaDB"
+  | "Redis"
+  | "Memcached"
+  | "MinIO";
 export type CreateContainerParams = z.infer<typeof ContainerSchema>;
 export const ContainerUpdateSchema = ContainerSchema.partial();
 export type UpdateContainerParams = z.infer<typeof ContainerUpdateSchema> & {

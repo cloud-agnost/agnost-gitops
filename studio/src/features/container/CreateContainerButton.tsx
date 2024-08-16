@@ -13,10 +13,19 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '@/components/Dropdown';
-import { Kubernetes } from '@/components/icons';
+import {
+	Kubernetes,
+	MariaDb,
+	Memcached,
+	MinIo,
+	MongoDb,
+	MySql,
+	PostgreSql,
+	Redis,
+} from '@/components/icons';
 import { CONTAINER_TYPES } from '@/constants';
 import useContainerStore from '@/store/container/containerStore';
-import { ContainerType } from '@/types';
+import { ContainerType, TemplateTypes } from '@/types';
 import { toDisplayName } from '@/utils';
 import { CaretDown, Cloud, HardDrive, Package, Plus, Timer } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
@@ -40,6 +49,27 @@ export default function CreateContainerButton() {
 
 			default:
 				return <Cloud size={16} />;
+		}
+	}
+
+	function getTemplateIcon(type: TemplateTypes) {
+		switch (type) {
+			case 'MongoDB':
+				return <MongoDb className='size-4' />;
+			case 'PostgreSQL':
+				return <PostgreSql className='size-4' />;
+			case 'MySQL':
+				return <MySql className='size-4' />;
+			case 'Redis':
+				return <Redis className='size-4' />;
+			case 'MariaDB':
+				return <MariaDb className='size-4' />;
+			case 'Memcached':
+				return <Memcached className='size-4' />;
+			case 'MinIO':
+				return <MinIo className='size-4' />;
+			default:
+				return <Package size={16} />;
 		}
 	}
 
@@ -92,7 +122,7 @@ export default function CreateContainerButton() {
 															setSearchParams({ template: template.name });
 														}}
 													>
-														<Package size={16} />
+														{getTemplateIcon(template.name as TemplateTypes)}
 														{template.name}
 													</DropdownMenuItem>
 												))}

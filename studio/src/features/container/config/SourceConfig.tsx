@@ -200,7 +200,7 @@ function ProviderSelect() {
 		<Select
 			value={form.watch('repo.gitProviderId')}
 			onValueChange={onProviderSelect}
-			disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
+			disabled={!_.isEmpty(container)}
 		>
 			<SelectTrigger className='w-full'>
 				<SelectValue placeholder='Select provider' />

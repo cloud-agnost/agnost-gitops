@@ -25,7 +25,7 @@ export default function Notifications() {
 				size: MODULE_PAGE_SIZE,
 				sortBy: 'createdAt',
 				sortDir: 'desc',
-				actor: searchParams.get('actor')?.split(',') ?? undefined,
+				actor: (searchParams.get('actor')?.split(',') as NotificationActions[]) ?? undefined,
 				start: searchParams.get('start') ?? undefined,
 				end: searchParams.get('end') ?? undefined,
 				action: (searchParams.get('a')?.split(',') as NotificationActions[]) ?? undefined,
