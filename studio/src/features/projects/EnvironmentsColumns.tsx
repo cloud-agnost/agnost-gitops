@@ -7,6 +7,7 @@ import { Environment } from '@/types';
 import { getProjectPermission, translate } from '@/utils';
 import { GitBranch, LockSimple, LockSimpleOpen } from '@phosphor-icons/react';
 import { ColumnDef } from '@tanstack/react-table';
+import { SortButton } from '@/components/DataTable';
 
 const { selectEnvironment } = useEnvironmentStore.getState();
 const closeVersionDrawer = useProjectStore.getState().closeEnvironmentDrawer;
@@ -14,9 +15,10 @@ const closeVersionDrawer = useProjectStore.getState().closeEnvironmentDrawer;
 export const EnvironmentsColumns: ColumnDef<Environment>[] = [
 	{
 		id: 'name',
-		header: translate('general.name'),
+		header: () => <SortButton text={translate('general.name')} field='name' />,
 		accessorKey: 'name',
 		size: 75,
+		enableSorting: true,
 		cell: ({ row }) => {
 			const { name } = row.original;
 			return (
@@ -29,7 +31,7 @@ export const EnvironmentsColumns: ColumnDef<Environment>[] = [
 	},
 	{
 		id: 'createdBy',
-		header: translate('general.created_at'),
+		header: () => <SortButton text={translate('general.created_at')} field='createdAt' />,
 		accessorKey: 'createdBy',
 		size: 200,
 		cell: ({ row }) => {
@@ -42,7 +44,7 @@ export const EnvironmentsColumns: ColumnDef<Environment>[] = [
 	},
 	{
 		id: 'permissions',
-		header: translate('project.read_write'),
+		header: () => <SortButton text={translate('project.read_write')} field='readOnly' />,
 		accessorKey: 'readOnly',
 		size: 100,
 		cell: ({ row }) => {

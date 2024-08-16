@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { UpdateProjectParams } from "./project";
 import { NameSchema } from "./schema";
-import { BaseGetRequest } from "./type";
 
 export interface Environment {
   orgId: string;
@@ -17,11 +16,7 @@ export interface Environment {
   __v: number;
 }
 
-export interface GetEnvironmentRequest
-  extends BaseGetRequest,
-    UpdateProjectParams {
-  name?: string;
-}
+export type GetEnvironmentRequest = UpdateProjectParams;
 
 export interface GetEnvironmentByIdRequest {
   projectId: string;

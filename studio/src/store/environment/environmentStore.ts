@@ -13,7 +13,6 @@ import useContainerStore from "../container/containerStore";
 type EnvironmentStore = {
   environment: Environment;
   environments: Environment[];
-  lastFetchedPage: number | undefined;
   isCreateEnvironmentDrawerOpen: boolean;
   isDeleteEnvironmentModalOpen: boolean;
 };
@@ -33,7 +32,6 @@ type Actions = {
 const initialState: EnvironmentStore = {
   environment: {} as Environment,
   environments: [],
-  lastFetchedPage: undefined,
   isCreateEnvironmentDrawerOpen: false,
   isDeleteEnvironmentModalOpen: false,
 };
@@ -42,14 +40,7 @@ const useEnvironmentStore = create<EnvironmentStore & Actions>((set, get) => ({
   ...initialState,
   getEnvironments: async (req: GetEnvironmentRequest) => {
     const environments = await EnvironmentService.getEnvironments(req);
-    if (req.page === 0) {
-      set({ environments, lastFetchedPage: req.page });
-    } else {
-      set((prev) => ({
-        environments: [...prev.environments, ...environments],
-        lastFetchedPage: req.page,
-      }));
-    }
+    set({ environments });
     return environments;
   },
   getEnvironmentById: async (req: GetEnvironmentByIdRequest) => {

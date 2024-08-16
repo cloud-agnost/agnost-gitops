@@ -12,7 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './organization.scss';
 import OrganizationSettings from './OrganizationSettings';
 import InviteOrganization from './Settings/Members/InviteOrganization';
@@ -21,7 +21,6 @@ export function OrganizationDropdown() {
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [openModal, setOpenModal] = useState(false);
-	const [openSettings, setOpenSettings] = useState(false);
 	const [openCreateModal, setOpenCreateModal] = useState(false);
 	const [openInviteDialog, setOpenInviteDialog] = useState(false);
 	const {
@@ -30,10 +29,11 @@ export function OrganizationDropdown() {
 		selectOrganization,
 		leaveOrganization,
 		getAllOrganizationByUser,
+		toggleOrganizationSettings,
 	} = useOrganizationStore();
 	const { getProjects } = useProjectStore();
 	const navigate = useNavigate();
-
+	const [searchParams, setSearchParams] = useSearchParams();
 	const { toast } = useToast();
 
 	const { mutate: leaveOrgMutate, isPending } = useMutation({
@@ -74,6 +74,11 @@ export function OrganizationDropdown() {
 		navigate(`/organization/${organization?._id}/projects`);
 	}
 
+	function openOrgSettings() {
+		setSearchParams({ ot: 'general' });
+		toggleOrganizationSettings();
+	}
+
 	useEffect(() => {
 		if (_.isEmpty(organizations)) {
 			getAllOrganizationByUser();
@@ -81,7 +86,7 @@ export function OrganizationDropdown() {
 	}, []);
 	return (
 		<>
-			<OrganizationSettings open={openSettings} onOpenChange={setOpenSettings} />
+			<OrganizationSettings />
 			<InviteOrganization dropdown open={openInviteDialog} onOpenChange={setOpenInviteDialog} />
 			<SelectionDropdown<Organization>
 				data={organizations}
@@ -89,7 +94,7 @@ export function OrganizationDropdown() {
 				onSelect={(org) => onSelect(org as Organization)}
 				onClick={navigateOrg}
 			>
-				<DropdownMenuItem onClick={() => setOpenSettings(true)}>
+				<DropdownMenuItem onClick={openOrgSettings}>
 					<GearSix size={16} className='mr-2' />
 					{t('general.settings')}
 				</DropdownMenuItem>

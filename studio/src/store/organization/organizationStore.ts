@@ -27,6 +27,7 @@ interface OrganizationStore {
   invitations: Invitation[];
   lastFetchedInvitationsPage: number;
   orgAuthorization: OrgPermissions;
+  isOrganizationSettingsOpen: boolean;
 }
 
 type Actions = {
@@ -67,6 +68,7 @@ type Actions = {
     req: GetInvitationRequest
   ) => Promise<Invitation[]>;
   getOrgPermissions: () => Promise<OrgPermissions>;
+  toggleOrganizationSettings: () => void;
   reset: () => void;
 };
 
@@ -77,6 +79,7 @@ const initialState: OrganizationStore = {
   invitations: [],
   orgAuthorization: {} as OrgPermissions,
   lastFetchedInvitationsPage: 0,
+  isOrganizationSettingsOpen: false,
 };
 
 const useOrganizationStore = create<OrganizationStore & Actions>()(
@@ -412,7 +415,10 @@ const useOrganizationStore = create<OrganizationStore & Actions>()(
         set({ orgAuthorization });
         return orgAuthorization;
       },
-
+      toggleOrganizationSettings: () =>
+        set((state) => ({
+          isOrganizationSettingsOpen: !state.isOrganizationSettingsOpen,
+        })),
       reset: () => set(initialState),
     }))
   )

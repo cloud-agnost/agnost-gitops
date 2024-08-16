@@ -10,29 +10,21 @@ import {
 	OrganizationMenuItem,
 	TransferOrganization,
 } from '@/features/organization';
-import { DialogProps } from '@radix-ui/react-dialog';
-import { useEffect } from 'react';
+import useOrganizationStore from '@/store/organization/organizationStore';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-export default function OrganizationSettings({ open, onOpenChange }: DialogProps) {
+export default function OrganizationSettings() {
 	const { t } = useTranslation();
 	const [searchParams, setSearchParams] = useSearchParams();
-
-	function onOpenChangeHandler(open: boolean) {
-		onOpenChange?.(open);
+	const { isOrganizationSettingsOpen, toggleOrganizationSettings } = useOrganizationStore();
+	function onOpenChangeHandler() {
+		toggleOrganizationSettings();
 		searchParams.delete('ot');
 		setSearchParams(searchParams);
 	}
 
-	useEffect(() => {
-		if (open) {
-			searchParams.set('ot', 'general');
-			setSearchParams(searchParams);
-		}
-	}, [open]);
-
 	return (
-		<Drawer open={open} onOpenChange={onOpenChangeHandler}>
+		<Drawer open={isOrganizationSettingsOpen} onOpenChange={onOpenChangeHandler}>
 			<DrawerContent position='right' size='lg' className='h-full'>
 				<DrawerHeader className='border-none'>
 					<DrawerTitle>{t('organization.settings.title')}</DrawerTitle>

@@ -25,10 +25,11 @@ export default function InviteOrganization({
 	onOpenChange,
 }: { dropdown?: boolean } & DialogProps) {
 	const canInvite = useAuthorizeOrg('invite.create');
-	const [_, setSearchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const { t } = useTranslation();
 
-	const { inviteUsersToOrganization, organization } = useOrganizationStore();
+	const { inviteUsersToOrganization, organization, toggleOrganizationSettings } =
+		useOrganizationStore();
 	const form = useForm<z.infer<typeof InviteMemberSchema>>({
 		resolver: zodResolver(InviteMemberSchema),
 	});
@@ -44,7 +45,10 @@ export default function InviteOrganization({
 					},
 				],
 			});
+			searchParams.set('ot', 'invitations');
+			setSearchParams(searchParams);
 			document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+			toggleOrganizationSettings();
 		},
 		onError: (err) => {
 			err.fields?.forEach((field) => {

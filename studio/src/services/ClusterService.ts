@@ -82,7 +82,9 @@ export default class ClusterService {
 
   static async setReverseProxyURL(reverseProxyURL: string): Promise<Cluster> {
     return (
-      await axios.put(`${this.url}/reverse-proxy-url`, { reverseProxyURL })
+      await axios.put(`${this.url}/reverse-proxy-url`, {
+        reverseProxyURL: reverseProxyURL || undefined,
+      })
     ).data;
   }
 

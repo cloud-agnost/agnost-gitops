@@ -11,60 +11,75 @@ import {
 import { SearchInput } from '@/components/SearchInput';
 import { TableLoading } from '@/components/Table/Table';
 import { MODULE_PAGE_SIZE } from '@/constants';
-import { useTable } from '@/hooks';
+import { useSearch, useTable } from '@/hooks';
 import useEnvironmentStore from '@/store/environment/environmentStore';
 import useProjectStore from '@/store/project/projectStore';
 import { Project } from '@/types/project';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useMatch, useParams, useSearchParams } from 'react-router-dom';
 import { EnvironmentsColumns } from './EnvironmentsColumns';
+import { useEffect, useMemo } from 'react';
 
 export default function Environments() {
 	const { t } = useTranslation();
 	const { selectProject, isEnvOpen, projects, closeEnvironmentDrawer, project } = useProjectStore();
-	const { getEnvironments, environments, lastFetchedPage } = useEnvironmentStore();
+	const { getEnvironments, environments } = useEnvironmentStore();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const match = useMatch('/organization/:orgId/projects');
 	const { orgId, projectId } = useParams() as Record<string, string>;
+
+	const filteredAndSortedEnv = useMemo(() => {
+		let envs = environments;
+
+		// Filtering
+		const searchQuery = searchParams.get('ev');
+		if (searchQuery) {
+			const query = new RegExp(searchQuery, 'i');
+			envs = envs.filter((env) => query.test(env.name));
+		}
+
+		// Sorting
+		const sortKey = searchParams.get('f');
+		const sortDir = searchParams.get('d');
+		if (sortKey && sortDir && sortKey in envs[0]) {
+			envs = [...envs].sort((a, b) => {
+				if (a.name < b.name) {
+					return sortDir === 'asc' ? -1 : 1;
+				}
+				if (a.name > b.name) {
+					return sortDir === 'asc' ? 1 : -1;
+				}
+				return 0;
+			});
+		}
+
+		return envs;
+	}, [searchParams.get('ev'), searchParams.get('f'), searchParams.get('d'), environments]);
 	const table = useTable({
-		data: environments,
+		data: filteredAndSortedEnv,
 		columns: EnvironmentsColumns,
 	});
 	function closeDrawerHandler() {
 		searchParams.delete('q');
 		setSearchParams(searchParams);
-		console.log('closeDrawerHandler', project._id, projectId);
+
 		if (project._id !== projectId)
 			selectProject(projects.find((prj) => prj._id === projectId) as Project);
 		closeEnvironmentDrawer(!!match);
 	}
 
-	const { fetchNextPage, isFetchingNextPage, hasNextPage } = useInfiniteQuery({
-		queryFn: ({ pageParam }) =>
+	const { isPending } = useQuery({
+		queryFn: () =>
 			getEnvironments({
 				orgId,
 				projectId: project._id,
-				page: pageParam,
-				size: MODULE_PAGE_SIZE,
-				search: searchParams.get('q') as string,
-				sortBy: searchParams.get('f') as string,
-				sortDir: searchParams.get('d') as string,
-				name: searchParams.get('q') as string,
 			}),
-		initialPageParam: 0,
 		queryKey: ['Environments'],
-		enabled:
-			(lastFetchedPage === undefined ||
-				Math.ceil(environments.length / MODULE_PAGE_SIZE) < (lastFetchedPage ?? 0)) &&
-			isEnvOpen,
-		getNextPageParam: (lastPage) => {
-			const nextPage =
-				lastPage?.length === MODULE_PAGE_SIZE ? (lastFetchedPage ?? 0) + 1 : undefined;
-			return nextPage;
-		},
+		enabled: isEnvOpen,
 	});
+
 	return (
 		<Drawer open={isEnvOpen} onOpenChange={closeDrawerHandler}>
 			<DrawerContent position='right' size='lg'>
@@ -73,16 +88,8 @@ export default function Environments() {
 				</DrawerHeader>
 				<div className='scroll' id='infinite-scroll'>
 					<div className='space-y-6 p-6'>
-						<SearchInput placeholder={t('project.environment.search') as string} />
-						<InfiniteScroll
-							scrollableTarget='infinite-scroll'
-							dataLength={environments.length}
-							next={fetchNextPage}
-							hasMore={hasNextPage}
-							loader={isFetchingNextPage && <TableLoading />}
-						>
-							<DataTable table={table} />
-						</InfiniteScroll>
+						<SearchInput placeholder={t('project.environment.search') as string} urlKey='ev' />
+						<DataTable table={table} />
 						<DrawerFooter>
 							<DrawerClose asChild>
 								<Button variant='secondary' size='lg'>
