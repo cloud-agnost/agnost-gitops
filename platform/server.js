@@ -56,6 +56,7 @@ async function initExpress() {
 	app.use("/", (await import("./routes/system.js")).default);
 	app.use("/storage", (await import("./routes/storage.js")).default);
 	app.use("/v1/cluster", (await import("./routes/cluster.js")).default);
+	app.use("/v1/registry", (await import("./routes/registry.js")).default);
 	app.use("/v1/telemetry", (await import("./routes/telemetry.js")).default);
 	app.use("/v1/types", (await import("./routes/types.js")).default);
 	app.use("/v1/auth", (await import("./routes/auth.js")).default);
