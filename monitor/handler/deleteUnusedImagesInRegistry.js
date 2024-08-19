@@ -1,5 +1,7 @@
 import axios from "axios";
 import config from "config";
+import { getDBClient } from "../init/db.js";
+import helper from "../util/helper.js";
 
 const registryBaseUrl = `http://registry.${process.env.NAMESPACE}.svc.cluster.local:5000/v2`;
 
@@ -14,24 +16,52 @@ export async function deleteUnusedImagesInRegistry() {
 
 		// Delete unused images (we keep the latest 5 images)
 		for (const info of registryInfo) {
-			if (info.tags.length > 1) {
-				const tagsToDelete = info.tags.slice(
-					config.get("general.registry.maxImages")
-				);
-				for (const tag of tagsToDelete) {
-					try {
-						await axios.delete(
-							`${registryBaseUrl}/${info.repo}/manifests/${tag.dockerContentDigest}`,
-							{
-								headers: {
-									Accept:
-										"application/vnd.docker.distribution.manifest.v1+json",
-								},
-							}
+			const trimmedRepo = info.repo.replace(/-cache$/, "");
+			const container = await getContainer(trimmedRepo);
+			// If we do not have the container then we delete all tags
+			const tagsToKeep = container
+				? info.tags.slice(0, config.get("general.registry.maxImages"))
+				: [];
+
+			const tagsToDelete = container
+				? info.tags.slice(config.get("general.registry.maxImages"))
+				: info.tags;
+
+			for (const tag of tagsToDelete) {
+				try {
+					await axios.delete(
+						`${registryBaseUrl}/${info.repo}/manifests/${tag.dockerContentDigest}`,
+						{
+							headers: {
+								Accept: "application/vnd.docker.distribution.manifest.v1+json",
+							},
+						}
+					);
+					console.log(`Deleted image manifest ${info.repo}:${tag.tag}`);
+				} catch (err) {}
+			}
+
+			// If we have the container then we update the latest images only for actual repos not cached ones
+			if (tagsToKeep.length > 0 && trimmedRepo === info.repo) {
+				// Make api call to the platform to set the latest images of the container
+				axios
+					.post(
+						helper.getPlatformUrl() + "/v1/telemetry/container/images",
+						{ slug: trimmedRepo, images: tagsToKeep },
+						{
+							headers: {
+								Authorization: process.env.MASTER_TOKEN,
+								"Content-Type": "application/json",
+							},
+						}
+					)
+					.catch((err) => {
+						console.error(
+							`Cannot update container latest image data . ${
+								err.response?.body?.message ?? err.message
+							}`
 						);
-						console.log(`Deleted image manifest ${info.repo}:${tag.tag}`);
-					} catch (err) {}
-				}
+					});
 			}
 		}
 	} catch (err) {
@@ -97,4 +127,13 @@ async function getTagManifest(repo, tag) {
 		createdAt: blob.data.created,
 		dockerContentDigest: manifest.headers["docker-content-digest"],
 	};
+}
+
+async function getContainer(slug) {
+	let dbClient = getDBClient();
+
+	return await dbClient
+		.db("agnost")
+		.collection("containers")
+		.findOne({ slug: slug });
 }

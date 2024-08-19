@@ -4,6 +4,7 @@ import { authMasterToken } from "../middlewares/authMasterToken.js";
 import { checkContentType } from "../middlewares/contentType.js";
 import { sendMessage } from "../init/sync.js";
 import helper from "../util/helper.js";
+import { deleteKey } from "../init/cache.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -37,6 +38,52 @@ router.post(
 				action: "telemetry",
 				object: "org.project.environment.container",
 				description: `Container status updated to '${status.status}'`,
+				timestamp: Date.now(),
+				data: updatedContainer,
+				identifiers: {
+					orgId: updatedContainer.orgId,
+					projectId: updatedContainer.projectId,
+					environmentId: updatedContainer.environmentId,
+					containerId: updatedContainer._id,
+				},
+			});
+		} catch (error) {
+			helper.handleError(req, res, error);
+		}
+	}
+);
+
+/*
+@route      /v1/telemetry/container/images
+@method     POST
+@desc       Updates the latest images of the container
+@access     public
+*/
+router.post(
+	"/container/images",
+	checkContentType,
+	authMasterToken,
+	async (req, res) => {
+		try {
+			const { slug, images } = req.body;
+			let updatedContainer = await cntrCtrl.updateOneByQuery(
+				{ slug },
+				{
+					latestImages: images,
+				}
+			);
+
+			// Renew the container cache
+			deleteKey(updatedContainer._id);
+
+			res.json();
+
+			// Send realtime message about the status change of the container
+			sendMessage(updatedContainer._id, {
+				actor: null,
+				action: "telemetry",
+				object: "org.project.environment.container",
+				description: `Container latest images updated`,
 				timestamp: Date.now(),
 				data: updatedContainer,
 				identifiers: {
