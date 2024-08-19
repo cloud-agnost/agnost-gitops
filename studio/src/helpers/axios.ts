@@ -44,6 +44,7 @@ instance.interceptors.response.use(
       useAuthStore.getState().setRefreshToken(rt);
       useAuthStore.getState().setToken(at);
     }
+
     return response;
   },
   (error) => {
@@ -53,8 +54,8 @@ instance.interceptors.response.use(
       details: err.fields?.[0]?.msg ?? err.details,
     };
     if (ERROR_CODES_TO_REDIRECT_LOGIN_PAGE.includes(apiError.code)) {
-      resetAllStores();
       window.location.href = "/studio/login";
+      resetAllStores();
     }
 
     return Promise.reject(apiError);
