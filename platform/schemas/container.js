@@ -74,6 +74,11 @@ export const ContainerModel = mongoose.model(
 			status: {
 				type: mongoose.Schema.Types.Mixed,
 			},
+			latestImages: [
+				{
+					type: mongoose.Schema.Types.Mixed,
+				},
+			],
 			pipelineStatus: {
 				type: String,
 			},

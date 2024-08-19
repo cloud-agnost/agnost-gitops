@@ -30,7 +30,7 @@ spec:
     - name: gitrepo
       value: $(body.repository.git_url)
     - name: gitcommitter
-      value: $(body.head_commit.committer.name)
+      value: $(body.pusher.name)
     - name: gitcommiturl
       value: $(body.head_commit.url)
     - name: gitrepourl

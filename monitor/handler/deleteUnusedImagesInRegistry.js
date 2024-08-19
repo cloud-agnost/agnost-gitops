@@ -13,8 +13,6 @@ export async function deleteUnusedImagesInRegistry() {
 		}
 
 		// Delete unused images (we keep the latest 5 images)
-
-		console.log(registryInfo);
 		for (const info of registryInfo) {
 			if (info.tags.length > 1) {
 				const tagsToDelete = info.tags.slice(
@@ -22,7 +20,7 @@ export async function deleteUnusedImagesInRegistry() {
 				);
 				for (const tag of tagsToDelete) {
 					try {
-						const response = await axios.delete(
+						await axios.delete(
 							`${registryBaseUrl}/${info.repo}/manifests/${tag.dockerContentDigest}`,
 							{
 								headers: {

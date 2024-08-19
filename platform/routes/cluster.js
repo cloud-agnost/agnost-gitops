@@ -4,6 +4,7 @@ import userCtrl from "../controllers/user.js";
 import clsCtrl from "../controllers/cluster.js";
 import cntrCtrl from "../controllers/container.js";
 import domainCtrl from "../controllers/domain.js";
+import regCtrl from "../controllers/registry.js";
 import { authSession } from "../middlewares/authSession.js";
 import { applyRules } from "../schemas/cluster.js";
 import { validate } from "../middlewares/validate.js";
@@ -12,6 +13,7 @@ import { validateClusterIPs } from "../middlewares/validateClusterIPs.js";
 import { checkContentType } from "../middlewares/contentType.js";
 import { removeClusterDomainFromIngresses } from "../handlers/ingress.js";
 import { updateClusterContainerReleases } from "../handlers/cluster.js";
+import { getAllStorageUsageInfo } from "../handlers/usage.js";
 import {
 	createClusterDomainCertificate,
 	deleteClusterDomainCertificate,
@@ -53,6 +55,36 @@ router.get("/info", authSession, async (req, res) => {
 		});
 
 		res.json(cluster);
+	} catch (error) {
+		helper.handleError(req, res, error);
+	}
+});
+
+/*
+@route      /v1/cluster/storage-info
+@method     GET
+@desc       Returns information about the storage utilization data for agnost components
+@access     public
+*/
+router.get("/storage-info", authSession, async (req, res) => {
+	try {
+		const result = await getAllStorageUsageInfo();
+		res.json(result);
+	} catch (error) {
+		helper.handleError(req, res, error);
+	}
+});
+
+/*
+@route      /v1/cluster/default-registry
+@method     GET
+@desc       Returns information about the public default registry information
+@access     public
+*/
+router.get("/public-registry", authSession, async (req, res) => {
+	try {
+		const result = await regCtrl.getOneByQuery({ isClusterEntity: true });
+		res.json(result);
 	} catch (error) {
 		helper.handleError(req, res, error);
 	}
