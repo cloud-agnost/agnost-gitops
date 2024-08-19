@@ -53,8 +53,8 @@ async function execCommandInPod(namespace, podName, containerName, command) {
 			errorOutput += data.toString();
 		});
 
-		try {
-			exec.exec(
+		exec
+			.exec(
 				namespace,
 				podName,
 				containerName,
@@ -63,11 +63,10 @@ async function execCommandInPod(namespace, podName, containerName, command) {
 				stderr,
 				null, // no input stream
 				false, // tty disabled,
-				(status) => {
-					console.log("****here", output);
-					if (status === 0) {
+				(result) => {
+					if (result.status === 0 || result.status === "Success") {
 						const parsedOutput = parseDfOutput(output);
-						resolve(parsedOutput);
+						resolve({ podName, containerName, ...parsedOutput });
 					} else {
 						reject(
 							new Error(
@@ -76,10 +75,10 @@ async function execCommandInPod(namespace, podName, containerName, command) {
 						);
 					}
 				}
-			);
-		} catch (err) {
-			console.log("****", err);
-		}
+			)
+			.catch((err) => {
+				reject(err);
+			});
 	});
 }
 
@@ -114,8 +113,8 @@ export async function getAllStorageUsageInfo() {
 		});
 
 		const results = await Promise.all(promises);
-		console.log(JSON.stringify(results, null, 2));
+		return results;
 	} catch (err) {
-		console.log("***error", err);
+		throw new Error(`Failed to get storage usage info: ${err.message}`);
 	}
 }
