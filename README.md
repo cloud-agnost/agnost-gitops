@@ -8,7 +8,7 @@ Agnost GitOps is an open source GitOps platform running on Kubernetes clusters. 
 
 > For how to install, set up and use Agnost please refer to its [documentation](https://agnost.dev).
 
-## Key Features
+## Key Features
 
 Agnost provides the following features:
 - **Integration with [GitHub](https://github.com), [GitLab](https://gitlab.com) or [Bitbucket](https://bitbucket.com).** You can connect your git repo to your container in your Kubernetes cluster and whenever you push new code, Agnost pulls the code builds the docker image and deploys it. 
