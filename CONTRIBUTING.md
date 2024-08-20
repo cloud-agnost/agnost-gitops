@@ -4,7 +4,7 @@ First off, thank you for considering contributing to Agnost. It's people like yo
 
 ### Code of Conduct
 
-This project and everyone participating is governed by the [Agnost Code of Conduct](https://github.com/cloud-agnost/agnost-community/blob/master/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to support@agnost.dev.
+This project and everyone participating is governed by the [Agnost Code of Conduct](https://github.com/cloud-agnost/agnost-gitops/blob/main/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to support@agnost.dev.
 
 ### How Can I Contribute?
 
@@ -28,4 +28,4 @@ Bugs are tracked as GitHub issues. Create an issue and provide the following inf
 
 #### Contributing to the Codebase
 
-If you want to become a contributor of Agnost, submit your pull requests and fill in the [required template](https://github.com/cloud-agnost/agnost-community/blob/master/PR_TEMPLATE.md). Please keep a consistent style for code, code comments, and commit messages.  All submissions will be reviewed as quickly as possible.
+If you want to become a contributor of Agnost, submit your pull requests and fill in the [required template](https://github.com/cloud-agnost/agnost-gitops/blob/main/PR_TEMPLATE.md). Please keep a consistent style for code, code comments, and commit messages.  All submissions will be reviewed as quickly as possible.
