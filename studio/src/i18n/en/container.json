@@ -27,7 +27,10 @@
 	},
 	"registry": {
 		"help": "Enter a Docker image from DockerHub, GHCR, or quay.io, e.g., any public docker image registry",
-		"image": "Docker Image URL"
+		"image": "Docker Image URL",
+		"image_placeholder": "docker.io/nginx:latest",
+		"registry": "Image Registry",
+		"registry_help": "Select the registry where the image is hosted."
 	},
 	"general": "General",
 	"deployment": {

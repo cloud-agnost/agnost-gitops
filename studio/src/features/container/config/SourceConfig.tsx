@@ -472,7 +472,7 @@ function RegistryForm() {
 				name='registry.registryId'
 				render={({ field }) => (
 					<FormItem>
-						<FormLabel>{t('container.registry.image')}</FormLabel>
+						<FormLabel>{t('container.registry.registry')}</FormLabel>
 						<FormControl>
 							<Select key={field.value} value={field.value} onValueChange={field.onChange}>
 								<SelectTrigger className='w-full'>
@@ -489,7 +489,7 @@ function RegistryForm() {
 								</SelectContent>
 							</Select>
 						</FormControl>
-						<FormDescription>{t('container.registry.help')}</FormDescription>
+						<FormDescription>{t('container.registry.registry_help')}</FormDescription>
 						<FormMessage />
 					</FormItem>
 				)}
@@ -507,9 +507,7 @@ function RegistryForm() {
 									className='pl-10'
 									error={Boolean(form.formState.errors.registry?.imageUrl)}
 									placeholder={
-										t('forms.placeholder', {
-											label: t('container.registry.image'),
-										}) ?? ''
+										t('container.registry.image_placeholder')
 									}
 									disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 									{...field}

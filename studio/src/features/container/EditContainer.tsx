@@ -76,7 +76,7 @@ export default function EditContainer() {
 	});
 
 	const tabs = useMemo(() => {
-		if (!_.isEmpty(container?.template)) {
+		if (!_.isEmpty(container?.template) || container?.repoOrRegistry === 'registry') {
 			return EDIT_CONTAINER_TABS.filter((tab) => tab.href !== 'builds');
 		}
 		return EDIT_CONTAINER_TABS;
