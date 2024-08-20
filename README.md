@@ -1,4 +1,5 @@
 # Agnost GitOps
+
 Agnost GitOps is an open source GitOps platform running on Kubernetes clusters. It provides a **complete CD solution for building, deploying, and managing applications in a Kubernetes cluster**. In short, you connect your GitHub, GitLab or Bitbucket repository and Agnost takes care of building and deploying your app to your Kubernetes cluster when you push new code.
 
 <p align="center">
@@ -8,6 +9,7 @@ Agnost GitOps is an open source GitOps platform running on Kubernetes clusters. 
 > For how to install, set up and use Agnost please refer to its [documentation](https://agnost.dev).
 
 ## Key Features
+
 Agnost provides the following features:
 - **Integration with [GitHub](https://github.com), [GitLab](https://gitlab.com) or [Bitbucket](https://bitbucket.com).** You can connect your git repo to your container in your Kubernetes cluster and whenever you push new code, Agnost pulls the code builds the docker image and deploys it. 
 - **Building docker images.** Under the hood we use [Kaniko](https://github.com/GoogleContainerTools/kaniko) to build container images from a Dockerfile, inside a your Kubernetes cluster. Through Agnost Studio you can also monitor build status and access to build logs.
@@ -17,9 +19,11 @@ Agnost provides the following features:
 - **One click deployment using build-in templates.** Agnost comes with predefined templates for commonly used open-source platforms such as **MongoDB, PostgreSQL, MySQL, MariaDB, Redis, Memcached and Minio**. With one click you can easily deploy your database, cache or object storage.
 
 ## Community
+
 We'd love to hear from you! [Join our Discord channel](https://discord.gg/5NhssWVm).
 
 ## How does Agnost work?
+
 Under the hood Agnost uses several open source solutions and integrate them seamlessles. Basically, for each new container that you create and associate with your git repository we create a [Tekton](https://tekton.dev/) pipeline and register a webhook to yoru git repository to listen push events. Whenever you push your updates to your repository this webhook is triggered and Tekton pipeline starts. 
 
 There are three steps in the Tekton pipeline which are executed in sequence and described below:
@@ -30,11 +34,13 @@ There are three steps in the Tekton pipeline which are executed in sequence and 
 Please note that all setup, build and deploy operations are performed within your cluster and no data or files are transferred outside of your cluster.
 
 ## Installing and Setting up Agnost
+
 For how to install, set up and use Agnost please refer to its [documentation](https://agnost.dev). Alternatively, you can also have a look to [Agnost Helm chart](https://github.com/cloud-agnost/agnost-gitops-charts).
 
 In short you need to have an up and running Kuberntes cluster with at least 4CPUs and 8GB of memory and install the Agnost Helm Chart to this cluster.
 
 ## Want to Contribute
+
 We are so excited to have you!
 
 See [CONTRIBUTING.md](https://github.com/cloud-agnost/agnost-gitops/blob/main/CONTRIBUTING.md) for an overview of our processes
