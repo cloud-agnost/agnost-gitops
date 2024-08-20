@@ -16,7 +16,7 @@ Agnost provides the following features:
 - **Deploy docker images.** If you connect your git repo to your container in your cluster, Agnost will automatically handle the build and also deployment. Additionally, you can also deploy any publicly available Docker image through Agnost Studio.
 - **Flexible networking settings.** For your containers, Agnost can automatically generate a **subdomain based ingress** or you can **define your own custom domain** to expose your application services to the outside world. Additionally you can also **enable/disable TCP proxying** so that you can connect your containers through a dedicated port.
 - **TLS certificates.** Not only a standard domain but you can als define wildward subdomins for your containers and Agnost automatically handles the TLS certificate issue and renewal.
-- **One click deployment using build-in templates.** Agnost comes with predefined templates for commonly used open-source platforms such as **MongoDB, PostgreSQL, MySQL, MariaDB, Redis, Memcached and Minio**. With one click you can easily deploy your database, cache or object storage.
+- **One click deployment using built-in templates.** Agnost comes with predefined templates for commonly used open-source platforms such as **MongoDB, PostgreSQL, MySQL, MariaDB, Redis, Memcached and Minio**. With one click you can easily deploy your database, cache or object storage.
 
 ## Community
 
