@@ -41,5 +41,6 @@ In short, you need to have an up and running Kuberntes cluster with at least 4CP
 
 ## Want to Contribute
 
-See [CONTRIBUTING.md](https://github.com/cloud-agnost/agnost-gitops/blob/main/CONTRIBUTING.md) for an overview of our processes
+See [CONTRIBUTING.md](https://github.com/cloud-agnost/agnost-gitops/blob/main/CONTRIBUTING.md) for an overview of our processes.
+
 If you are looking for support, enter an issue or join our [Join our Discord channel](https://discord.gg/5NhssWVm).
