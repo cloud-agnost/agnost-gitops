@@ -6,7 +6,6 @@ import {
   DomainParams,
   EnforceSSLAccessParams,
   TransferRequest,
-  UpdateClusterComponentParams,
   UpdateRemainingClusterComponentsParams,
 } from "@/types";
 
@@ -17,14 +16,8 @@ export default class ClusterService {
     return (await axios.get(`${this.url}/setup-status`)).data;
   }
 
-  static async getClusterComponents(): Promise<ClusterComponent[]> {
-    return (await axios.get(`${this.url}/components`)).data;
-  }
-
-  static async updateClusterComponent(
-    data: UpdateClusterComponentParams
-  ): Promise<ClusterComponent> {
-    return (await axios.put(`${this.url}/components`, data)).data;
+  static async getClusterStorageInfo() {
+    return (await axios.get(`/v1/cluster/storage-info`)).data;
   }
 
   static async transferClusterOwnership({ userId }: TransferRequest) {
@@ -86,6 +79,10 @@ export default class ClusterService {
         reverseProxyURL: reverseProxyURL || undefined,
       })
     ).data;
+  }
+
+  static async getAllRegistries() {
+    return (await axios.get("/v1/registry")).data;
   }
 
   static async healthCheck() {

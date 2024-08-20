@@ -36,7 +36,7 @@ const ContainerColumns: ColumnDefWithClassName<Container>[] = [
 	},
 	{
 		id: 'iid',
-		header: () => <SortButton text={translate('general.id')} field='type' />,
+		header: () => <SortButton text={translate('general.id')} field='iid' />,
 		accessorKey: 'iid',
 		sortingFn: 'textCaseSensitive',
 		enableSorting: true,
@@ -63,7 +63,7 @@ const ContainerColumns: ColumnDefWithClassName<Container>[] = [
 	},
 	{
 		id: 'status',
-		header: () => <SortButton text={translate('general.status')} field='type' />,
+		header: () => <SortButton text={translate('general.status')} field='status' />,
 		accessorKey: 'status',
 		sortingFn: 'textCaseSensitive',
 		enableSorting: true,
@@ -80,7 +80,9 @@ const ContainerColumns: ColumnDefWithClassName<Container>[] = [
 	},
 	{
 		id: 'pipelineStatus',
-		header: () => <SortButton text={translate('container.pipelineStatus')} field='type' />,
+		header: () => (
+			<SortButton text={translate('container.pipelineStatus')} field='pipelineStatus' />
+		),
 		accessorKey: 'pipelineStatus',
 		sortingFn: 'textCaseSensitive',
 		enableSorting: true,

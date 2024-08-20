@@ -19,6 +19,7 @@ import {
 import { Bitbucket, Docker, Github } from '@/components/icons';
 import GitLab from '@/components/icons/GitLab';
 import { useToast } from '@/hooks';
+import { ClusterService } from '@/services';
 import useAuthStore from '@/store/auth/authStore';
 import useContainerStore from '@/store/container/containerStore';
 import { CreateContainerParams, StateOption } from '@/types';
@@ -68,7 +69,9 @@ function RepoOrRegistryField() {
 
 	function onChange(value: string) {
 		form.setValue('repoOrRegistry', value as 'repo' | 'registry');
-		// if (value === 'registry') form.setValue('repo', undefined);
+		if (value === 'registry') {
+			form.setValue('repo.connected', false);
+		}
 	}
 	return (
 		<FormField
@@ -452,8 +455,45 @@ function RegistryForm() {
 	const { t } = useTranslation();
 	const { container } = useContainerStore();
 	const { user } = useAuthStore();
+
+	const { data: registries } = useQuery({
+		queryKey: ['registries'],
+		queryFn: () => ClusterService.getAllRegistries(),
+	});
+
+	useEffect(() => {
+		form.setValue('registry.registryId', registries?.[0]?._id);
+	}, [registries]);
+
 	return (
 		<div className='space-y-4'>
+			<FormField
+				control={form.control}
+				name='registry.registryId'
+				render={({ field }) => (
+					<FormItem>
+						<FormLabel>{t('container.registry.image')}</FormLabel>
+						<FormControl>
+							<Select key={field.value} value={field.value} onValueChange={field.onChange}>
+								<SelectTrigger className='w-full'>
+									<SelectValue placeholder='Select provider' />
+								</SelectTrigger>
+
+								<SelectContent>
+									{registries?.map((registry: any) => (
+										<SelectItem key={registry._id} value={registry._id}>
+											{registry.name}
+										</SelectItem>
+									))}
+									<SelectSeparator className=' bg-wrapper-background-base' />
+								</SelectContent>
+							</Select>
+						</FormControl>
+						<FormDescription>{t('container.registry.help')}</FormDescription>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
 			<FormField
 				control={form.control}
 				name='registry.imageUrl'

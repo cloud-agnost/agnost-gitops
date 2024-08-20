@@ -112,12 +112,14 @@ export default function AuthUserDropdown() {
 								{t('general.account_settings')}
 							</div>
 						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => setOpenClusterMng(true)}>
-							<div className={cn('flex items-center gap-2')}>
-								<LineSegments className='text-icon-base text-lg' />
-								{t('profileSettings.clusters_title')}
-							</div>
-						</DropdownMenuItem>
+						{user.isClusterOwner && (
+							<DropdownMenuItem onClick={() => setOpenClusterMng(true)}>
+								<div className={cn('flex items-center gap-2')}>
+									<LineSegments className='text-icon-base text-lg' />
+									{t('profileSettings.clusters_title')}
+								</div>
+							</DropdownMenuItem>
+						)}
 
 						<DropdownMenuSub>
 							<DropdownMenuSubTrigger className='dropdown-item flex items-center gap-2'>

@@ -37,8 +37,8 @@ export default function DateFilter() {
 						date={date}
 						onChange={(date) => {
 							setDate(date);
-							form.setValue('start', date[0].startDate?.toISOString());
-							form.setValue('end', date[0].endDate?.toISOString());
+							form.setValue('start', startOfDay(date[0].startDate!).toISOString());
+							form.setValue('end', endOfDay(date[0].endDate!).toISOString());
 						}}
 					/>
 					<FormMessage />

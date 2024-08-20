@@ -11,7 +11,6 @@ import {
   ModuleVersions,
   OnboardingData,
   TransferRequest,
-  UpdateClusterComponentParams,
   UpdateRemainingClusterComponentsParams,
 } from "@/types";
 import { BaseGetRequest, User, UserDataToRegister } from "@/types/type.ts";
@@ -42,8 +41,6 @@ type Actions = {
   finalizeClusterSetup: (
     params: OnboardingData
   ) => Promise<ClusterSetupResponse>;
-  getClusterComponents: () => Promise<ClusterComponent[]>;
-  updateClusterComponent: (data: UpdateClusterComponentParams) => Promise<void>;
   openEditClusterComponent: (editedClusterComponent: ClusterComponent) => void;
   closeEditClusterComponent: () => void;
   transferClusterOwnership: (params: TransferRequest) => Promise<void>;
@@ -126,23 +123,6 @@ const useClusterStore = create<ClusterStore & Actions>()(
         return clusterSetupResponse;
       } catch (error) {
         set({ error: error as APIError });
-        throw error;
-      }
-    },
-    getClusterComponents: async () => {
-      try {
-        const clusterComponents = await ClusterService.getClusterComponents();
-        set({ clusterComponents });
-        return clusterComponents;
-      } catch (error) {
-        set({ error: error as APIError });
-        throw error;
-      }
-    },
-    updateClusterComponent: async (data: UpdateClusterComponentParams) => {
-      try {
-        await ClusterService.updateClusterComponent(data);
-      } catch (error) {
         throw error;
       }
     },

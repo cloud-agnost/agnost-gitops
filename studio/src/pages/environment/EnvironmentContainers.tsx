@@ -23,9 +23,7 @@ export default function EnvironmentContainers() {
 	const { containers, getContainersInEnv, lastFetchedPage } = useContainerStore();
 	const { orgId, projectId, envId } = useParams() as Record<string, string>;
 	const [searchParams, setSearchParams] = useSearchParams();
-
 	// Todo const canCreate = true;
-
 	const table = useTable<Container>({
 		data: containers,
 		columns: ContainerColumns,
@@ -36,14 +34,7 @@ export default function EnvironmentContainers() {
 		setSearchParams(searchParams);
 	}
 
-	const {
-		fetchNextPage,
-		isFetchingNextPage,
-		hasNextPage,
-		isPending: loading,
-		isFetching,
-		refetch,
-	} = useInfiniteQuery({
+	const { fetchNextPage, isFetchingNextPage, hasNextPage, isFetching, refetch } = useInfiniteQuery({
 		queryFn: ({ pageParam }) =>
 			getContainersInEnv({
 				orgId,
@@ -85,7 +76,7 @@ export default function EnvironmentContainers() {
 		searchParams.get('f'),
 		searchParams.get('d'),
 	]);
-	if (!containers.length && !loading) {
+	if (!containers.length && !isFetching) {
 		return (
 			<EmptyState
 				type='container'
@@ -126,7 +117,7 @@ export default function EnvironmentContainers() {
 					</div>
 				</div>
 				<div className='h-[calc(100%-2.5rem)]'>
-					{!loading && (
+					{!isFetching && (
 						<InfiniteScroll
 							scrollableTarget='env-layout'
 							dataLength={containers.length}

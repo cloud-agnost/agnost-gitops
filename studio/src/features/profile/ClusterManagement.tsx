@@ -1,19 +1,20 @@
-import { CopyInput } from '@/components/CopyInput';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/Drawer';
-import { SettingsFormItem } from '@/components/SettingsFormItem';
 import useClusterStore from '@/store/cluster/clusterStore';
 import { DialogProps } from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import { useTranslation } from 'react-i18next';
-import CustomDomains from '../cluster/CustomDomain/CustomDomains';
-import ReverseProxyURL from '../cluster/CustomDomain/ReverseProxyURL';
-import TransferClusterOwnership from './TransferClusterOwnership';
+import { OrganizationMenuItem } from '../organization';
+import { CLUSTER_MENU_ITEMS } from '@/constants';
+import { useSearchParams } from 'react-router-dom';
+import ClusterManagementGeneral from './ClusterManagementGeneral';
+import ClusterManagementUsage from './ClusterManagementUsage';
+import { useEffect } from 'react';
 
 export default function ClusterManagement(props: DialogProps) {
 	const { t } = useTranslation();
-	const { checkDomainStatus, clusterDomainError, cluster } = useClusterStore();
-
+	const { checkDomainStatus, clusterDomainError } = useClusterStore();
+	const [searchParams, setSearchParams] = useSearchParams();
 	useQuery({
 		queryFn: checkDomainStatus,
 		queryKey: ['checkDomainStatus'],
@@ -21,46 +22,31 @@ export default function ClusterManagement(props: DialogProps) {
 		enabled: _.isNil(clusterDomainError),
 	});
 
+	useEffect(() => {
+		if (props.open) setSearchParams({ cm: 'general' });
+		else setSearchParams({});
+	}, [props.open]);
+
 	return (
 		<Drawer {...props}>
 			<DrawerContent>
-				<DrawerHeader>
+				<DrawerHeader className='border-none'>
 					<DrawerTitle>{t('profileSettings.clusters_title')}</DrawerTitle>
 				</DrawerHeader>
-				<div className='p-6 scroll'>
-					<SettingsFormItem
-						className='space-y-0 py-0 pb-6'
-						contentClassName='pt-6'
-						title={t('cluster.yourClusterId')}
-						description={t('cluster.yourClusterIdDescription')}
-					>
-						<CopyInput readOnly value={cluster._id} />
-					</SettingsFormItem>
-					<SettingsFormItem
-						className='space-y-0 py-0 pb-6'
-						contentClassName='pt-6'
-						title={t('cluster.transferClusterOwnership')}
-						description={t('cluster.transferClusterOwnershipDescription')}
-					>
-						<TransferClusterOwnership />
-					</SettingsFormItem>
-					<SettingsFormItem
-						className='space-y-0 py-0 pb-6'
-						contentClassName='pt-6'
-						title={t('cluster.reverseProxyURL')}
-						description={t('cluster.reverseProxyURLDescription')}
-					>
-						<ReverseProxyURL />
-					</SettingsFormItem>
-					<SettingsFormItem
-						className='space-y-0 py-0 pb-6'
-						contentClassName='pt-6'
-						title={t('cluster.custom_domain')}
-						description={t('cluster.custom_domain_description')}
-					>
-						<CustomDomains />
-					</SettingsFormItem>
-				</div>
+				<nav className='flex border-b'>
+					{CLUSTER_MENU_ITEMS.map((item) => {
+						return (
+							<OrganizationMenuItem
+								key={item.name}
+								item={item}
+								active={searchParams.get('cm') === item.href}
+								urlKey='cm'
+							/>
+						);
+					})}
+				</nav>
+				{searchParams.get('cm') === 'general' && <ClusterManagementGeneral />}
+				{searchParams.get('cm') === 'usage' && <ClusterManagementUsage />}
 			</DrawerContent>
 		</Drawer>
 	);

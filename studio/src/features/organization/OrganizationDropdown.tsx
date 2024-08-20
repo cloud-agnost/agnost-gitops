@@ -9,7 +9,7 @@ import { APIError, Organization } from '@/types';
 import { Envelope, GearSix, Plus, SignOut } from '@phosphor-icons/react';
 import { DropdownMenuItem } from '@/components/Dropdown';
 import { useMutation } from '@tanstack/react-query';
-import _ from 'lodash';
+import _, { isEmpty } from 'lodash';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -33,7 +33,7 @@ export function OrganizationDropdown() {
 	} = useOrganizationStore();
 	const { getProjects } = useProjectStore();
 	const navigate = useNavigate();
-	const [searchParams, setSearchParams] = useSearchParams();
+	const [_, setSearchParams] = useSearchParams();
 	const { toast } = useToast();
 
 	const { mutate: leaveOrgMutate, isPending } = useMutation({
@@ -80,7 +80,7 @@ export function OrganizationDropdown() {
 	}
 
 	useEffect(() => {
-		if (_.isEmpty(organizations)) {
+		if (isEmpty(organizations)) {
 			getAllOrganizationByUser();
 		}
 	}, []);

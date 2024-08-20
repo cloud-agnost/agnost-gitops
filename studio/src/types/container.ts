@@ -611,7 +611,7 @@ export const SourceConfigSchema = z
   })
   .superRefine((data, ctx) => {
     // all values are required if source is connected
-    if (data.connected) {
+    if (data.connected && data.type) {
       if (!data.name) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -745,6 +745,7 @@ export const ContainerSchema = z.object({
   registry: z
     .object({
       imageUrl: z.string().optional(),
+      registryId: z.string().optional(),
     })
     .optional(),
   repo: SourceConfigSchema.optional(),

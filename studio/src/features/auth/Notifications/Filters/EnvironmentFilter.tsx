@@ -15,8 +15,6 @@ export default function EnvironmentFilter() {
 			getEnvironments({
 				orgId: form.watch('orgId'),
 				projectId: form.watch('projectId')!,
-				page: 0,
-				size: 250,
 			}),
 		enabled: !!form.watch('orgId') && !!form.watch('projectId'),
 	});

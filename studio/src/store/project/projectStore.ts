@@ -77,7 +77,7 @@ type Actions = {
   updateInvitationUserRole: (req: UpdateRoleRequest) => Promise<Invitation>;
   deleteInvitation: (req: InvitationRequest) => Promise<void>;
   deleteMultipleInvitations: (req: InvitationRequest) => Promise<void>;
-  openEnvironmentDrawer: (project: Project) => void;
+  openEnvironmentDrawer: () => void;
   closeEnvironmentDrawer: (clearProject?: boolean) => void;
   onProjectClick: (project: Project) => void;
   reset: () => void;
@@ -366,11 +366,10 @@ const useProjectStore = create<ProjectState & Actions>()(
             throw error as APIError;
           }
         },
-        openEnvironmentDrawer: (project: Project) => {
+        openEnvironmentDrawer: () => {
           set({
             isEnvOpen: true,
           });
-          get().selectProject(project);
         },
         closeEnvironmentDrawer: (clearProject = false) => {
           set({
@@ -391,14 +390,12 @@ const useProjectStore = create<ProjectState & Actions>()(
           const environments = await getEnvironments({
             orgId,
             projectId: project._id,
-            page: 0,
-            size: 250,
           });
 
           if (environments.length === 1) {
             selectEnvironment(environments[0]);
           } else {
-            openEnvironmentDrawer(project);
+            openEnvironmentDrawer();
           }
           set({ loading: false });
         },

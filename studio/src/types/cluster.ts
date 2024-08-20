@@ -122,3 +122,14 @@ export interface UpdateRemainingClusterComponentsParams {
     readReplica: boolean;
   };
 }
+
+export interface ClusterStorageInfo {
+  podName: string;
+  containerName: string;
+  filesystem: string;
+  size: string;
+  used: string;
+  available: string;
+  usedPercentage: string;
+  mountPoint: string;
+}

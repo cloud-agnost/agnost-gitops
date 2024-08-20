@@ -137,7 +137,6 @@ export default function CreateContainerDrawer() {
 		localStorage.removeItem('createDeployment');
 		closeCreateContainerDialog();
 	}
-
 	useEffect(() => {
 		if (isCreateContainerDialogOpen) {
 			form.setValue('type', createdContainerType!);

@@ -57,10 +57,12 @@ export default function OrganizationInvitations() {
 	}, [searchParams, searchParams.get('tab')]);
 
 	return (
-		<div className='space-y-4 relative'>
+		<div className='space-y-4 relative h-full'>
 			<OrganizationMembersTableHeader table={table} />
 			{isFetching ? (
-				<Loading loading={isFetching} />
+				<div className='relative h-full'>
+					<Loading loading={isFetching} />
+				</div>
 			) : (
 				<InfiniteScroll
 					scrollableTarget='settings-scroll'

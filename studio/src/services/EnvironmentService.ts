@@ -10,18 +10,9 @@ import {
 export default class EnvironmentService {
   static url = "/v1/org";
   static async getEnvironments(req: GetEnvironmentRequest) {
-    const { name, page, size, search, sortBy, sortDir, projectId } = req;
+    const { projectId } = req;
     return (
-      await axios.get(`${this.url}/${req.orgId}/project/${projectId}/env`, {
-        params: {
-          name,
-          page,
-          size,
-          search,
-          sortBy,
-          sortDir,
-        },
-      })
+      await axios.get(`${this.url}/${req.orgId}/project/${projectId}/env`)
     ).data;
   }
 

@@ -12,7 +12,7 @@ export default function useEnvironmentDropdown() {
 	const { t } = useTranslation();
 	const { toast } = useToast();
 	const { projectId, orgId, envId } = useParams() as Record<string, string>;
-	const { openEnvironmentDrawer, project } = useProjectStore();
+	const { openEnvironmentDrawer } = useProjectStore();
 	const {
 		environments,
 		environment,
@@ -37,8 +37,6 @@ export default function useEnvironmentDropdown() {
 			getEnvironments({
 				projectId,
 				orgId,
-				page: 0,
-				size: 2,
 			});
 		}
 	}, [envId]);
@@ -47,10 +45,7 @@ export default function useEnvironmentDropdown() {
 		() => [
 			{
 				title: t('project.settings.openEnv'),
-				action: () => {
-					if (!project) return;
-					openEnvironmentDrawer(project);
-				},
+				action: openEnvironmentDrawer,
 				disabled: environments.length <= 1,
 				icon: GitBranch,
 			},

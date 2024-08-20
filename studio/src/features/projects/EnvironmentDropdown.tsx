@@ -28,7 +28,7 @@ export default function EnvironmentDropdown() {
 	const { toast } = useToast();
 	const { orgId, projectId, envId } = useParams() as Record<string, string>;
 	const navigate = useNavigate();
-	const { openEnvironmentDrawer, project } = useProjectStore();
+	const { openEnvironmentDrawer } = useProjectStore();
 	const { t } = useTranslation();
 	const envDropdownItems = useEnvironmentDropdown();
 
@@ -50,7 +50,7 @@ export default function EnvironmentDropdown() {
 				selectEnvironment(environments[0]);
 			} else {
 				navigate(`/organization/${orgId}/projects`);
-				openEnvironmentDrawer(project);
+				openEnvironmentDrawer();
 			}
 		},
 		onError: (error: APIError) => {

@@ -33,6 +33,7 @@ export interface APIError {
       | "phoneVerified"
       | "phone_verified";
   }[];
+  message?: string;
 }
 export type User = {
   iid: string;

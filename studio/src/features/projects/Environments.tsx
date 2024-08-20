@@ -9,18 +9,15 @@ import {
 	DrawerTitle,
 } from '@/components/Drawer';
 import { SearchInput } from '@/components/SearchInput';
-import { TableLoading } from '@/components/Table/Table';
-import { MODULE_PAGE_SIZE } from '@/constants';
-import { useSearch, useTable } from '@/hooks';
+import { useTable } from '@/hooks';
 import useEnvironmentStore from '@/store/environment/environmentStore';
 import useProjectStore from '@/store/project/projectStore';
 import { Project } from '@/types/project';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import InfiniteScroll from 'react-infinite-scroll-component';
 import { useMatch, useParams, useSearchParams } from 'react-router-dom';
 import { EnvironmentsColumns } from './EnvironmentsColumns';
-import { useEffect, useMemo } from 'react';
 
 export default function Environments() {
 	const { t } = useTranslation();
@@ -64,13 +61,13 @@ export default function Environments() {
 	function closeDrawerHandler() {
 		searchParams.delete('q');
 		setSearchParams(searchParams);
-
+		console.log('closeDrawerHandler', project._id, projectId);
 		if (project._id !== projectId)
 			selectProject(projects.find((prj) => prj._id === projectId) as Project);
 		closeEnvironmentDrawer(!!match);
 	}
 
-	const { isPending } = useQuery({
+	useQuery({
 		queryFn: () =>
 			getEnvironments({
 				orgId,

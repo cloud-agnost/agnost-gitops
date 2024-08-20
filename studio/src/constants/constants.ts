@@ -207,6 +207,8 @@ export const BADGE_COLOR_MAP: Record<string, BadgeColors> = {
   UPDATE: "yellow",
   DELETE: "red",
   ACCEPT: "purple",
+  TERMINATING: "red",
+  SCHEDULED: "yellow",
 };
 
 export const CLUSTER_RELEASE_CLASS_MAP: Record<string, string[]> = {
@@ -261,6 +263,16 @@ export const CONTAINER_TYPES = [
   "cronjob",
 ] as const;
 
+export const CLUSTER_MENU_ITEMS = [
+  {
+    name: translate("project.edit.general"),
+    href: "general",
+  },
+  {
+    name: "Usage",
+    href: "usage",
+  },
+];
 export const EDIT_PROJECT_MENU_ITEMS = [
   {
     name: translate("project.edit.general"),
