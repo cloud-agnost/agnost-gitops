@@ -6,7 +6,7 @@ Agnost GitOps is an open source GitOps platform running on Kubernetes clusters. 
 <img width="960" height="245" src="https://github.com/cloud-agnost/agnost-gitops/blob/main/agnost.svg" alt="Agnost logo"></img>
 </p>
 
-> For how to install, set up and use Agnost please refer to its [documentation](https://agnost.dev).
+> For how to install, set up and use Agnost please refer to its [documentation](https://agnost.dev/getting-started).
 
 ## Key Features
 
