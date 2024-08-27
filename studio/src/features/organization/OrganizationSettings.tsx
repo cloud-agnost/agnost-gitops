@@ -17,6 +17,7 @@ export default function OrganizationSettings() {
 	const { t } = useTranslation();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const { isOrganizationSettingsOpen, toggleOrganizationSettings } = useOrganizationStore();
+
 	function onOpenChangeHandler() {
 		toggleOrganizationSettings();
 		searchParams.delete('ot');

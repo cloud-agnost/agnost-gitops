@@ -183,7 +183,7 @@ const useContainerStore = create<ContainerState & Actions>()(
           joinChannel(container._id);
           set((state) => ({
             containers: [
-              ...state.containers,
+              ...state.containers.filter((en) => en._id !== container._id),
               {
                 ...container,
                 status: {

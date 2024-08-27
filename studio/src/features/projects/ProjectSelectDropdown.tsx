@@ -3,9 +3,9 @@ import { SelectionDropdown } from '@/components/SelectionDropdown';
 import { PROJECT_SETTINGS } from '@/constants';
 import useProjectStore from '@/store/project/projectStore';
 import { Project } from '@/types/project';
-import _ from 'lodash';
+import { isEmpty } from 'lodash';
 import { Fragment, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import CreateProject from './CreateProject';
 import { Plus } from '@phosphor-icons/react';
 import { useTranslation } from 'react-i18next';
@@ -15,13 +15,14 @@ export default function ProjectSelectDropdown() {
 	const { t } = useTranslation();
 	const { orgId } = useParams();
 	const [openCreateProject, setOpenCreateProject] = useState(false);
+	const [_, setSearchParams] = useSearchParams();
 	function onSelect(prj: Project) {
 		if (prj._id === project?._id) return;
 		onProjectClick(prj);
 	}
 
 	useEffect(() => {
-		if (_.isEmpty(projects) && orgId) {
+		if (isEmpty(projects) && orgId) {
 			getProjects(orgId);
 		}
 	}, [orgId]);
@@ -41,7 +42,10 @@ export default function ProjectSelectDropdown() {
 				{PROJECT_SETTINGS.map((setting, index) => (
 					<Fragment key={setting.name}>
 						<DropdownMenuItem
-							onClick={() => setting.onClick(project)}
+							onClick={() => {
+								if (setting.id === 'update') setSearchParams({ st: 'general' });
+								setting.onClick(project);
+							}}
 							disabled={setting.isDisabled(project.role, project)}
 						>
 							<setting.icon className='w-5 h-5 mr-2' />

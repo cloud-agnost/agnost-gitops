@@ -1,7 +1,6 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/Popover';
 import { cn } from '@/utils';
 import { Trash, X } from '@phosphor-icons/react';
-import { Align } from '@radix-ui/react-popper';
 import { MutationFunction, useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +13,7 @@ interface TableConfirmationProps {
 	disabled?: boolean;
 	title: string;
 	description: string;
-	align?: Align;
+	align?: 'start' | 'end' | 'center';
 	contentClassName?: string;
 	hasPermission: boolean;
 	icon?: React.ReactNode;

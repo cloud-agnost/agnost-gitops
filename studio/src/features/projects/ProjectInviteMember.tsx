@@ -15,8 +15,13 @@ import { z } from 'zod';
 
 export default function ProjectInviteMember() {
 	const { t } = useTranslation();
-	const { isInviteMemberModalOpen, closeInviteMemberModal, project, inviteUsersToProject } =
-		useProjectStore();
+	const {
+		isInviteMemberModalOpen,
+		closeInviteMemberModal,
+		project,
+		inviteUsersToProject,
+		openEditProjectDrawer,
+	} = useProjectStore();
 	const { toast } = useToast();
 	const { orgId } = useParams() as Record<string, string>;
 	const canInvite = useAuthorizeProject('invite.create');
@@ -28,6 +33,7 @@ export default function ProjectInviteMember() {
 		mutationFn: inviteUsersToProject,
 		onSuccess: () => {
 			setSearchParams({ st: 'invitations' });
+			openEditProjectDrawer(project);
 			handleCloseDrawer();
 		},
 		onError: (err: APIError) => {

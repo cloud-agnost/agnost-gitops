@@ -50,15 +50,6 @@ export const PROJECT_SETTINGS = [
     name: translate("project.settings.editProject"),
     onClick: (project: Project) => {
       useProjectStore.getState().openEditProjectDrawer(project);
-      const searchParams = new URLSearchParams(window.location.search);
-      if (!searchParams.get("t")) {
-        searchParams.set("t", "general");
-        window.history.replaceState(
-          null,
-          "",
-          `${window.location.pathname}?${searchParams.toString()}`
-        );
-      }
     },
     isDisabled: (role: ProjectRole) => !getProjectPermission("update", role),
     icon: PencilSimple,

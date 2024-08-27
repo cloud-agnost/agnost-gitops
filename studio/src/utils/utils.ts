@@ -15,8 +15,8 @@ import copy from 'copy-to-clipboard';
 import cronstrue from 'cronstrue';
 import i18next from 'i18next';
 import _, { capitalize } from 'lodash';
+import psl from "psl";
 import { twMerge } from 'tailwind-merge';
-
 
 export function arrayToQueryString(array: string[] | undefined, key: string) {
 	return array?.map((item) => `${key}=${item}`).join('&');
@@ -173,4 +173,13 @@ export function isIPAddress(text: string): boolean {
 export function isWildcardDomain(domain: string): boolean {
   const wildcardRegex = /^\*\./;
   return wildcardRegex.test(domain);
+}
+
+export function isRootDomain(domain: string) {
+    const parsedDomain = psl.parse(domain);
+		//@ts-ignore
+    if (parsedDomain && parsedDomain.domain === domain) {
+        return true;
+    }
+    return false;
 }

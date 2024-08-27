@@ -3,7 +3,6 @@ import { EDIT_PROJECT_MENU_ITEMS } from '@/constants';
 import OrganizationMenuItem from '@/features/organization/navbar/OrganizationMenuItem';
 import useProjectStore from '@/store/project/projectStore';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMatch, useParams, useSearchParams } from 'react-router-dom';
 import ProjectGeneralSettings from './ProjectGeneralSettings';
@@ -17,17 +16,10 @@ export default function EditProject() {
 	const match = useMatch('/organization/:orgId/projects');
 	const { orgId } = useParams() as Record<string, string>;
 
-	useEffect(() => {
-		if (isEditProjectOpen && !searchParams.get('st')) {
-			searchParams.set('st', 'general');
-			setSearchParams(searchParams);
-		}
-
-		if (!isEditProjectOpen) {
-			searchParams.delete('st');
-			setSearchParams(searchParams);
-		}
-	}, [isEditProjectOpen, searchParams]);
+	function closeEditProject() {
+		closeEditProjectDrawer(!!match);
+		setSearchParams({});
+	}
 
 	const { isPending } = useQuery({
 		queryFn: () =>
@@ -41,7 +33,7 @@ export default function EditProject() {
 	});
 
 	return (
-		<Drawer open={isEditProjectOpen} onOpenChange={() => closeEditProjectDrawer(!!match)}>
+		<Drawer open={isEditProjectOpen} onOpenChange={closeEditProject}>
 			<DrawerContent position='right' size='lg' className='h-full'>
 				<DrawerHeader className='border-none'>
 					<DrawerTitle>{t('project.edit_project')}</DrawerTitle>

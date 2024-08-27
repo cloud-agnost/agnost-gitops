@@ -1,20 +1,12 @@
 import useClusterStore from "@/store/cluster/clusterStore";
-import { ClusterResourceStatus, RealtimeActionParams } from "@/types";
+import { Cluster as ClusterType, RealtimeActionParams } from "@/types";
 import { RealtimeActions } from "./RealtimeActions";
 
-class Cluster implements RealtimeActions<ClusterResourceStatus[]> {
-  update(param: RealtimeActionParams<ClusterResourceStatus[]>): void {
-    console.log("Cluster update", param);
-    useClusterStore.setState?.((prev) => ({
-      ...prev,
-      clusterComponentsReleaseInfo: prev.clusterComponentsReleaseInfo.map(
-        (component) => ({
-          ...component,
-        })
-      ),
-    }));
+class Cluster implements RealtimeActions<ClusterType> {
+  update(param: RealtimeActionParams<ClusterType>): void {
+    useClusterStore.setState?.({ cluster: param.data });
   }
-  telemetry(param: RealtimeActionParams<ClusterResourceStatus[]>): void {
+  telemetry(param: RealtimeActionParams<ClusterType>): void {
     this.update(param);
   }
 }

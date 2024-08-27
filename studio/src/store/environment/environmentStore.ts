@@ -50,6 +50,7 @@ const useEnvironmentStore = create<EnvironmentStore & Actions>((set, get) => ({
     return environment;
   },
   selectEnvironment: (environment) => {
+    if (environment._id === get().environment._id) return;
     get().reset();
     set({ environment });
     joinChannel(environment._id);
