@@ -26,8 +26,8 @@ We'd love to hear from you! [Join our Discord channel](https://discord.gg/5NhssW
 
 Under the hood Agnost uses several open source solutions and integrate them seamlessles. Basically, for each new container that you create and associate with your git repository we create a [Tekton](https://tekton.dev/) pipeline and register a webhook to your git repository to listen push events. Whenever you push your code updates to your repository this webhook is triggered and Tekton pipeline starts running. 
 
-There are three steps in the Tekton pipeline which are executed in sequence and described below:
-1. **Setup:** At this first step we clone your git repository to the Kubernets cluster where Agnost is running
+There are three steps in the Tekton pipeline, which are executed in sequence and described below:
+1. **Setup:** At this first step we clone your git repository to the Kubernetes cluster where Agnost is running
 2. **Build:** Using [Kaniko](https://github.com/GoogleContainerTools/kaniko), we build the OCI compliant docker image and push the image to the [Registy](https://distribution.github.io/distribution/) in your Kubernetes cluster. 
 3. **Deploy:** Using the pushed image, we change the image of your container in your Kubernetes cluster.
 
@@ -37,7 +37,7 @@ Please note that all setup, build and deploy operations are performed within you
 
 For how to install, set up and use Agnost please refer to its [documentation](https://agnost.dev). Alternatively, you can also have a look to [Agnost Helm chart](https://github.com/cloud-agnost/agnost-gitops-charts).
 
-In short, you need to have an up and running Kuberntes cluster with at least 4CPUs and 8GB of memory and install the Agnost Helm Chart to this cluster.
+In short, you need to have an up and running Kubernetes cluster with at least 4CPUs and 8GB of memory and install the Agnost Helm Chart to this cluster.
 
 ## Want to Contribute
 
