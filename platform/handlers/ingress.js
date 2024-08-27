@@ -431,39 +431,53 @@ export async function addClusterDomainToIngresses(containers, domain) {
 			});
 
 			ingress.body.spec.rules = ingress.body.spec.rules ?? [];
+
+			let paths = [];
+			if (ingressPath === "studio") {
+				paths = [
+					{
+						// If he container has a custom path then use it, otherwise use the container iid and namespace concatenated
+						path: `/${ingressPath ?? container.iid + "-" + namespace}(/|$)(.*)`,
+						pathType: "Prefix",
+						backend: {
+							service: {
+								name: `${container.iid}`,
+								port: { number: containerPort },
+							},
+						},
+					},
+					{
+						path: "/",
+						pathType: "Prefix",
+						backend: {
+							service: {
+								name: `${container.iid}`,
+								port: { number: containerPort },
+							},
+						},
+					},
+				];
+			} else {
+				paths = [
+					{
+						// If he container has a custom path then use it, otherwise use the container iid and namespace concatenated
+						path: `/${ingressPath ?? container.iid + "-" + namespace}/(.*)`,
+						pathType: "ImplementationSpecific",
+						backend: {
+							service: {
+								name: `${container.iid}`,
+								port: { number: containerPort },
+							},
+						},
+					},
+				];
+			}
+
 			// We are adding this rule to the top of the list so that it gets precedence over other rules
 			ingress.body.spec.rules.unshift({
 				host: domain,
 				http: {
-					paths: [
-						ingressPath === "studio"
-							? {
-									// If he container has a custom path then use it, otherwise use the container iid and namespace concatenated
-									path: `/${
-										ingressPath ?? container.iid + "-" + namespace
-									}(/|$)(.*)`,
-									pathType: "Prefix",
-									backend: {
-										service: {
-											name: `${container.iid}`,
-											port: { number: containerPort },
-										},
-									},
-							  }
-							: {
-									// If he container has a custom path then use it, otherwise use the container iid and namespace concatenated
-									path: `/${
-										ingressPath ?? container.iid + "-" + namespace
-									}/(.*)`,
-									pathType: "ImplementationSpecific",
-									backend: {
-										service: {
-											name: `${container.iid}`,
-											port: { number: containerPort },
-										},
-									},
-							  },
-					],
+					paths: paths,
 				},
 			});
 
