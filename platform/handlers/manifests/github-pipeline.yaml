@@ -110,7 +110,13 @@ spec:
               export URL=$(echo $(tt.params.gitrepourl) | sed "s|://|://$(tt.params.githubpat)@|")
               export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
               cd $(workspaces.ws.path)
-              git clone ${URL} -b $(tt.params.gitbranch)
+
+              # Clone the repository and check for errors
+              if ! git clone ${URL} -b $(tt.params.gitbranch); then
+                echo "Failed to clone the repository. Exiting..."
+                exit 0
+              fi
+
               cd ${REPO_NAME}
 
               # Set the file dates to the same as the repo after cloning

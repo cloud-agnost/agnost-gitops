@@ -1,4 +1,5 @@
 import k8s from "@kubernetes/client-node";
+import psl from "psl";
 import { getClusterRecord, getK8SResource } from "./util.js";
 import {
 	createCertificateIssuerForDNS01,
@@ -189,6 +190,25 @@ export async function createCustomDomainIngress(
 ) {
 	// Set the issuer of the certifiate
 	const isWildcard = definition.customDomain.domain.startsWith("*");
+
+	// If wildward then it cannot be a root domain
+	const isRootDomain = isWildcard
+		? false
+		: isRootDomain(definition.customDomain.domain);
+
+	let hosts = [];
+	if (isWildcard) {
+		hosts = [definition.customDomain.domain];
+	} else {
+		// For root domains we also generate certificate for www subdomain
+		if (isRootDomain)
+			hosts = [
+				definition.customDomain.domain,
+				`www.${definition.customDomain.domain}`,
+			];
+		else hosts = [definition.customDomain.domain];
+	}
+
 	const ingress = {
 		apiVersion: "networking.k8s.io/v1",
 		kind: "Ingress",
@@ -209,12 +229,7 @@ export async function createCustomDomainIngress(
 		spec: {
 			tls: [
 				{
-					hosts: isWildcard
-						? [definition.customDomain.domain]
-						: [
-								definition.customDomain.domain,
-								`www.${definition.customDomain.domain}`,
-						  ],
+					hosts: hosts,
 					secretName: `${name}-tls`,
 				},
 			],
@@ -247,24 +262,27 @@ export async function createCustomDomainIngress(
 		// Assign issuer as annotation
 		ingress.metadata.annotations["cert-manager.io/issuer"] = name;
 	} else {
-		// We are also adding a rule for www subdomain
-		ingress.spec.rules.push({
-			host: `www.${definition.customDomain.domain}`,
-			http: {
-				paths: [
-					{
-						path: "/",
-						pathType: "Prefix",
-						backend: {
-							service: {
-								name: `${name}`,
-								port: { number: definition.containerPort },
+		// We are also adding a rule for www subdomain in case of root domain
+		if (isRootDomain) {
+			ingress.spec.rules.push({
+				host: `www.${definition.customDomain.domain}`,
+				http: {
+					paths: [
+						{
+							path: "/",
+							pathType: "Prefix",
+							backend: {
+								service: {
+									name: `${name}`,
+									port: { number: definition.containerPort },
+								},
 							},
 						},
-					},
-				],
-			},
-		});
+					],
+				},
+			});
+		}
+
 		// In case of non-wildcard domain we can use the default cluster scoped http01 solver
 		ingress.metadata.annotations["cert-manager.io/cluster-issuer"] =
 			"agnost-http01";
@@ -357,12 +375,14 @@ export async function deleteCustomDomainIngress(name, namespace) {
 	try {
 		// Delete the certificate resources associated with the custom domain
 		await deleteCertificate(`${name}-tls`, namespace);
-		// In case of wildcard domain we need to delete the issuer with DNS01 solver, if it exists
-		await deleteCertificateIssuerForDNS01(name, namespace);
 		await k8sNetworkingApi.deleteNamespacedIngress(`${name}-domain`, namespace);
 		console.info(
 			`Ingress '${name}-domain' in namespace ${namespace} deleted successfully`
 		);
+		try {
+			// In case of wildcard domain we need to delete the issuer with DNS01 solver, if it exists
+			await deleteCertificateIssuerForDNS01(name, namespace);
+		} catch (err) {}
 	} catch (err) {
 		console.error(
 			`Error deleting ingress '${name}-domain' in namespace ${namespace}. ${
@@ -545,4 +565,21 @@ export async function removeClusterDomainFromIngresses(containers, domain) {
 			);
 		}
 	}
+}
+
+/**
+ * Checks if the given domain is a root domain.
+ *
+ * @param {string} domain - The domain to check.
+ * @returns {boolean} Returns true if the domain is a root domain, false otherwise.
+ */
+export function isRootDomain(domain) {
+	const parsedDomain = psl.parse(domain);
+
+	// Check if the domain has only a TLD and SLD
+	if (parsedDomain && parsedDomain.domain === domain) {
+		return true;
+	}
+
+	return false;
 }

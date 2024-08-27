@@ -30,6 +30,7 @@
       "nanoid": "4.0.1",
       "nocache": "3.0.4",
       "on-headers": "1.0.2",
+      "psl": "1.9.0",
       "randomcolor": "0.6.2",
       "rate-limiter-flexible": "2.4.1",
       "redis": "3.1.2",
