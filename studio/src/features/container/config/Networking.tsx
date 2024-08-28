@@ -16,7 +16,7 @@ import useClusterStore from '@/store/cluster/clusterStore';
 import useContainerStore from '@/store/container/containerStore';
 import useEnvironmentStore from '@/store/environment/environmentStore';
 import { CreateContainerParams } from '@/types';
-import { isWildcardDomain } from '@/utils';
+import { isRootDomain, isWildcardDomain } from '@/utils';
 import { ArrowRight, CaretDown, ShareNetwork, Trash } from '@phosphor-icons/react';
 import { AccordionTrigger } from '@radix-ui/react-accordion';
 import _ from 'lodash';
@@ -206,6 +206,7 @@ export default function Networking() {
 											isWildcardDomain(form.watch('networking.customDomain.domain') ?? '') ?? false
 										}
 										isContainer
+										isRootDomain={isRootDomain(form.watch('networking.customDomain.domain') ?? '')}
 									/>
 								</AccordionContent>
 							</AccordionItem>

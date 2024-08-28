@@ -6,6 +6,7 @@ import useClusterStore from '@/store/cluster/clusterStore';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import DnsSettings from './DnsSettings';
+import { isRootDomain } from '@/utils';
 
 interface CustomDomainFormProps {
 	loading?: boolean;
@@ -23,6 +24,7 @@ export default function CustomDomainForm({ loading, modal }: CustomDomainFormPro
 					description={t('cluster.dns_settings_description')}
 					ips={cluster.ips}
 					slug={cluster?.slug ?? ''}
+					isRootDomain={isRootDomain(form.watch('domain'))}
 				/>
 			)}
 			<FormField

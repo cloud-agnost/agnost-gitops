@@ -9,7 +9,7 @@ import useContainerStore from '@/store/container/containerStore';
 import useEnvironmentStore from '@/store/environment/environmentStore';
 import useOrganizationStore from '@/store/organization/organizationStore';
 import useProjectStore from '@/store/project/projectStore';
-import { ProjectRole, RealtimeData } from '@/types';
+import { CustomDomainSchema, ProjectRole, RealtimeData } from '@/types';
 import { clsx, type ClassValue } from 'clsx';
 import copy from 'copy-to-clipboard';
 import cronstrue from 'cronstrue';
@@ -176,6 +176,13 @@ export function isWildcardDomain(domain: string): boolean {
 }
 
 export function isRootDomain(domain: string) {
+    try {
+			
+       CustomDomainSchema.parse(domain);
+    } catch (error) {
+        return false;
+    }
+  
     const parsedDomain = psl.parse(domain);
 		//@ts-ignore
     if (parsedDomain && parsedDomain.domain === domain) {

@@ -1,6 +1,6 @@
 import { CopyButton } from '@/components/CopyButton';
 import { Description } from '@/components/Description';
-import { isIPAddress, isRootDomain } from '@/utils';
+import { isIPAddress } from '@/utils';
 import { Separator } from '@radix-ui/react-dropdown-menu';
 import { useTranslation } from 'react-i18next';
 
@@ -10,6 +10,7 @@ interface DnsSettingsProps {
 	slug: string;
 	isWildcard?: boolean;
 	isContainer?: boolean;
+	isRootDomain: boolean;
 }
 
 export default function DnsSettings({
@@ -18,6 +19,7 @@ export default function DnsSettings({
 	slug,
 	isWildcard,
 	isContainer,
+	isRootDomain,
 }: DnsSettingsProps) {
 	const { t } = useTranslation();
 	const isIp = isIPAddress(ips[0] ?? '');
@@ -33,7 +35,7 @@ export default function DnsSettings({
 					<p>{t('cluster.ttl')}</p>
 				</div>
 				<Separator />
-				{ips.map((ip) => (
+				{ips?.map((ip) => (
 					<>
 						{(!isContainer || (isContainer && !isWildcard)) && (
 							<div className='grid grid-cols-[3fr_1fr_6fr_1fr] gap-4' key={ip}>
@@ -41,7 +43,7 @@ export default function DnsSettings({
 								<p className='mt-1'>
 									{isIp
 										? t('cluster.at')
-										: !isWildcard && isRootDomain(ip)
+										: !isWildcard && isRootDomain
 										? t('cluster.alias')
 										: t('cluster.cname')}
 								</p>

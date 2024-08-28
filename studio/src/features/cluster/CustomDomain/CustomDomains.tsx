@@ -15,6 +15,7 @@ import DnsSettings from './DnsSettings';
 import DomainList from './DomainList';
 import { Badge } from '@/components/Badge';
 import { BADGE_COLOR_MAP } from '@/constants';
+import { isRootDomain } from '@/utils';
 
 export default function CustomDomains() {
 	const { t } = useTranslation();
@@ -52,7 +53,7 @@ export default function CustomDomains() {
 
 	return (
 		<div className='space-y-6 max-w-2xl'>
-			{clusterDomainError ? (
+			{!clusterDomainError ? (
 				<Alert variant='warning'>
 					<AlertDescription className='text-slate-300'>
 						{t('cluster.domain_error')}
@@ -100,6 +101,7 @@ export default function CustomDomains() {
 						description={t('cluster.dns_settings_description')}
 						ips={cluster.ips}
 						slug={cluster?.slug ?? ''}
+						isRootDomain={isRootDomain(cluster.domains[0])}
 					/>
 				</>
 			)}
