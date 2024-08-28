@@ -849,7 +849,7 @@ export const clusterContainers = [
 		storageConfig: {
 			enabled: true,
 			mountPath: "/var/lib/registry",
-			size: 50,
+			size: 100,
 			sizeType: "gibibyte",
 			accessModes: ["ReadWriteOnce"],
 		},
