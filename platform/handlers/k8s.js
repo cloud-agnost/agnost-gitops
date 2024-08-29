@@ -151,8 +151,8 @@ async function manageDeployment({
 		await deleteHPA(name, namespace);
 		await deletePVC(name, namespace);
 		await deleteService(name, namespace);
-		await deleteIngress(`${name}-subdomain`, namespace);
-		await deleteCustomDomainIngress(`${name}-domain`, namespace);
+		await deleteIngress(name, namespace);
+		await deleteCustomDomainIngress(name, namespace);
 		await deleteTCPProxy(
 			container.networking.tcpProxy?.enabled
 				? container.networking.tcpProxy.publicPort
@@ -260,8 +260,8 @@ async function manageStatefulSet({
 	} else if (action === "delete") {
 		if (container.template?.name) {
 			await deleteTemplatedK8SResources(container, environment);
-			await deleteIngress(`${name}-subdomain`, namespace);
-			await deleteCustomDomainIngress(`${name}-domain`, namespace);
+			await deleteIngress(name, namespace);
+			await deleteCustomDomainIngress(name, namespace);
 			await deleteTCPProxy(
 				container.networking.tcpProxy?.enabled
 					? container.networking.tcpProxy.publicPort
@@ -277,8 +277,8 @@ async function manageStatefulSet({
 			await deleteStatefulSet(name, namespace);
 			await deleteService(name, namespace);
 			await deleteService(`${name}-headless`, namespace);
-			await deleteIngress(`${name}-subdomain`, namespace);
-			await deleteCustomDomainIngress(`${name}-domain`, namespace);
+			await deleteIngress(name, namespace);
+			await deleteCustomDomainIngress(name, namespace);
 			await deleteTCPProxy(
 				container.networking.tcpProxy?.enabled
 					? container.networking.tcpProxy.publicPort
