@@ -192,7 +192,7 @@ export async function createCustomDomainIngress(
 	const isWildcard = definition.customDomain.domain.startsWith("*");
 
 	// If wildward then it cannot be a root domain
-	const isRootDomain = isWildcard
+	const isRootDomainFlag = isWildcard
 		? false
 		: isRootDomain(definition.customDomain.domain);
 
@@ -201,7 +201,7 @@ export async function createCustomDomainIngress(
 		hosts = [definition.customDomain.domain];
 	} else {
 		// For root domains we also generate certificate for www subdomain
-		if (isRootDomain)
+		if (isRootDomainFlag)
 			hosts = [
 				definition.customDomain.domain,
 				`www.${definition.customDomain.domain}`,
@@ -263,7 +263,7 @@ export async function createCustomDomainIngress(
 		ingress.metadata.annotations["cert-manager.io/issuer"] = name;
 	} else {
 		// We are also adding a rule for www subdomain in case of root domain
-		if (isRootDomain) {
+		if (isRootDomainFlag) {
 			ingress.spec.rules.push({
 				host: `www.${definition.customDomain.domain}`,
 				http: {
