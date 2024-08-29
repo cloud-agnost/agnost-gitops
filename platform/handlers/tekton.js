@@ -165,7 +165,8 @@ export async function createTektonPipeline(
 					resource.spec.params[1].value = appName;
 					resource.spec.params[2].value = agnostNamespace;
 					resource.spec.params[3].value = namespace;
-					resource.spec.params[4].value = "registry." + agnostNamespace + ":5000";
+					resource.spec.params[4].value =
+						"registry." + agnostNamespace + ":5000";
 					resource.spec.params[5].value = gitPat;
 					resource.spec.params[6].value = gitBranch;
 					resource.spec.params[7].value = gitSubPath.replace(/^\/+/, ""); // remove leading slash, if exists
@@ -848,7 +849,6 @@ export async function triggerTektonPipeline(
 		taskrunParams[17].value = new Date().toISOString();
 		populatedSpec.params = taskrunParams;
 
-		console.log("****here", JSON.stringify(populatedSpec, null, 2));
 		// Get the environment variables from the start up container
 		const envVars = populatedSpec.taskSpec.steps[0].env || [];
 		// Update the environment variables with the new values
