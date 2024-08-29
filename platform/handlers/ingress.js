@@ -473,13 +473,15 @@ export async function addClusterDomainToIngresses(containers, domain) {
 				];
 			}
 
-			// We are adding this rule to the top of the list so that it gets precedence over other rules
-			ingress.body.spec.rules.unshift({
-				host: domain,
-				http: {
-					paths: paths,
+			// Assign new rules to the ingress
+			ingress.body.spec.rules = [
+				{
+					host: domain,
+					http: {
+						paths: paths,
+					},
 				},
-			});
+			];
 
 			const requestOptions = {
 				headers: { "Content-Type": "application/merge-patch+json" },
@@ -546,10 +548,11 @@ export async function removeClusterDomainFromIngresses(containers, domain) {
 				];
 			}
 
-			// Remove the domain entry from ingress rules
-			ingress.body.spec.rules = ingress.body.spec.rules?.filter(
-				(rule) => rule.host !== domain
-			);
+			// Remove the host value from ingress rules
+			ingress.body.spec.rules = ingress.body.spec.rules?.map((rule) => {
+				delete rule.host;
+				return rule;
+			});
 
 			const requestOptions = {
 				headers: { "Content-Type": "application/merge-patch+json" },
