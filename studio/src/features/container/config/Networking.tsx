@@ -216,7 +216,7 @@ export default function Networking() {
 								<AccordionContent>
 									<DnsSettings
 										description='To finalize setting up your custom domain, please add the following entries to your domain DNS records'
-										ips={cluster.domains}
+										ips={cluster.ips}
 										slug={container?.slug ?? ''}
 										isWildcard={
 											isWildcardDomain(form.watch('networking.customDomain.domain') ?? '') ?? false

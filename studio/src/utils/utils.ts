@@ -168,23 +168,14 @@ export function isWildcardDomain(domain: string): boolean {
 export function isRootDomain(domain: string) {
 	try {
 		if (domain && domain.trim().startsWith('*.')) return false;
-		console.log('****isRootDomain', domain);
 		CustomDomainSchema.parse({ domain });
-		console.log('****isRootDomain-1');
 		const parsedDomain = psl.parse(domain);
-		console.log('****isRootDomain-2');
 		//@ts-ignore
 		if (parsedDomain && parsedDomain.domain === domain) {
-			console.log('****isRootDomain-true', domain);
-
 			return true;
 		}
-		console.log('****isRootDomain-false', domain);
-
 		return false;
 	} catch (error) {
-		console.log(error);
-		console.log('****isRootDomain-err-false', domain);
 		return false;
 	}
 }
