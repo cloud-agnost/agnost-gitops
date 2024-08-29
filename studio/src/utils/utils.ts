@@ -167,6 +167,7 @@ export function isWildcardDomain(domain: string): boolean {
 
 export function isRootDomain(domain: string) {
 	try {
+		if (domain && domain.trim().startsWith('*.')) return false;
 		console.log('****isRootDomain', domain);
 		CustomDomainSchema.parse({ domain });
 		console.log('****isRootDomain-1');

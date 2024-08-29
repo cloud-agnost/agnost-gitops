@@ -38,9 +38,12 @@ export default function Networking() {
 	const visibleFields = template?.config?.visibleFields ?? [];
 
 	const isValidDomain =  useMemo(() => {
+		let domain = form.watch('networking.customDomain.domain')?.trim() ?? '';
+		if (domain.startsWith("*.")) domain = domain.replace("*.", "");
+
 		try {
 			CustomDomainSchema.parse({
-				domain: form.watch('networking.customDomain.domain') ?? '',
+				domain: domain,
 	
 			} ?? '');
 			return true;
