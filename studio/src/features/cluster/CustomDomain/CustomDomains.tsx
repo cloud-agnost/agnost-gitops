@@ -53,7 +53,7 @@ export default function CustomDomains() {
 
 	return (
 		<div className='space-y-6 max-w-2xl'>
-			{!clusterDomainError ? (
+			{clusterDomainError ? (
 				<Alert variant='warning'>
 					<AlertDescription className='text-slate-300'>
 						{t('cluster.domain_error')}

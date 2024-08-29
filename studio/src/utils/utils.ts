@@ -140,11 +140,11 @@ export function sortByField<T extends { updatedBy?: string; updatedAt: string; t
 	field: keyof T,
 	direction: 'asc' | 'desc' = 'asc',
 ): T[] {
-	 const FIELD_MAPPER: Record<string, string> = {
-  createdat: "datetime",
-  updatedat: "datetime",
-  parent: "reference",
-};
+	const FIELD_MAPPER: Record<string, string> = {
+		createdat: "datetime",
+		updatedat: "datetime",
+		parent: "reference",
+	};
 	return _.orderBy(
 		arr?.map((d) => ({
 			...d,
@@ -162,31 +162,32 @@ export const resetAllStores = () => {
 	Object.entries(STATE_LIST).forEach(([, store]) => {
 		store?.getState()?.reset?.();
 	});
-		useAuthStore.getState().reset();
+	useAuthStore.getState().reset();
 };
 export function isIPAddress(text: string): boolean {
-  const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
-  const ipv6Regex = /^(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$/;
+	const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
+	const ipv6Regex = /^(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$/;
 
-  return ipv4Regex.test(text) || ipv6Regex.test(text);
+	return ipv4Regex.test(text) || ipv6Regex.test(text);
 }
 export function isWildcardDomain(domain: string): boolean {
-  const wildcardRegex = /^\*\./;
-  return wildcardRegex.test(domain);
+	const wildcardRegex = /^\*\./;
+	return wildcardRegex.test(domain);
 }
 
 export function isRootDomain(domain: string) {
-    try {
-			
-       CustomDomainSchema.parse(domain);
-    } catch (error) {
-        return false;
-    }
-  
-    const parsedDomain = psl.parse(domain);
+	try {
+		CustomDomainSchema.parse({ domain });
+		const parsedDomain = psl.parse(domain);
 		//@ts-ignore
-    if (parsedDomain && parsedDomain.domain === domain) {
-        return true;
-    }
-    return false;
+		if (parsedDomain && parsedDomain.domain === domain) {
+			return true;
+		}
+		return false;
+	} catch (error) {
+		console.log(error);
+		return false;
+	}
+
+
 }

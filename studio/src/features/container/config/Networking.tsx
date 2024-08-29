@@ -15,7 +15,7 @@ import DnsSettings from '@/features/cluster/CustomDomain/DnsSettings';
 import useClusterStore from '@/store/cluster/clusterStore';
 import useContainerStore from '@/store/container/containerStore';
 import useEnvironmentStore from '@/store/environment/environmentStore';
-import { CreateContainerParams } from '@/types';
+import { CreateContainerParams, CustomDomainSchema } from '@/types';
 import { isRootDomain, isWildcardDomain } from '@/utils';
 import { ArrowRight, CaretDown, ShareNetwork, Trash } from '@phosphor-icons/react';
 import { AccordionTrigger } from '@radix-ui/react-accordion';
@@ -26,6 +26,7 @@ import ContainerFormTitle from './ContainerFormLayout';
 import { CopyButton } from '@/components/CopyButton';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/Alert';
+import { useMemo } from 'react';
 
 export default function Networking() {
 	const { t } = useTranslation();
@@ -35,6 +36,18 @@ export default function Networking() {
 	const { cluster } = useClusterStore();
 	const disabledFields = template?.config?.disabledFields ?? [];
 	const visibleFields = template?.config?.visibleFields ?? [];
+
+	const isValidDomain =  useMemo(() => {
+		try {
+			CustomDomainSchema.parse({
+				domain: form.watch('networking.customDomain.domain') ?? '',
+	
+			} ?? '');
+			return true;
+		} catch (error) {
+			return false;
+		}
+	}, [form.watch('networking.customDomain.domain')]);
 
 	const renderContainerPortInput = () => (
 		<FormField
@@ -186,7 +199,7 @@ export default function Networking() {
 							/>
 						)}
 					</FormControl>
-					{!_.isEmpty(cluster.domains) && (
+					{!_.isEmpty(cluster.domains) && isValidDomain && (
 						<Accordion type='single' collapsible className='w-full'>
 							<AccordionItem value='dns' className='border-none group'>
 								<AccordionTrigger className='link flex items-center justify-center gap-2'>
