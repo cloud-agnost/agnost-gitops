@@ -9,6 +9,7 @@ import { sendMessage } from "../init/sync.js";
 // Create a Kubernetes core API client
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
+const k8sCoreApi = kc.makeApiClient(k8s.CoreV1Api);
 const k8sAppsApi = kc.makeApiClient(k8s.AppsV1Api);
 const k8sCustomObjectApi = kc.makeApiClient(k8s.CustomObjectsApi);
 // Interval ID for the certificate renewal
@@ -663,6 +664,12 @@ export async function deleteCertificate(name, namespace) {
 				} catch {}
 			}
 		}
+
+		// Delete the certificate secret
+		try {
+			await k8sCoreApi.deleteNamespacedSecret(name, namespace);
+			console.info(`Deleted certificate secret ${name}.`);
+		} catch {}
 	} catch (err) {
 		console.error(
 			`Cannot delete cluster level domain certificate ${name}. ${
