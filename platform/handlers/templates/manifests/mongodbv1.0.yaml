@@ -142,7 +142,7 @@ spec:
             echo "MongoDB is already initialized.";
           else
             echo "Initializing MongoDB...";
-            mongosh --eval "rs.initiate({_id: 'rs0', members: [{ _id: 0, host: '{{iid}}-0.{{iid}}-headless.{{namespace}}.svc.cluster.local:27017' }]})";
+            mongosh --eval "rs.initiate({_id: 'rs0', members: [{ _id: 0, host: '{{iid}}-0.{{iid}}.{{namespace}}.svc.cluster.local:27017' }]})";
             echo "MongoDB initialized.";
           fi &&
           USER_EXISTS=$(mongosh --eval "db.getSiblingDB('admin').getUser('${MONGO_INITDB_ROOT_USERNAME}')" --quiet) &&
@@ -203,7 +203,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{iid}}-headless
+  name: {{iid}}
   namespace: {{namespace}}
 spec:
   ports:
@@ -213,20 +213,4 @@ spec:
   clusterIP: None
   selector:
     app: {{iid}}
-  type: ClusterIP
 
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{iid}}
-  namespace: {{namespace}}
-spec:
-  type: ClusterIP
-  ports:
-  - port: 27017
-    targetPort: 27017
-    name: mongodb
-  selector:
-    app: {{iid}}
