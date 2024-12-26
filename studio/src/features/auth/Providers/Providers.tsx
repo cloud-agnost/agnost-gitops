@@ -5,11 +5,15 @@ import { Link, useSearchParams } from 'react-router-dom';
 
 export default function Providers() {
 	const [_, setSearchParams] = useSearchParams();
+
 	const getCallbackUrl = useCallback((provider: 'github' | 'gitlab' | 'bitbucket') => {
-		const hasSearchParam = window.location.href.includes('?');
-		return `https://api.agnost.dev/oauth/${provider}?redirect=${window.location.href}${
-			hasSearchParam ? '&' : '?'
-		}provider=${provider}`;
+		const redirectURL = new URL(`https://api.agnost.dev/oauth/${provider}`);
+		const url = new URL(window.location.href);
+
+		url.searchParams.set('provider', provider);
+		redirectURL.searchParams.set('redirect', url.toString());
+
+		return redirectURL.toString();
 	}, []);
 
 	function onProviderClick(provider: 'github' | 'gitlab' | 'bitbucket') {
