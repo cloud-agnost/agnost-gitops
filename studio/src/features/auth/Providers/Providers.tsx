@@ -13,7 +13,7 @@ export default function Providers() {
 		url.searchParams.set('provider', provider);
 		redirectURL.searchParams.set('redirect', url.toString());
 
-		return redirectURL.toString();
+		return decodeURIComponent(redirectURL.toString());
 	}, []);
 
 	function onProviderClick(provider: 'github' | 'gitlab' | 'bitbucket') {
