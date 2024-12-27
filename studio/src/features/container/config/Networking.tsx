@@ -42,10 +42,7 @@ export default function Networking() {
 		if (domain.startsWith("*.")) domain = domain.replace("*.", "");
 
 		try {
-			CustomDomainSchema.parse({
-				domain: domain,
-	
-			} ?? '');
+			CustomDomainSchema.parse({ domain: domain });
 			return true;
 		} catch (error) {
 			return false;
