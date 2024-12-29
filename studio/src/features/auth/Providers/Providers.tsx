@@ -1,7 +1,7 @@
-import { buttonVariants } from '@/components/Button';
+import { Button } from '@/components/Button';
 import { Bitbucket, Github, Gitlab } from '@/components/icons';
 import { useCallback } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Providers() {
 	const [_, setSearchParams] = useSearchParams();
@@ -17,45 +17,26 @@ export default function Providers() {
 	}, []);
 
 	function onProviderClick(provider: 'github' | 'gitlab' | 'bitbucket') {
+		const url = getCallbackUrl(provider);
 		localStorage.setItem('provider', provider);
 		setSearchParams({});
+		window.location.href = url;
 	}
 
 	return (
 		<div className='flex flex-col items-center gap-4 w-full'>
-			<Link
-				className={buttonVariants({
-					variant: 'secondary',
-					size: '2xl',
-				})}
-				to={getCallbackUrl('github')}
-				onClick={() => onProviderClick('github')}
-			>
+			<Button variant='secondary' size='2xl' onClick={() => onProviderClick('github')}>
 				<Github className='mr-2 size-5' />
 				Continue with GitHub
-			</Link>
-			<Link
-				className={buttonVariants({
-					variant: 'secondary',
-					size: '2xl',
-				})}
-				to={getCallbackUrl('gitlab')}
-				onClick={() => onProviderClick('gitlab')}
-			>
+			</Button>
+			<Button variant='secondary' size='2xl' onClick={() => onProviderClick('gitlab')}>
 				<Gitlab className='mr-2 size-8' />
 				Continue with GitLab
-			</Link>
-			<Link
-				className={buttonVariants({
-					variant: 'secondary',
-					size: '2xl',
-				})}
-				to={getCallbackUrl('bitbucket')}
-				onClick={() => onProviderClick('bitbucket')}
-			>
+			</Button>
+			<Button variant='secondary' size='2xl' onClick={() => onProviderClick('bitbucket')}>
 				<Bitbucket className='mr-2 size-4' />
 				Continue with Bitbucket
-			</Link>
+			</Button>
 		</div>
 	);
 }
