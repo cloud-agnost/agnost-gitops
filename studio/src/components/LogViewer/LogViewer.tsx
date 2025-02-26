@@ -15,7 +15,7 @@ const LogViewer = ({ logs, className }: { logs: string[]; className?: string }) 
 		<div
 			className={cn('log-viewer bg-gray-900 text-gray-100 p-4 overflow-auto text-xs', className)}
 		>
-			<div dangerouslySetInnerHTML={{ __html: htmlLogs }} className='whitespace-nowrap' />
+			<div dangerouslySetInnerHTML={{ __html: htmlLogs }} className='whitespace-pre' />
 		</div>
 	);
 };
