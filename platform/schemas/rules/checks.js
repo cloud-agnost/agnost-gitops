@@ -1313,7 +1313,11 @@ export const checkProbes = () => {
 			.custom((value) => value.startsWith("/"))
 			.withMessage("Path must start with a '/' character")
 			.bail()
-			.customSanitizer((value) => value.replace(/\/+$/, "")), // Remove trailing slashes using custom sanitizer
+			.customSanitizer((value) =>{
+				// if value is just a slash, return it as is
+				if (value === '/') return value;
+				return value.replace(/\/+$/, ""); // Remove trailing slashes using custom sanitizer
+			}),
 		body("probes.liveness.httpPort")
 			.if(
 				(value, { req }) =>
