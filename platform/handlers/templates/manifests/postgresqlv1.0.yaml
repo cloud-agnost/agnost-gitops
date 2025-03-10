@@ -70,16 +70,14 @@ spec:
           value: /var/lib/postgresql/dstore/data
         livenessProbe:
           exec:
-            command:
-            - pg_isready
+            command: ["pg_isready", "-U", "postgres"]
           failureThreshold: 5
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 6
         readinessProbe:
           exec:
-            command:
-            - pg_isready
+            command: ["pg_isready", "-U", "postgres"]
           failureThreshold: 5
           initialDelaySeconds: 30
           periodSeconds: 10
