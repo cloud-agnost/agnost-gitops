@@ -30,6 +30,7 @@ const defaultValues: Partial<CreateContainerParams> = {
 		dockerfile: 'Dockerfile',
 		connected: true,
 		path: '/',
+		watchPath: '/',
 	},
 	podConfig: {
 		cpuLimit: 1,
@@ -255,10 +256,10 @@ export default function CreateContainerDrawer() {
 						{!!form.watch('template.name')
 							? t('container.create_container_from_template', {
 									type: form.watch('template.name'),
-							  })
+								})
 							: t('container.create', {
 									type: startCase(createdContainerType!),
-							  })}
+								})}
 					</DrawerTitle>
 				</DrawerHeader>
 				<Form {...form}>
