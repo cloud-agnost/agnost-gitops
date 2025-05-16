@@ -431,7 +431,7 @@ function RepoWatchPathField() {
 						</div>
 					</FormControl>
 					<FormDescription className='whitespace-pre-wrap'>
-						{t('container.source.watchDirectoryHelp')}
+						{t('container.source.watchPathHelp')}
 					</FormDescription>
 					<FormMessage />
 				</FormItem>
