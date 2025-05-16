@@ -125,6 +125,10 @@ export const ContainerModel = mongoose.model(
 					type: String,
 					default: "/",
 				},
+				// For monorepos the directory to watch for code changes
+				watchPath: {
+					type: String,
+				},
 				// The name of the docker file in the repository
 				dockerfile: {
 					type: String,
@@ -679,6 +683,7 @@ const fields = [
 	"repo.url",
 	"repo.branch",
 	"repo.path",
+	"repo.watchPath",
 	"repo.dockerfile",
 	"repo.gitProviderId",
 	"repo.webHookId",

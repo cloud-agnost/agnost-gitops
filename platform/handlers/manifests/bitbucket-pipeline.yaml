@@ -21,6 +21,8 @@ spec:
       value: willbereplaced
     - name: gitsubpath
       value: willbereplaced
+    - name: gitwatchpath
+      value: willbereplaced
     - name: imagename
       value: willbereplaced
     - name: dockerfile
@@ -28,7 +30,7 @@ spec:
     - name: gitrevision
       value: $(body.push.changes[0].new.target.hash)
     - name: gitrepo
-      value: "git@bitbucket.org:$(body.repository.full_name).git"
+      value: 'git@bitbucket.org:$(body.repository.full_name).git'
     - name: gitcommitter
       value: $(body.actor.display_name)
     - name: gitcommiturl
@@ -57,6 +59,7 @@ spec:
     - name: bitbucketpat
     - name: gitbranch
     - name: gitsubpath
+    - name: gitwatchpath
     - name: gitrevision
     - name: gitrepo
     - name: imagename
@@ -75,108 +78,127 @@ spec:
       spec:
         serviceAccountName: tekton-triggers-bitbucket-sa
         workspaces:
-        - name: ws
-          emptyDir: {}
+          - name: ws
+            emptyDir: {}
         taskSpec:
           workspaces:
-          - name: ws
+            - name: ws
           steps:
-          - name: setup
-            image: bitnami/git:2.44.0
-            onError: continue
-            env:
-            - name: GIT_REPO
-              value: $(tt.params.gitrepo)
-            - name: GIT_BRANCH
-              value: $(tt.params.gitbranch)
-            - name: GIT_REVISION
-              value: $(tt.params.gitrevision)
-            - name: GIT_COMMITTER_USERNAME
-              value: $(tt.params.gitcommitter)
-            - name: SUB_PATH
-              value: $(tt.params.gitsubpath)
-            - name: GIT_COMMIT_URL
-              value: $(tt.params.gitcommiturl)
-            - name: GIT_REPO_URL
-              value: $(tt.params.gitrepourl)
-            - name: GIT_REPO_NAME
-              value: $(tt.params.gitreponame)
-            - name: GIT_COMMIT_MESSAGE
-              value: $(tt.params.gitcommitmessage)
-            - name: GIT_COMMIT_TIMESTAMP
-              value: $(tt.params.gitcommittimestamp)
-            script: |
-              #!/bin/bash
-              export URL=$(echo $(tt.params.gitrepourl) | sed "s|://|://x-token-auth:$(tt.params.bitbucketpat)@|")
-              export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
-              cd $(workspaces.ws.path)
+            - name: setup
+              image: bitnami/git:2.44.0
+              onError: continue
+              env:
+                - name: GIT_REPO
+                  value: $(tt.params.gitrepo)
+                - name: GIT_BRANCH
+                  value: $(tt.params.gitbranch)
+                - name: GIT_REVISION
+                  value: $(tt.params.gitrevision)
+                - name: GIT_COMMITTER_USERNAME
+                  value: $(tt.params.gitcommitter)
+                - name: SUB_PATH
+                  value: $(tt.params.gitsubpath)
+                - name: GIT_WATCH_PATH
+                  value: $(tt.params.gitwatchpath)
+                - name: GIT_COMMIT_URL
+                  value: $(tt.params.gitcommiturl)
+                - name: GIT_REPO_URL
+                  value: $(tt.params.gitrepourl)
+                - name: GIT_REPO_NAME
+                  value: $(tt.params.gitreponame)
+                - name: GIT_COMMIT_MESSAGE
+                  value: $(tt.params.gitcommitmessage)
+                - name: GIT_COMMIT_TIMESTAMP
+                  value: $(tt.params.gitcommittimestamp)
+              script: |
+                #!/bin/bash
+                export URL=$(echo $(tt.params.gitrepourl) | sed "s|://|://x-token-auth:$(tt.params.bitbucketpat)@|")
+                export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
+                cd $(workspaces.ws.path)
 
-              # Clone the repository and check for errors
-              if ! git clone ${URL} -b $(tt.params.gitbranch); then
-                echo "Failed to clone the repository. Exiting..."
-                exit 0
-              fi
- 
-              cd ${REPO_NAME}
+                # Clone the repository and check for errors
+                if ! git clone ${URL} -b $(tt.params.gitbranch); then
+                  echo "Failed to clone the repository. Exiting..."
+                  exit 0
+                fi
 
-              # Set the file dates to the same as the repo after cloning
-              git ls-tree -r --long HEAD | while read -r mode type object size filename; do
-                commit_date=$(git log -1 --format="%ct" -- "$filename")
-                touch -d "@$commit_date" "$filename"
-              done
+                cd ${REPO_NAME}
 
-              # Do not check commits if this is an initial manual run
-              if [[ ! $(context.taskRun.name) =~ "manual-run-" ]]; then
-                # If subpath is defined, then check for the changed files
-                if [ "$(tt.params.gitsubpath)" != "" ]; then
-                  git diff --name-only $(git log -1 --pretty=%P $(tt.params.gitrevision) | awk '{print $1}')..$(tt.params.gitrevision) > /tmp/changed_files
-                  NUM_CHANGES=$(grep -c "^$(tt.params.gitsubpath)" /tmp/changed_files)
-                  # If there are not changes on this subpath, exit with Error, but onError is set to continue
-                  if [ ${NUM_CHANGES} == 0 ]; then
-                    echo "No changed files for this pipeline, exiting..."
-                    exit 1
+                # Set the file dates to the same as the repo after cloning
+                git ls-tree -r --long HEAD | while read -r mode type object size filename; do
+                  commit_date=$(git log -1 --format="%ct" -- "$filename")
+                  touch -d "@$commit_date" "$filename"
+                done
+
+                # Do not check commits if this is an initial manual run
+                if [[ ! $(context.taskRun.name) =~ "manual-run-" ]]; then
+                  # If watch paths are defined, then check for the changed files
+                  if [ "$(tt.params.gitwatchpath)" != "" ]; then
+                    git diff --name-only $(git log -1 --pretty=%P $(tt.params.gitrevision) | awk '{print $1}')..$(tt.params.gitrevision) > /tmp/changed_files
+                    
+                    # Split watch paths by comma and check each one
+                    IFS=',' read -ra WATCH_PATHS <<< "$(tt.params.gitwatchpath)"
+                    CHANGES_FOUND=0
+                    
+                    for WATCH_PATH in "${WATCH_PATHS[@]}"; do
+                      # Trim whitespace
+                      WATCH_PATH=$(echo "$WATCH_PATH" | xargs)
+                      NUM_CHANGES=$(grep -c "^${WATCH_PATH}" /tmp/changed_files)
+                      
+                      if [ ${NUM_CHANGES} -gt 0 ]; then
+                        echo "Changes detected in watch path: ${WATCH_PATH}"
+                        CHANGES_FOUND=1
+                        break
+                      fi
+                    done
+                    
+                    # If there are no changes in any watch path, exit with Error
+                    if [ ${CHANGES_FOUND} -eq 0 ]; then
+                      echo "No changed files in any of the specified watch paths, exiting..."
+                      exit 1
+                    fi
                   fi
                 fi
-              fi
 
-              echo "$(tt.params.containerregistry)/$(tt.params.imagename):$(echo $(tt.params.gitrevision) | head -c 7)" > $(workspaces.ws.path)/image
-          - name: build
-            image: gcr.io/kaniko-project/executor:v1.21.1-debug
-            script: |
-              #!/busybox/sh
+                echo "$(tt.params.containerregistry)/$(tt.params.imagename):$(echo $(tt.params.gitrevision) | head -c 7)" > $(workspaces.ws.path)/image
+            - name: build
+              image: gcr.io/kaniko-project/executor:v1.21.1-debug
+              script: |
+                #!/busybox/sh
 
-              CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
-              if [ ${CANCEL_PIPELINE} -eq 1 ]; then
-                echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
-                exit 0
-              fi
-              export IMAGE=$(cat $(workspaces.ws.path)/image)
-              export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
-              echo "Context: $(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath)"
-              echo "Dockerfile: $(tt.params.dockerfile)"
-              echo "Image: ${IMAGE}"
-              /kaniko/executor \
-                --destination=${IMAGE} \
-                --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
-                --dockerfile=$(tt.params.dockerfile) \
-                --cache=true \
-                --cache-repo=$(tt.params.containerregistry)/$(tt.params.imagename)-cache \
-                --insecure
-          - name: deploy
-            image: bitnami/kubectl:1.29.2
-            script: |
-              #!/usr/bin/bash
+                CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
+                if [ ${CANCEL_PIPELINE} -eq 1 ]; then
+                  echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
+                  exit 0
+                fi
+                export IMAGE=$(cat $(workspaces.ws.path)/image)
+                export REPO_NAME=$(basename -s .git "$(tt.params.gitreponame)")
+                echo "Context: $(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath)"
+                echo "Watch path: $(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitwatchpath)"
+                echo "Dockerfile: $(tt.params.dockerfile)"
+                echo "Image: ${IMAGE}"
+                /kaniko/executor \
+                  --destination=${IMAGE} \
+                  --context=$(workspaces.ws.path)/${REPO_NAME}/$(tt.params.gitsubpath) \
+                  --dockerfile=$(tt.params.dockerfile) \
+                  --cache=true \
+                  --cache-repo=$(tt.params.containerregistry)/$(tt.params.imagename)-cache \
+                  --insecure
+            - name: deploy
+              image: bitnami/kubectl:1.29.2
+              script: |
+                #!/usr/bin/bash
 
-              CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
-              if [ ${CANCEL_PIPELINE} -eq 1 ]; then
-                echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
-                exit 0
-              fi
+                CANCEL_PIPELINE=$(cat $(steps.step-setup.exitCode.path))
+                if [ ${CANCEL_PIPELINE} -eq 1 ]; then
+                  echo "Pipeline cancelled. No changes detected in repo subpath of this container..."
+                  exit 0
+                fi
 
-              export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/registry.$(tt.params.agnostnamespace):5000/localhost:30050/')
-              kubectl set image $(tt.params.kind)/$(tt.params.resourcename) $(tt.params.resourcename)=${IMAGE} -n $(tt.params.resourcenamespace)
-              kubectl rollout status $(tt.params.kind)/$(tt.params.resourcename) -n $(tt.params.resourcenamespace) -w
-              kubectl annotate $(tt.params.kind)/$(tt.params.resourcename) kubernetes.io/change-cause="Update image to ${IMAGE}" -n $(tt.params.resourcenamespace)
+                export IMAGE=$(cat $(workspaces.ws.path)/image | sed 's/registry.$(tt.params.agnostnamespace):5000/localhost:30050/')
+                kubectl set image $(tt.params.kind)/$(tt.params.resourcename) $(tt.params.resourcename)=${IMAGE} -n $(tt.params.resourcenamespace)
+                kubectl rollout status $(tt.params.kind)/$(tt.params.resourcename) -n $(tt.params.resourcenamespace) -w
+                kubectl annotate $(tt.params.kind)/$(tt.params.resourcename) kubernetes.io/change-cause="Update image to ${IMAGE}" -n $(tt.params.resourcenamespace)
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -191,7 +213,7 @@ metadata:
   namespace: tekton-builds
 type: Opaque
 stringData:
-  secretToken: "1234567"
+  secretToken: '1234567'
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -199,8 +221,8 @@ metadata:
   name: triggers-bitbucket-eventlistener-binding
   namespace: tekton-builds
 subjects:
-- kind: ServiceAccount
-  name: tekton-triggers-bitbucket-sa
+  - kind: ServiceAccount
+    name: tekton-triggers-bitbucket-sa
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -211,9 +233,9 @@ kind: ClusterRoleBinding
 metadata:
   name: triggers-bitbucket-eventlistener-clusterbinding
 subjects:
-- kind: ServiceAccount
-  name: tekton-triggers-bitbucket-sa
-  namespace: tekton-builds
+  - kind: ServiceAccount
+    name: tekton-triggers-bitbucket-sa
+    namespace: tekton-builds
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -229,19 +251,19 @@ spec:
     - name: bitbucket-listener
       interceptors:
         - ref:
-            name: "bitbucket"
+            name: 'bitbucket'
           params:
-            - name: "secretRef"
+            - name: 'secretRef'
               value:
                 secretName: bitbucket-secret
                 secretKey: secretToken
-            - name: "eventTypes"
-              value: ["repo:push"]
-        - name: "Only for the specific branch"
+            - name: 'eventTypes'
+              value: ['repo:push']
+        - name: 'Only for the specific branch'
           ref:
-            name: "cel"
+            name: 'cel'
           params:
-            - name: "filter"
+            - name: 'filter'
               value: "body.ref == 'refs/heads/master'"
       bindings:
         - ref: bitbucket-push-binding
@@ -256,11 +278,11 @@ spec:
             containers:
               - resources:
                   requests:
-                    memory: "64Mi"
-                    cpu: "50m"
+                    memory: '64Mi'
+                    cpu: '50m'
                   limits:
-                    memory: "128Mi"
-                    cpu: "100m"
+                    memory: '128Mi'
+                    cpu: '100m'
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -276,12 +298,12 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
   rules:
-  - http:
-      paths:
-      - path: /tekton-bitbucket/(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: el-bitbucket-listener
-            port:
-               number: 8080
+    - http:
+        paths:
+          - path: /tekton-bitbucket/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: el-bitbucket-listener
+                port:
+                  number: 8080
