@@ -613,3 +613,7 @@ button:focus-visible {
 [data-radix-popper-content-wrapper] {
 	z-index: 50 !important;
 }
+
+.remove-repo-select-border .select__control {
+	border: none !important;
+}

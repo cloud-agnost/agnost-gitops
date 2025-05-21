@@ -147,11 +147,12 @@ function GitConfig() {
 
 	return (
 		<Fragment>
-			<ProviderSelect />
 			<div className='grid grid-cols-2 gap-4'>
+				<ProviderSelect />
 				<RepositorySelect />
 			</div>
 			<RepoPathField />
+			<RepoWatchPathField />
 			<DockerFileField />
 		</Fragment>
 	);
@@ -200,40 +201,43 @@ function ProviderSelect() {
 	}, [providers]);
 
 	return (
-		<Select
-			value={form.watch('repo.gitProviderId')}
-			onValueChange={onProviderSelect}
-			disabled={!_.isEmpty(container)}
-		>
-			<SelectTrigger className='w-full'>
-				<SelectValue placeholder='Select provider' />
-			</SelectTrigger>
+		<div className='space-y-2'>
+			<FormLabel>{t('container.source.title')}</FormLabel>
+			<Select
+				value={form.watch('repo.gitProviderId')}
+				onValueChange={onProviderSelect}
+				disabled={!_.isEmpty(container)}
+			>
+				<SelectTrigger className='w-full'>
+					<SelectValue placeholder='Select provider' />
+				</SelectTrigger>
 
-			<SelectContent>
-				{providers?.map((provider) => (
-					<SelectItem key={provider._id} value={provider._id}>
-						<div className='flex items-center gap-2'>
-							{getProviderIcon(provider.provider)}
-							{provider.username}
-						</div>
-					</SelectItem>
-				))}
-				<SelectSeparator className=' bg-wrapper-background-base' />
-				{['github', 'gitlab', 'bitbucket'].map((provider) => (
-					<Link
-						key={provider}
-						onClick={connectGithubHandler}
-						to={`https://api.agnost.dev/oauth/${provider}?redirect=${window.location.href}?provider=${provider}`}
-						className='select-item flex items-center gap-2'
-					>
-						{getProviderIcon(provider as 'github' | 'gitlab' | 'bitbucket')}
-						{t('container.source.connect_git', {
-							provider: _.startCase(provider),
-						})}
-					</Link>
-				))}
-			</SelectContent>
-		</Select>
+				<SelectContent>
+					{providers?.map((provider) => (
+						<SelectItem key={provider._id} value={provider._id}>
+							<div className='flex items-center gap-2'>
+								{getProviderIcon(provider.provider)}
+								{provider.username}
+							</div>
+						</SelectItem>
+					))}
+					<SelectSeparator className=' bg-wrapper-background-base' />
+					{['github', 'gitlab', 'bitbucket'].map((provider) => (
+						<Link
+							key={provider}
+							onClick={connectGithubHandler}
+							to={`https://api.agnost.dev/oauth/${provider}?redirect=${window.location.href}?provider=${provider}`}
+							className='select-item flex items-center gap-2'
+						>
+							{getProviderIcon(provider as 'github' | 'gitlab' | 'bitbucket')}
+							{t('container.source.connect_git', {
+								provider: _.startCase(provider),
+							})}
+						</Link>
+					))}
+				</SelectContent>
+			</Select>
+		</div>
 	);
 }
 
@@ -305,7 +309,7 @@ function RepositorySelect() {
 							<MultiSelect
 								ref={selectedRepoRef}
 								options={repoOptions}
-								className='select-container'
+								className='select-container remove-repo-select-border'
 								classNamePrefix='select'
 								value={field.value ? { value: field.value, label: field.value } : null}
 								onChange={(selected: any) => {
@@ -333,13 +337,13 @@ function RepositorySelect() {
 					control={form.control}
 					name='repo.branch'
 					render={({ field }) => (
-						<FormItem>
+						<FormItem className={'col-span-2'}>
 							<FormLabel>{t('container.source.branch')}</FormLabel>
 							<FormControl>
 								<MultiSelect
 									ref={branchRef}
 									options={branchesOptions}
-									className='select-container'
+									className='select-container remove-repo-select-border'
 									classNamePrefix='select'
 									value={field.value ? { value: field.value, label: field.value } : null}
 									onChange={(selected) =>
@@ -391,6 +395,44 @@ function RepoPathField() {
 						</div>
 					</FormControl>
 					<FormDescription>{t('container.source.rootDirectoryHelp')}</FormDescription>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
+}
+
+function RepoWatchPathField() {
+	const form = useFormContext<CreateContainerParams>();
+	const { t } = useTranslation();
+	const { container } = useContainerStore();
+	const { user } = useAuthStore();
+	return (
+		<FormField
+			control={form.control}
+			name='repo.watchPath'
+			render={({ field }) => (
+				<FormItem>
+					<FormLabel>{t('container.source.watchDirectory')}</FormLabel>
+					<FormControl>
+						<div className='relative'>
+							<Folder className='size-5 mr-2 absolute left-2 top-2' />
+							<Input
+								className='pl-10'
+								error={Boolean(form.formState.errors.repo?.watchPath)}
+								placeholder={
+									t('forms.placeholder', {
+										label: t('container.source.watchDirectory'),
+									}) ?? ''
+								}
+								disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
+								{...field}
+							/>
+						</div>
+					</FormControl>
+					<FormDescription className='whitespace-pre-wrap'>
+						{t('container.source.watchPathHelp')}
+					</FormDescription>
 					<FormMessage />
 				</FormItem>
 			)}
@@ -506,9 +548,7 @@ function RegistryForm() {
 								<Input
 									className='pl-10'
 									error={Boolean(form.formState.errors.registry?.imageUrl)}
-									placeholder={
-										t('container.registry.image_placeholder')
-									}
+									placeholder={t('container.registry.image_placeholder')}
 									disabled={!_.isEmpty(container) && user._id !== container?.createdBy}
 									{...field}
 								/>

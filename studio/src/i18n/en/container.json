@@ -20,9 +20,10 @@
 		"repo": "Source Repo",
 		"branch": "Branch",
 		"rootDirectory": "Path",
-		"rootDirectoryHelp": "If you have a monorepo where you maintain code for multiple apps such as backend and frontend then this is the path of the app that you would like to link this deployment to (e.g. /frontend)",
+		"watchDirectory": "Watch Path",
+		"rootDirectoryHelp": "If you have a monorepo where you maintain code for multiple apps such as backend and frontend then this is the path of the app that you would like to link this deployment to (e.g. /apps/frontend)",
 		"watchPath": "Watch Paths",
-		"watchPathHelp": "This are the paths of the source code that Agnost will check for changes to trigger a build. If left empty, it defaults to the Path of the repository specified above.",
+		"watchPathHelp": "These are the paths of the source code that Agnost will check for changes to trigger a build. If left empty, it defaults to the Path of the repository specified above.\n\nIf you want to specify multiple paths, you can separate them with commas (e.g. /apps/backend,/apps/common).",
 		"dockerFile": "Docker File",
 		"dockerFileHelp": "The name of the Docker file that will be used to create the Docker image of your app. The Docker file location is relative to the path you have specified above.",
 		"connect_git": "Connect {{provider}} Account"
