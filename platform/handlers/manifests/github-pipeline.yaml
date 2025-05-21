@@ -136,17 +136,30 @@ spec:
                   if [ "$(tt.params.gitwatchpath)" != "" ]; then
                     git diff --name-only $(git log -1 --pretty=%P $(tt.params.gitrevision) | awk '{print $1}')..$(tt.params.gitrevision) > /tmp/changed_files
                     
+                    # Debug: Show all changed files
+                    echo "DEBUG: List of all changed files:"
+                    cat /tmp/changed_files
+                    
                     # Split watch paths by comma and check each one
                     IFS=',' read -ra WATCH_PATHS <<< "$(tt.params.gitwatchpath)"
                     CHANGES_FOUND=0
+                    
+                    # Debug: Show all watch paths
+                    echo "DEBUG: Watch paths to check: $(tt.params.gitwatchpath)"
                     
                     for WATCH_PATH in "${WATCH_PATHS[@]}"; do
                       # Trim whitespace
                       WATCH_PATH=$(echo "$WATCH_PATH" | xargs)
                       NUM_CHANGES=$(grep -c "^${WATCH_PATH}" /tmp/changed_files)
                       
+                      # Debug: Show each watch path and the number of changes
+                      echo "DEBUG: Checking watch path: '${WATCH_PATH}', found ${NUM_CHANGES} changes"
+                      
                       if [ ${NUM_CHANGES} -gt 0 ]; then
                         echo "Changes detected in watch path: ${WATCH_PATH}"
+                        # Debug: Show the actual matching files
+                        echo "DEBUG: Files changed in this watch path:"
+                        grep "^${WATCH_PATH}" /tmp/changed_files
                         CHANGES_FOUND=1
                         break
                       fi
