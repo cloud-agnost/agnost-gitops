@@ -85,7 +85,7 @@ spec:
             - name: ws
           steps:
             - name: setup
-              image: bitnami/git:2.44.0
+              image: bitnamilegacy/git:2.44.0
               onError: continue
               env:
                 - name: GIT_REPO
@@ -185,7 +185,7 @@ spec:
                   --cache-repo=$(tt.params.containerregistry)/$(tt.params.imagename)-cache \
                   --insecure
             - name: deploy
-              image: bitnami/kubectl:1.29.2
+              image: bitnamilegacy/kubectl:1.29.2
               script: |
                 #!/usr/bin/bash
 
