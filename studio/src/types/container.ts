@@ -586,17 +586,12 @@ export const SourceConfigSchema = z
 				const paths = pathsString.split(',');
 
 				// Process each path: remove spaces and ensure it starts with a slash
-				const processedPaths = paths
-					.map((path) => {
-						// Remove spaces
-						const trimmedPath = path.trim();
-						// Add a leading slash if not present
-						return trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`;
-					})
-					.filter((path) => {
-						// Filter out paths that don't match the regex pattern
-						return /^\/([\w\-\/]*)$/.test(path);
-					});
+				const processedPaths = paths.map((path) => {
+					// Remove spaces
+					const trimmedPath = path.trim();
+					// remove a leading slash if present
+					return trimmedPath.startsWith('/') ? trimmedPath.slice(1) : trimmedPath;
+				});
 
 				// Join back with commas (no spaces)
 				return processedPaths.join(',');
